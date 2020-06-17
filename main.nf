@@ -201,6 +201,7 @@ process get_software_versions {
 process fastqc {
     tag "$name"
     label 'process_medium'
+	container "genomicpariscentre/fastqc:0.11.5"
     publishDir "${params.outdir}/fastqc", mode: 'copy',
         saveAs: { filename ->
                       filename.indexOf(".zip") > 0 ? "zips/$filename" : "$filename"
@@ -223,6 +224,7 @@ process fastqc {
  */
 process multiqc {
     publishDir "${params.outdir}/MultiQC", mode: 'copy'
+	container "ewels/multiqc:1.9"
 
     input:
     file (multiqc_config) from ch_multiqc_config
@@ -252,6 +254,7 @@ process multiqc {
  */
 process output_documentation {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
+    container "nfcore/base:1.9"
 
     input:
     file output_docs from ch_output_docs
