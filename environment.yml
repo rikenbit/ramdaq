@@ -12,4 +12,8 @@ dependencies:
   - conda-forge::pygments=2.5.2
   # TODO nf-core: Add required software dependencies here
   - bioconda::fastqc=0.11.8
-  - bioconda::multiqc=1.7
+  - bioconda::multiqc=1.9
+  - bioconda::hisat2=2.2.0
+  - bioconda::rseqc=3.0.1
+  - bioconda::ea-utils=1.1.2.779
+

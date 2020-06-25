@@ -185,7 +185,7 @@ Channel.from(summary.collect{ [it.key, it.value] })
 process get_software_versions {
 
     // TODO nf-core: Change all-in-out container later
-    container "nfcore/mnaseseq:latest"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.2"
 
     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
         saveAs: { filename ->
@@ -217,7 +217,7 @@ process get_software_versions {
 process fastqc {
     tag "$name"
     label 'process_medium'
-    container "genomicpariscentre/fastqc:0.11.5"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.2"
     
     publishDir "${params.outdir}/fastqc", mode: 'copy',
         saveAs: { filename ->
@@ -277,8 +277,7 @@ process multiqc {
 
 process output_documentation {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
-    // container "nfcore/base:1.9"
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.2"
 
     input:
     file output_docs from ch_output_docs
