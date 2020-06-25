@@ -52,9 +52,11 @@ if (params.help) {
     exit 0
 }
 
+///////////////////////////////////////////////////////////////////////////////
 /*
- * SET UP CONFIGURATION VARIABLES
- */
+* SET UP CONFIGURATION VARIABLES
+*/
+///////////////////////////////////////////////////////////////////////////////
 
 // Check if genome exists in the config file
 if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
@@ -94,9 +96,13 @@ ch_multiqc_config = file("$baseDir/assets/multiqc_config.yaml", checkIfExists: t
 ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multiqc_config, checkIfExists: true) : Channel.empty()
 ch_output_docs = file("$baseDir/docs/output.md", checkIfExists: true)
 
+
+///////////////////////////////////////////////////////////////////////////////
 /*
- * Create a channel for input read files
- */
+* Create a channel for input read files
+*/
+///////////////////////////////////////////////////////////////////////////////
+
 if (params.readPaths) {
     if (params.single_end) {
         Channel
@@ -170,10 +176,16 @@ Channel.from(summary.collect{ [it.key, it.value] })
     """.stripIndent() }
     .set { ch_workflow_summary }
 
+///////////////////////////////////////////////////////////////////////////////
 /*
- * Parse software version numbers
- */
+* Parse software version numbers
+*/
+///////////////////////////////////////////////////////////////////////////////
+
 process get_software_versions {
+
+    container "nfcore/mnaseseq:latest"
+
     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
         saveAs: { filename ->
                       if (filename.indexOf(".csv") > 0) filename
@@ -195,9 +207,12 @@ process get_software_versions {
     """
 }
 
+///////////////////////////////////////////////////////////////////////////////
 /*
- * STEP 1 - FastQC
- */
+* STEP 1 - FastQC
+*/
+///////////////////////////////////////////////////////////////////////////////
+
 process fastqc {
     tag "$name"
     label 'process_medium'
@@ -219,9 +234,12 @@ process fastqc {
     """
 }
 
+///////////////////////////////////////////////////////////////////////////////
 /*
- * STEP 2 - MultiQC
- */
+* STEP 2 - MultiQC
+*/
+///////////////////////////////////////////////////////////////////////////////
+
 process multiqc {
     publishDir "${params.outdir}/MultiQC", mode: 'copy'
 	container "ewels/multiqc:1.9"
@@ -249,12 +267,16 @@ process multiqc {
     """
 }
 
+///////////////////////////////////////////////////////////////////////////////
 /*
- * STEP 3 - Output Description HTML
- */
+* STEP 3 - Output Description HTML
+*/
+///////////////////////////////////////////////////////////////////////////////
+
 process output_documentation {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
-    container "nfcore/base:1.9"
+    // container "nfcore/base:1.9"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9"
 
     input:
     file output_docs from ch_output_docs
@@ -268,9 +290,12 @@ process output_documentation {
     """
 }
 
+///////////////////////////////////////////////////////////////////////////////
 /*
- * Completion e-mail notification
- */
+* Completion e-mail notification
+*/
+///////////////////////////////////////////////////////////////////////////////
+
 workflow.onComplete {
 
     // Set up the e-mail variables
