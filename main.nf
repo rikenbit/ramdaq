@@ -184,6 +184,7 @@ Channel.from(summary.collect{ [it.key, it.value] })
 
 process get_software_versions {
 
+    // TODO nf-core: Change all-in-out container later
     container "nfcore/mnaseseq:latest"
 
     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
@@ -216,7 +217,8 @@ process get_software_versions {
 process fastqc {
     tag "$name"
     label 'process_medium'
-	container "genomicpariscentre/fastqc:0.11.5"
+    container "genomicpariscentre/fastqc:0.11.5"
+    
     publishDir "${params.outdir}/fastqc", mode: 'copy',
         saveAs: { filename ->
                       filename.indexOf(".zip") > 0 ? "zips/$filename" : "$filename"
@@ -242,7 +244,7 @@ process fastqc {
 
 process multiqc {
     publishDir "${params.outdir}/MultiQC", mode: 'copy'
-	container "ewels/multiqc:1.9"
+    container "ewels/multiqc:1.9"
 
     input:
     file (multiqc_config) from ch_multiqc_config
