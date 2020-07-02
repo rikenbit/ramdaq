@@ -107,8 +107,8 @@ ch_output_docs = file("$baseDir/docs/output.md", checkIfExists: true)
 if (params.readPaths) {
     if (params.single_end) {
         Channel
-            .fromPath(params.readPaths + "/*.fastq.gz")
-            .map { [ it.baseName.replaceAll('.fastq', ''), it ] }
+            .from(params.readPaths)
+            .map { row -> [ row[0], [ file(row[1][0], checkIfExists: true) ] ] }
             .ifEmpty { exit 1, "params.readPaths was empty - no input files supplied" }
             .into { ch_read_files_fastqc; 
                     ch_read_files_fastqmcf }
@@ -129,7 +129,7 @@ if (params.readPaths) {
                 ch_debug }
 }
 
-ch_debug.println()
+//ch_debug.println()
 
 // Header log info
 log.info nfcoreHeader()
