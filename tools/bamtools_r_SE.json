@@ -1,0 +1,8 @@
+{
+    "filters" : [
+        { "id" : "reverse",
+          "isReverseStrand" : "false"
+        }
+    ],
+    "rule" : "reverse"
+}

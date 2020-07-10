@@ -21,20 +21,25 @@ def helpMessage() {
     nextflow run nf-core/ramdaq --reads '*_R{1,2}.fastq.gz' -profile docker
 
     Mandatory arguments:
-      --reads [file]                Path to input data (must be surrounded with quotes)
-      -profile [str]                Configuration profile to use. Can use multiple (comma separated)
-                                    Available: conda, docker, singularity, test, awsbatch, <institute> and more
-      --local_annot_dir [str]       Base path for local annotation files
+      --reads [file]                  Path to input data (must be surrounded with quotes)
+      -profile [str]                  Configuration profile to use. Can use multiple (comma separated)
+                                      Available: conda, docker, singularity, test, awsbatch, <institute> and more
+      --local_annot_dir [str]         Base path for local annotation files
 
     Options:
       --genome [str]                  Name of iGenomes reference
-      --single_end [bool]             Specifies that the input is single-end reads
+      --single_end                    Specifies that the input is single-end reads
+      --stranded                      Specifies that the input is stranded reads
 
     Fastqmcf:
       --maxReadLength [N]             Maximum remaining sequence length (Default: 75)
       --minReadLength [N]             Minimum remaining sequence length (Default: 36)
       --sKew [N]                      sKew percentage-less-than causing cycle removal (Default: 4)
       --quality [N]                   quality threshold causing base removal (Default: 30)
+    
+    Hisat2:
+      --softclipping                  HISAT2 allow soft-clip reads near their 5' and 3' ends (Default: disallow)
+      --threads_num [N]               HISAT2 to launch a specified number of parallel search threads. (Default: 1)
 
     References:                       If not specified in the configuration file or you wish to overwrite any of the references
       --fasta [file]                  Path to fasta reference
@@ -71,11 +76,25 @@ if (params.genomes && params.genome && !params.genomes.containsKey(params.genome
 }
 
 // Configurable variables
-ch_adapter = file(params.genomes[ params.genome ].adapter, checkIfExists: true)
+params.adapter = params.genome ? params.genomes[ params.genome ].adapter ?: false : false
+params.hisat2_idx = params.genome ? params.genomes[ params.genome ].hisat2 ?: false : false
+params.chrsize = params.genome ? params.genomes[ params.genome ].chrsize ?: false : false
 
 // Validate inputs
-// if (params.adapter) { ch_adapter = file(params.adapter, checkIfExists: true) } else { exit 1, "Adapter file not specified!" }
+if (params.adapter) { ch_adapter = file(params.adapter, checkIfExists: true) } else { exit 1, "Adapter file not specified!" }
 
+if (params.hisat2_idx) {
+    check_hisat2_idx = Channel
+        .from(params.hisat2_idx)
+        .flatMap{file(params.hisat2_idx + "*", checkIfExists: true)}
+        .ifEmpty { exit 1, "HISAT2 index not found: ${params.hisat2_idx}" }
+    
+    ch_hisat2_idx = Channel
+        .from(params.hisat2_idx)
+        .map{[it, file(it + "*")]}
+}
+
+if (params.chrsize) { ch_chrsize= file(params.chrsize, checkIfExists: true) } else { exit 1, "Chromosome size file not specified!" }
 
 // Has the run name been specified by the user?
 //  this has the bonus effect of catching both -name and --name
@@ -98,6 +117,9 @@ if (workflow.profile.contains('awsbatch')) {
 ch_multiqc_config = file("$baseDir/assets/multiqc_config.yaml", checkIfExists: true)
 ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multiqc_config, checkIfExists: true) : Channel.empty()
 ch_output_docs = file("$baseDir/docs/output.md", checkIfExists: true)
+
+// Tools dir
+ch_tools_dir = workflow.scriptFile.parent + "/tools"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -142,6 +164,7 @@ summary['Run Name']         = custom_runName ?: workflow.runName
 summary['Reads']            = params.reads
 //summary['Fasta Ref']        = params.fasta
 summary['Data Type']        = params.single_end ? 'Single-End' : 'Paired-End'
+summary['Strandness']       = params.stranded ? 'Stranded' : 'Unstranded'
 summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
 summary['Output dir']       = params.outdir
@@ -194,7 +217,7 @@ Channel.from(summary.collect{ [it.key, it.value] })
 process get_software_versions {
 
     // TODO nf-core: Change all-in-out container later
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.2"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3"
 
     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
         saveAs: { filename ->
@@ -214,6 +237,10 @@ process get_software_versions {
     fastqc --version > v_fastqc.txt
     multiqc --version > v_multiqc.txt
     fastq-mcf -V > v_fastqmcf.txt
+    hisat2 --version > v_hisat2.txt
+    samtools --version > v_samtools.txt
+    bam2wig.py --version > v_bam2wig.txt
+    bamtools --version > v_bamtools.txt
     scrape_software_versions.py &> software_versions_mqc.yaml
     """
 }
@@ -228,7 +255,7 @@ process get_software_versions {
 process fastqc {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.2"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3"
     
     publishDir "${params.outdir}/fastqc", mode: 'copy',
         saveAs: { filename ->
@@ -263,7 +290,7 @@ process fastqc {
 process fastqmcf  {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.2"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3"
 
     publishDir "${params.outdir}/fastqmcf", mode: 'copy', overwrite: true
  
@@ -297,6 +324,9 @@ ch_trimmed_reads
         ch_trimmed_reads_tohisat2
     }
 
+ch_hisat2_input = ch_trimmed_reads_tohisat2
+    .combine(ch_hisat2_idx)
+
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
@@ -307,7 +337,7 @@ ch_trimmed_reads
 process fastqc_trimmed {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.2"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3"
     
     publishDir "${params.outdir}/fastqc.trim", mode: 'copy',
         saveAs: { filename ->
@@ -335,6 +365,124 @@ process fastqc_trimmed {
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
+* STEP 4 - Hisat2
+*/
+///////////////////////////////////////////////////////////////////////////////
+
+process hisat2 {
+    tag "$name"
+    label 'process_medium'
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3"
+    
+    publishDir "${params.outdir}/hisat2", mode: 'copy', overwrite: true,
+        saveAs: { filename ->
+                    filename.indexOf(".hisat2_summary.txt") > 0 ? "logs/$filename" : "$filename"
+                }
+
+    input:
+    set val(name), file(reads), hisat2_idx, file(hisat2_idx_files) from ch_hisat2_input
+    path tools_dir from ch_tools_dir
+
+    output:
+    set val(name), file("*.bam"), file("*.bai") into ch_hisat2_bam
+    file "*.hisat2_summary.txt" into ch_alignment_logs
+
+    script:
+    def strandness = ''
+    if (params.stranded) {
+        strandness = params.single_end ? "--rna-strandness R" : "--rna-strandness RF"
+    }
+    softclipping = params.softclipping ? '' : "--no-softclip"
+    threads_num = params.threads_num > 0 ? "-p ${params.threads_num}" : ''
+
+    if (params.single_end) {
+        if (params.stranded) {
+            """
+            hisat2 $softclipping $threads_num -x $hisat2_idx -U $reads $strandness --summary-file ${name}.hisat2_summary.txt \\
+            | samtools view -bS - | samtools sort - -o ${name}.sort.bam
+            samtools index ${name}.sort.bam
+
+            bamtools filter -in ${name}.sort.bam -out ${name}.forward.bam -script ${tools_dir}/bamtools_f_SE.json
+            samtools index ${name}.forward.bam
+
+            bamtools filter -in ${name}.sort.bam -out ${name}.reverse.bam -script ${tools_dir}/bamtools_r_SE.json
+            samtools index ${name}.reverse.bam
+            """
+        } else {
+            """
+            hisat2 $softclipping $threads_num -x $hisat2_idx -U $reads $strandness --summary-file ${name}.hisat2_summary.txt \\
+            | samtools view -bS - | samtools sort - -o ${name}.sort.bam
+            samtools index ${name}.sort.bam
+            """
+        }
+
+    } else {
+        if (params.stranded) {
+            """
+            hisat2 $softclipping $threads_num -x $hisat2_idx -1 ${reads[0]} -2 ${reads[1]} $strandness --summary-file ${name}.hisat2_summary.txt \\
+            | samtools view -bS - | samtools sort - -o ${name}.sort.bam
+            samtools index ${name}.sort.bam
+
+            bamtools filter -in ${name}.sort.bam -out ${name}.forward.bam -script ${tools_dir}/bamtools_f_PE.json
+            samtools index ${name}.forward.bam
+
+            bamtools filter -in ${name}.sort.bam -out ${name}.reverse.bam -script ${tools_dir}/bamtools_r_PE.json
+            samtools index ${name}.reverse.bam
+
+            samtools view -bS -f 0x40 ${name}.sort.bam -o ${name}.R1.bam
+            samtools index ${name}.R1.bam
+
+            samtools view -bS -f 0x80 ${name}.sort.bam -o ${name}.R2.bam
+            samtools index ${name}.R2.bam
+            """
+        } else {
+            """
+            hisat2 $softclipping $threads_num -x $hisat2_idx -1 ${reads[0]} -2 ${reads[1]} $strandness --summary-file ${name}.hisat2_summary.txt \\
+            | samtools view -bS - | samtools sort - -o ${name}.sort.bam
+            samtools index ${name}.sort.bam
+            """
+        }
+    }
+}
+
+ch_hisat2_bam
+    .into{
+        hisat2_output_tobam2wig;
+        hisat2_output_tofcount;
+        hisat2_output_torseqc
+    }
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+* STEP 5 - Bam to BigWig
+*/
+///////////////////////////////////////////////////////////////////////////////
+
+process bam2wig {
+    tag "$name"
+    label 'process_medium'
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3"
+    
+    publishDir "${params.outdir}/bam_bigwig", mode: 'copy', overwrite: true
+
+    input:
+    set val(name), file(bam), file(bai) from hisat2_output_tobam2wig
+    file chrsize from ch_chrsize
+
+    output:
+    file "*.bw"
+    file "*.wig"
+
+    script:
+    """
+    bam2wig.py -i ${name}.sort.bam -s $chrsize -u -o ${name}
+    """
+
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/*
 * STEP X - MultiQC
 */
 ///////////////////////////////////////////////////////////////////////////////
@@ -349,6 +497,7 @@ process multiqc {
     // TODO nf-core: Add in log files from your new processes for MultiQC to find!
     file ('fastqc/*') from ch_fastqc_results.collect().ifEmpty([])
     file ('fastqc/*') from ch_trimmed_reads_fastqc_results.collect().ifEmpty([])
+    file ('alignment/*') from ch_alignment_logs.collect().ifEmpty([])
     file ('software_versions/*') from ch_software_versions_yaml.collect()
     file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
 
@@ -369,13 +518,13 @@ process multiqc {
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
-* STEP 3 - Output Description HTML
+* STEP X - Output Description HTML
 */
 ///////////////////////////////////////////////////////////////////////////////
 
 process output_documentation {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.2"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3"
 
     input:
     file output_docs from ch_output_docs
