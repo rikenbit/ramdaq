@@ -423,10 +423,10 @@ process hisat2 {
             | samtools view -bS - | samtools sort - -o ${name}.sort.bam
             samtools index ${name}.sort.bam
 
-            bamtools filter -in ${name}.sort.bam -out ${name}.forward.bam -script ${tools_dir}/bamtools_f_SE.json
+            bamtools filter -in ${name}.sort.bam -out ${name}.forward.bam -script ${tools_dir}/bamtools_f_PE.json
             samtools index ${name}.forward.bam
 
-            bamtools filter -in ${name}.sort.bam -out ${name}.reverse.bam -script ${tools_dir}/bamtools_r_SE.json
+            bamtools filter -in ${name}.sort.bam -out ${name}.reverse.bam -script ${tools_dir}/bamtools_r_PE.json
             samtools index ${name}.reverse.bam
 
             samtools view -bS -f 0x40 ${name}.sort.bam -o ${name}.R1.bam
