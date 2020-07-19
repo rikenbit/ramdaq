@@ -79,6 +79,7 @@ if (params.genomes && params.genome && !params.genomes.containsKey(params.genome
 params.adapter = params.genome ? params.genomes[ params.genome ].adapter ?: false : false
 params.hisat2_idx = params.genome ? params.genomes[ params.genome ].hisat2 ?: false : false
 params.chrsize = params.genome ? params.genomes[ params.genome ].chrsize ?: false : false
+params.bed = params.genome ? params.genomes[ params.genome ].bed ?: false : false
 
 // Validate inputs
 if (params.adapter) { ch_adapter = file(params.adapter, checkIfExists: true) } else { exit 1, "Adapter file not specified!" }
@@ -95,6 +96,8 @@ if (params.hisat2_idx) {
 }
 
 if (params.chrsize) { ch_chrsize= file(params.chrsize, checkIfExists: true) } else { exit 1, "Chromosome size file not specified!" }
+
+if (params.bed) { ch_bed= file(params.bed, checkIfExists: true) } else { exit 1, "bed file not specified!" }
 
 // Has the run name been specified by the user?
 //  this has the bonus effect of catching both -name and --name
@@ -241,6 +244,8 @@ process get_software_versions {
     samtools --version > v_samtools.txt
     bam2wig.py --version > v_bam2wig.txt
     bamtools --version > v_bamtools.txt
+    read_distribution.py --version > v_read_distribution.txt
+    infer_experiment.py --version > v_infer_experiment.txt
     scrape_software_versions.py &> software_versions_mqc.yaml
     """
 }
@@ -372,7 +377,7 @@ process fastqc_trimmed {
 process hisat2 {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:hisat2test"
     
     publishDir "${params.outdir}/hisat2", mode: 'copy', overwrite: true,
         saveAs: { filename ->
@@ -399,20 +404,20 @@ process hisat2 {
         if (params.stranded) {
             """
             hisat2 $softclipping $threads_num -x $hisat2_idx -U $reads $strandness --summary-file ${name}.hisat2_summary.txt \\
-            | samtools view -bS - | samtools sort - -o ${name}.sort.bam
-            samtools index ${name}.sort.bam
+            | samtools view -bS - | samtools sort - -o ${name}.bam
+            samtools index ${name}.bam
 
-            bamtools filter -in ${name}.sort.bam -out ${name}.forward.bam -script ${tools_dir}/bamtools_f_SE.json
+            bamtools filter -in ${name}.bam -out ${name}.forward.bam -script ${tools_dir}/bamtools_f_SE.json
             samtools index ${name}.forward.bam
 
-            bamtools filter -in ${name}.sort.bam -out ${name}.reverse.bam -script ${tools_dir}/bamtools_r_SE.json
+            bamtools filter -in ${name}.bam -out ${name}.reverse.bam -script ${tools_dir}/bamtools_r_SE.json
             samtools index ${name}.reverse.bam
             """
         } else {
             """
             hisat2 $softclipping $threads_num -x $hisat2_idx -U $reads $strandness --summary-file ${name}.hisat2_summary.txt \\
-            | samtools view -bS - | samtools sort - -o ${name}.sort.bam
-            samtools index ${name}.sort.bam
+            | samtools view -bS - | samtools sort - -o ${name}.bam
+            samtools index ${name}.bam
             """
         }
 
@@ -420,26 +425,26 @@ process hisat2 {
         if (params.stranded) {
             """
             hisat2 $softclipping $threads_num -x $hisat2_idx -1 ${reads[0]} -2 ${reads[1]} $strandness --summary-file ${name}.hisat2_summary.txt \\
-            | samtools view -bS - | samtools sort - -o ${name}.sort.bam
-            samtools index ${name}.sort.bam
+            | samtools view -bS - | samtools sort - -o ${name}.bam
+            samtools index ${name}.bam
 
-            bamtools filter -in ${name}.sort.bam -out ${name}.forward.bam -script ${tools_dir}/bamtools_f_PE.json
+            bamtools filter -in ${name}.bam -out ${name}.forward.bam -script ${tools_dir}/bamtools_f_PE.json
             samtools index ${name}.forward.bam
 
-            bamtools filter -in ${name}.sort.bam -out ${name}.reverse.bam -script ${tools_dir}/bamtools_r_PE.json
+            bamtools filter -in ${name}.bam -out ${name}.reverse.bam -script ${tools_dir}/bamtools_r_PE.json
             samtools index ${name}.reverse.bam
 
-            samtools view -bS -f 0x40 ${name}.sort.bam -o ${name}.R1.bam
+            samtools view -bS -f 0x40 ${name}.bam -o ${name}.R1.bam
             samtools index ${name}.R1.bam
 
-            samtools view -bS -f 0x80 ${name}.sort.bam -o ${name}.R2.bam
+            samtools view -bS -f 0x80 ${name}.bam -o ${name}.R2.bam
             samtools index ${name}.R2.bam
             """
         } else {
             """
             hisat2 $softclipping $threads_num -x $hisat2_idx -1 ${reads[0]} -2 ${reads[1]} $strandness --summary-file ${name}.hisat2_summary.txt \\
-            | samtools view -bS - | samtools sort - -o ${name}.sort.bam
-            samtools index ${name}.sort.bam
+            | samtools view -bS - | samtools sort - -o ${name}.bam
+            samtools index ${name}.bam
             """
         }
     }
@@ -448,7 +453,14 @@ process hisat2 {
 ch_hisat2_bam
     .into{
         hisat2_output_tobam2wig;
+        hisat2_output_totranspose
+    }
+
+hisat2_output_totranspose
+    .transpose()
+    .into{
         hisat2_output_tofcount;
+        hisat2_output_toreadcoverage;
         hisat2_output_torseqc
     }
 
@@ -475,11 +487,75 @@ process bam2wig {
 
     script:
     """
-    bam2wig.py -i ${name}.sort.bam -s $chrsize -u -o ${name}
+    bam2wig.py -i ${name}.bam -s $chrsize -u -o ${name}
     """
 
 }
 
+///////////////////////////////////////////////////////////////////////////////
+/*
+* STEP 6 - RSeQC
+*/
+///////////////////////////////////////////////////////////////////////////////
+
+process rseqc  {
+    tag "$name"
+    label 'process_medium'
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3"
+
+    publishDir "${params.outdir}/rseqc", mode: 'copy',
+        saveAs: {filename ->
+            if (filename.indexOf("readdist.txt") > 0)          "read_distribution/$filename"
+            else if (filename.indexOf("inferexp.txt") > 0)     "infer_experiment/$filename"
+            else filename
+    }
+
+    input:
+    set val(name), file(bam), file(bai) from hisat2_output_torseqc
+    file bed from ch_bed
+
+    output:
+    file "*.{txt,pdf,r,xls}" into rseqc_results
+    
+    script:
+    """
+    read_distribution.py -i $bam -r $bed > ${bam.baseName}.readdist.txt
+    infer_experiment.py -i $bam -r $bed > ${bam.baseName}.inferexp.txt
+    """
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+* STEP 7 - readcoverage.jl
+*/
+///////////////////////////////////////////////////////////////////////////////
+
+process readcoverage  {
+    tag "$name"
+    label 'process_medium'
+    container "yuifu/readcoverage.jl:0.1.2"
+
+    publishDir "${params.outdir}/rseqc", mode: 'copy',
+        saveAs: {filename ->
+            if (filename.indexOf("geneBodyCoverage.txt") > 0) "genebody_coverage/$filename"
+            else filename
+    }
+
+    input:
+    set val(name), file(bam), file(bai) from hisat2_output_toreadcoverage
+    file bed from ch_bed
+
+    output:
+    file "*.txt" into readcov_results
+    
+    script:
+    """
+    julia /opt/run.jl relcov $bam $bed ${bam.baseName}
+    """
+}
+
+rseqc_results_merge = rseqc_results
+    .concat(readcov_results)
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
@@ -498,6 +574,7 @@ process multiqc {
     file ('fastqc/*') from ch_fastqc_results.collect().ifEmpty([])
     file ('fastqc/*') from ch_trimmed_reads_fastqc_results.collect().ifEmpty([])
     file ('alignment/*') from ch_alignment_logs.collect().ifEmpty([])
+    file ('rseqc/*') from rseqc_results_merge.collect().ifEmpty([])
     file ('software_versions/*') from ch_software_versions_yaml.collect()
     file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
 
