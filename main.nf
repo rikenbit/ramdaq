@@ -34,12 +34,23 @@ def helpMessage() {
     Fastqmcf:
       --maxReadLength [N]             Maximum remaining sequence length (Default: 75)
       --minReadLength [N]             Minimum remaining sequence length (Default: 36)
-      --sKew [N]                      sKew percentage-less-than causing cycle removal (Default: 4)
-      --quality [N]                   quality threshold causing base removal (Default: 30)
+      --skew [N]                      Skew percentage-less-than causing cycle removal (Default: 4)
+      --quality [N]                   Quality threshold causing base removal (Default: 30)
     
     Hisat2:
       --softclipping                  HISAT2 allow soft-clip reads near their 5' and 3' ends (Default: disallow)
-      --threads_num [N]               HISAT2 to launch a specified number of parallel search threads. (Default: 1)
+      --hs_threads_num [N]            HISAT2 to launch a specified number of parallel search threads (Default: 1)
+
+    FeatureCounts:
+      --extra_attributes              Define which extra parameters should also be included in featureCounts (Default: 'gene_name')
+      --group_features                Define the attribute type used to group features (Default: 'gene_id')
+      --count_type                    Define the type used to assign reads (Default: 'exon')
+      --allow_multimap                Multi-mapping reads/fragments will be counted (Default: true)
+      --allow_overlap                 Reads will be allowed to be assigned to more than one matched meta-feature (Default: true)
+      --count_fractionally            Assign fractional counts to features  (Default: true / This option must be used together with ‘--allow_multimap’ or ‘--allow_overlap’ or both)
+      --fc_threads_num [N]            Number of the threads (Default: 1)
+      --group_features_type           Define the type attribute used to group features based on the group attribute (default: 'gene_type')
+
 
     References:                       If not specified in the configuration file or you wish to overwrite any of the references
       --fasta [file]                  Path to fasta reference
@@ -80,24 +91,27 @@ params.adapter = params.genome ? params.genomes[ params.genome ].adapter ?: fals
 params.hisat2_idx = params.genome ? params.genomes[ params.genome ].hisat2 ?: false : false
 params.chrsize = params.genome ? params.genomes[ params.genome ].chrsize ?: false : false
 params.bed = params.genome ? params.genomes[ params.genome ].bed ?: false : false
+params.gtf = params.genome ? params.genomes[ params.genome ].gtf ?: false : false
 
 // Validate inputs
-if (params.adapter) { ch_adapter = file(params.adapter, checkIfExists: true) } else { exit 1, "Adapter file not specified!" }
+if (params.adapter) { ch_adapter = file(params.adapter, checkIfExists: true) } else { exit 1, "Adapter file not found: ${params.adapter}" }
 
 if (params.hisat2_idx) {
     check_hisat2_idx = Channel
         .from(params.hisat2_idx)
         .flatMap{file(params.hisat2_idx + "*", checkIfExists: true)}
-        .ifEmpty { exit 1, "HISAT2 index not found: ${params.hisat2_idx}" }
+        .ifEmpty { exit 1, "HISAT2 index files not found: ${params.hisat2_idx}" }
     
     ch_hisat2_idx = Channel
         .from(params.hisat2_idx)
         .map{[it, file(it + "*")]}
 }
 
-if (params.chrsize) { ch_chrsize= file(params.chrsize, checkIfExists: true) } else { exit 1, "Chromosome size file not specified!" }
+if (params.chrsize) { ch_chrsize= file(params.chrsize, checkIfExists: true) } else { exit 1, "Chromosome size file not found: ${params.chrsize}" }
 
-if (params.bed) { ch_bed= file(params.bed, checkIfExists: true) } else { exit 1, "bed file not specified!" }
+if (params.bed) { ch_bed= file(params.bed, checkIfExists: true) } else { exit 1, "BED file not found: ${params.bed}" }
+
+if (params.gtf) { ch_gtf= file(params.gtf, checkIfExists: true) } else { exit 1, "GTF annotation file not found: ${params.gtf}" }
 
 // Has the run name been specified by the user?
 //  this has the bonus effect of catching both -name and --name
@@ -123,6 +137,8 @@ ch_output_docs = file("$baseDir/docs/output.md", checkIfExists: true)
 
 // Tools dir
 ch_tools_dir = workflow.scriptFile.parent + "/tools"
+
+ch_biotypes_header = Channel.fromPath("$baseDir/assets/biotypes_header.txt", checkIfExists: true)
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -168,6 +184,14 @@ summary['Reads']            = params.reads
 //summary['Fasta Ref']        = params.fasta
 summary['Data Type']        = params.single_end ? 'Single-End' : 'Paired-End'
 summary['Strandness']       = params.stranded ? 'Stranded' : 'Unstranded'
+if (params.hisat2_idx)summary['HISAT2 Index'] = params.hisat2_idx
+if (params.bed) summary['BED Annotation'] = params.bed
+if (params.gtf) summary['GTF Annotation'] = params.gtf
+if (params.allow_multimap) summary['Multimap Reads'] = params.allow_multimap ? 'Allow' : 'Disallow'
+if (params.allow_overlap) summary['Overlap Reads'] = params.allow_overlap ? 'Allow' : 'Disallow'
+if (params.count_fractionally) summary['Fractional counting'] = params.count_fractionally ? 'Enabled' : 'Disabled'
+if (params.group_features_type) summary['Biotype GTF field'] = params.group_features_type
+
 summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
 summary['Output dir']       = params.outdir
@@ -220,7 +244,7 @@ Channel.from(summary.collect{ [it.key, it.value] })
 process get_software_versions {
 
     // TODO nf-core: Change all-in-out container later
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.2"
 
     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
         saveAs: { filename ->
@@ -246,6 +270,7 @@ process get_software_versions {
     bamtools --version > v_bamtools.txt
     read_distribution.py --version > v_read_distribution.txt
     infer_experiment.py --version > v_infer_experiment.txt
+    featureCounts -v > v_featurecounts.txt
     scrape_software_versions.py &> software_versions_mqc.yaml
     """
 }
@@ -260,7 +285,7 @@ process get_software_versions {
 process fastqc {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.2"
     
     publishDir "${params.outdir}/fastqc", mode: 'copy',
         saveAs: { filename ->
@@ -295,7 +320,7 @@ process fastqc {
 process fastqmcf  {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.2"
 
     publishDir "${params.outdir}/fastqmcf", mode: 'copy', overwrite: true
  
@@ -309,16 +334,16 @@ process fastqmcf  {
     script:
     maxReadLength = params.maxReadLength > 0 ? "-L ${params.maxReadLength}" : ''
     minReadLength = params.maxReadLength > 0 ? "-l ${params.minReadLength}" : ''
-    sKew = params.sKew > 0 ? "-k ${params.sKew}" : ''
+    skew = params.skew > 0 ? "-k ${params.skew}" : ''
     quality = params.quality > 0 ? "-q ${params.quality}" : ''
 
     if (params.single_end) {
         """
-        fastq-mcf $adapter $reads -o ${name}.trim.fastq $maxReadLength $minReadLength $sKew $quality ; gzip ${name}.trim.fastq
+        fastq-mcf $adapter $reads -o ${name}.trim.fastq $maxReadLength $minReadLength $skew $quality ; gzip ${name}.trim.fastq
         """
     } else {
         """
-        fastq-mcf $adapter ${reads[0]} ${reads[1]} -o ${name}_1.trim.fastq -o ${name}_2.trim.fastq $maxReadLength $minReadLength $sKew $quality ; gzip ${name}_1.trim.fastq && gzip ${name}_2.trim.fastq
+        fastq-mcf $adapter ${reads[0]} ${reads[1]} -o ${name}_1.trim.fastq -o ${name}_2.trim.fastq $maxReadLength $minReadLength $skew $quality ; gzip ${name}_1.trim.fastq && gzip ${name}_2.trim.fastq
         """
     }
 }
@@ -342,7 +367,7 @@ ch_hisat2_input = ch_trimmed_reads_tohisat2
 process fastqc_trimmed {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.2"
     
     publishDir "${params.outdir}/fastqc.trim", mode: 'copy',
         saveAs: { filename ->
@@ -377,7 +402,7 @@ process fastqc_trimmed {
 process hisat2 {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:hisat2test"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.2"
     
     publishDir "${params.outdir}/hisat2", mode: 'copy', overwrite: true,
         saveAs: { filename ->
@@ -398,7 +423,7 @@ process hisat2 {
         strandness = params.single_end ? "--rna-strandness R" : "--rna-strandness RF"
     }
     softclipping = params.softclipping ? '' : "--no-softclip"
-    threads_num = params.threads_num > 0 ? "-p ${params.threads_num}" : ''
+    threads_num = params.hs_threads_num > 0 ? "-p ${params.hs_threads_num}" : ''
 
     if (params.single_end) {
         if (params.stranded) {
@@ -453,13 +478,13 @@ process hisat2 {
 ch_hisat2_bam
     .into{
         hisat2_output_tobam2wig;
+        hisat2_output_tofcount;
         hisat2_output_totranspose
     }
 
 hisat2_output_totranspose
     .transpose()
     .into{
-        hisat2_output_tofcount;
         hisat2_output_toreadcoverage;
         hisat2_output_torseqc
     }
@@ -473,7 +498,7 @@ hisat2_output_totranspose
 process bam2wig {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.2"
     
     publishDir "${params.outdir}/bam_bigwig", mode: 'copy', overwrite: true
 
@@ -501,13 +526,13 @@ process bam2wig {
 process rseqc  {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.2"
 
     publishDir "${params.outdir}/rseqc", mode: 'copy',
         saveAs: {filename ->
             if (filename.indexOf("readdist.txt") > 0)          "read_distribution/$filename"
             else if (filename.indexOf("inferexp.txt") > 0)     "infer_experiment/$filename"
-            else filename
+            else "$filename"
     }
 
     input:
@@ -538,7 +563,7 @@ process readcoverage  {
     publishDir "${params.outdir}/rseqc", mode: 'copy',
         saveAs: {filename ->
             if (filename.indexOf("geneBodyCoverage.txt") > 0) "genebody_coverage/$filename"
-            else filename
+            else "$filename"
     }
 
     input:
@@ -559,6 +584,88 @@ rseqc_results_merge = rseqc_results
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
+* STEP 8 - FeatureCounts
+*/
+///////////////////////////////////////////////////////////////////////////////
+
+process featureCounts  {
+    tag "$name"
+    label 'process_medium'
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.2"
+
+    publishDir "${params.outdir}/featureCounts", mode: 'copy',
+        saveAs: {filename ->
+            if (filename.indexOf("biotype_counts") > 0) "biotype_counts/$filename"
+            else if (filename.indexOf("_gene.featureCounts.txt.summary") > 0) "gene_count_summaries/$filename"
+            else if (filename.indexOf("_gene.featureCounts.txt") > 0) "gene_counts/$filename"
+            else "$filename"
+    }
+
+    input:
+    set val(name), file(bam), file(bai) from hisat2_output_tofcount
+    file gtf from ch_gtf
+    file biotypes_header from ch_biotypes_header.collect()
+
+    output:
+    file "${name}_gene.featureCounts.txt" into featureCounts_to_merge
+    file "${name}_gene.featureCounts.txt.summary" into featureCounts_logs
+    file "${name}_biotype_counts*mqc.{txt,tsv}" optional true into featureCounts_biotype
+    
+    script:
+
+    isPairedEnd = params.single_end ? '' : "-p"
+    isStrandSpecific = params.stranded ? "-s 2" : ''
+    extraAttributes = params.extra_attributes ? "--extraAttributes ${params.extra_attributes}" : ''
+    allow_multimap = params.allow_multimap ? "-M" : ''
+    allow_overlap = params.allow_overlap ? "-O" : ''
+    count_fractionally = params.count_fractionally ? "--fraction" : ''
+    threads_num = params.fc_threads_num > 0 ? "-T ${params.fc_threads_num}" : ''
+    biotype = params.group_features_type
+
+    biotype_qc = "featureCounts -a $gtf -g $biotype -o ${name}_biotype.featureCounts.txt $isPairedEnd $isStrandSpecific ${name}.bam"
+    mod_biotype = "cut -f 1,7 ${name}_biotype.featureCounts.txt | tail -n +3 | cat $biotypes_header - >> ${name}_biotype_counts_mqc.txt && mqc_features_stat.py ${name}_biotype_counts_mqc.txt -s ${name} -f rRNA -o ${name}_biotype_counts_gs_mqc.tsv"
+
+    """
+    featureCounts -a $gtf -g ${params.group_features} -t ${params.count_type} -o ${name}_gene.featureCounts.txt  \\
+    $isPairedEnd $isStrandSpecific $extraAttributes $count_fractionally $allow_multimap $allow_overlap $threads_num ${name}.bam
+    
+    $biotype_qc
+    $mod_biotype
+    """
+}
+
+process merge_featureCounts {
+      label "mid_memory"
+      tag "$name"
+      publishDir "${params.outdir}/featureCounts", mode: 'copy'
+
+      input:
+      file input_files from featureCounts_to_merge.collect()
+
+      output:
+      file 'merged_featureCounts_gene.txt' into featurecounts_merged
+
+      script:
+      // Redirection (the `<()`) for the win!
+      // Geneid in 1st column and gene_name in 7th
+      gene_ids = "<(tail -n +2 ${input_files[0]} | cut -f1,6,7 )"
+      counts = input_files.collect{filename ->
+        // Remove first line and take third column
+        "<(tail -n +2 ${filename} | sed 's:.bam::' | cut -f8)"}.join(" ")
+      """
+      paste $gene_ids $counts > merged_featureCounts_gene.txt
+      """
+  }
+
+
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+/*
 * STEP X - MultiQC
 */
 ///////////////////////////////////////////////////////////////////////////////
@@ -575,6 +682,8 @@ process multiqc {
     file ('fastqc/*') from ch_trimmed_reads_fastqc_results.collect().ifEmpty([])
     file ('alignment/*') from ch_alignment_logs.collect().ifEmpty([])
     file ('rseqc/*') from rseqc_results_merge.collect().ifEmpty([])
+    file ('featureCounts/*') from featureCounts_logs.collect().ifEmpty([])
+    file ('featureCounts_biotype/*') from featureCounts_biotype.collect()
     file ('software_versions/*') from ch_software_versions_yaml.collect()
     file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
 
@@ -601,7 +710,7 @@ process multiqc {
 
 process output_documentation {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.2"
 
     input:
     file output_docs from ch_output_docs
