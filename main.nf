@@ -34,7 +34,7 @@ def helpMessage() {
     Fastqmcf:
       --maxReadLength [N]             Maximum remaining sequence length (Default: 75)
       --minReadLength [N]             Minimum remaining sequence length (Default: 36)
-      --sKew [N]                      sKew percentage-less-than causing cycle removal (Default: 4)
+      --skew [N]                      Skew percentage-less-than causing cycle removal (Default: 4)
       --quality [N]                   Quality threshold causing base removal (Default: 30)
     
     Hisat2:
@@ -334,16 +334,16 @@ process fastqmcf  {
     script:
     maxReadLength = params.maxReadLength > 0 ? "-L ${params.maxReadLength}" : ''
     minReadLength = params.maxReadLength > 0 ? "-l ${params.minReadLength}" : ''
-    sKew = params.sKew > 0 ? "-k ${params.sKew}" : ''
+    skew = params.skew > 0 ? "-k ${params.skew}" : ''
     quality = params.quality > 0 ? "-q ${params.quality}" : ''
 
     if (params.single_end) {
         """
-        fastq-mcf $adapter $reads -o ${name}.trim.fastq $maxReadLength $minReadLength $sKew $quality ; gzip ${name}.trim.fastq
+        fastq-mcf $adapter $reads -o ${name}.trim.fastq $maxReadLength $minReadLength $skew $quality ; gzip ${name}.trim.fastq
         """
     } else {
         """
-        fastq-mcf $adapter ${reads[0]} ${reads[1]} -o ${name}_1.trim.fastq -o ${name}_2.trim.fastq $maxReadLength $minReadLength $sKew $quality ; gzip ${name}_1.trim.fastq && gzip ${name}_2.trim.fastq
+        fastq-mcf $adapter ${reads[0]} ${reads[1]} -o ${name}_1.trim.fastq -o ${name}_2.trim.fastq $maxReadLength $minReadLength $skew $quality ; gzip ${name}_1.trim.fastq && gzip ${name}_2.trim.fastq
         """
     }
 }
