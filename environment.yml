@@ -6,6 +6,17 @@ channels:
   - bioconda
   - defaults
 dependencies:
+  - conda-forge::r-base
+  - conda-forge::r-data.table
+  - conda-forge::r-gplots
+  - conda-forge::r-markdown
+  - conda-forge::r-stringr
+  - conda-forge::r-ggplot2
+  - conda-forge::r-dplyr
+  - conda-forge::r-rtsne
+  - conda-forge::r-umap
+
+  - bioconductor-edger=3.26.5
   - conda-forge::python=3.7.3
   - conda-forge::markdown=3.1.1
   - conda-forge::pymdown-extensions=6.0

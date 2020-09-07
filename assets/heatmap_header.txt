@@ -1,0 +1,24 @@
+# id: 'sample-similarity'
+# section_name: 'edgeR: Sample Similarity'
+# description: "is generated from normalised gene counts through
+#        <a href='https://bioconductor.org/packages/release/bioc/html/edgeR.html' target='_blank'>edgeR</a>.
+#        Pearson's correlation between log<sub>2</sub> normalised CPM values are then calculated and clustered."
+# plot_type: 'heatmap'
+# anchor: 'ngi_rnaseq-sample_similarity'
+# pconfig:
+#     title: "edgeR: Pearson's correlation"
+#     xlab: True
+#     reverseColors: False
+#     colstops: [
+#         [0, '#ffffff'],
+#         [0.1, '#fcfce1'],
+#         [0.2, '#ffffcc'],
+#         [0.3, '#ffeda0'],
+#         [0.4, '#fed976'],
+#         [0.5, '#feb24c'],
+#         [0.6, '#fd8d3c'],
+#         [0.7, '#fc4e2a'],
+#         [0.8, '#e31a1c'],
+#         [0.9, '#bd0026'],
+#         [1, '#800026'],
+#     ]

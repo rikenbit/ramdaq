@@ -23,7 +23,7 @@ def helpMessage() {
     Mandatory arguments:
       --reads [file]                  Path to input data (must be surrounded with quotes)
       -profile [str]                  Configuration profile to use. Can use multiple (comma separated)
-                                      Available: conda, docker, singularity, test, awsbatch, <institute> and more
+                                      Available: docker, singularity, test, awsbatch, <institute> and more
       --local_annot_dir [str]         Base path for local annotation files
 
     Options:
@@ -56,6 +56,7 @@ def helpMessage() {
       --fasta [file]                  Path to fasta reference
 
     Other options:
+      --sampleLevel                   Used to turn off the edgeR MDS and heatmap. Set automatically when running on fewer than 3 samples
       --outdir [file]                 The output directory where the results will be saved
       --email [email]                 Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits
       --email_on_fail [email]         Same as --email, except only send mail if the workflow is not successful
@@ -138,8 +139,16 @@ ch_output_docs = file("$baseDir/docs/output.md", checkIfExists: true)
 // Tools dir
 ch_tools_dir = workflow.scriptFile.parent + "/tools"
 
+ch_mdsplot_header = Channel.fromPath("$baseDir/assets/mdsplot_header.txt", checkIfExists: true)
+ch_heatmap_header = Channel.fromPath("$baseDir/assets/heatmap_header.txt", checkIfExists: true)
 ch_biotypes_header = Channel.fromPath("$baseDir/assets/biotypes_header.txt", checkIfExists: true)
-
+ch_ercc_data = Channel.fromPath("$baseDir/assets/ercc_dataset.txt", checkIfExists: true)
+ch_ercc_corr_header = Channel.fromPath("$baseDir/assets/ercc_correlation_header.txt", checkIfExists: true)
+ch_assignedgene_header = Channel.fromPath("$baseDir/assets/barplot_assignedgene_rate_header.txt", checkIfExists: true)
+ch_num_of_detgene_header = Channel.fromPath("$baseDir/assets/barplot_num_of_detgene_header.txt", checkIfExists: true)
+ch_pcaplot_header = Channel.fromPath("$baseDir/assets/pcaplot_header.txt", checkIfExists: true)
+ch_tsneplot_header = Channel.fromPath("$baseDir/assets/tsneplot_header.txt", checkIfExists: true)
+ch_umapplot_header = Channel.fromPath("$baseDir/assets/umapplot_header.txt", checkIfExists: true)
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
@@ -244,7 +253,7 @@ Channel.from(summary.collect{ [it.key, it.value] })
 process get_software_versions {
 
     // TODO nf-core: Change all-in-out container later
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.2"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
 
     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
         saveAs: { filename ->
@@ -270,7 +279,9 @@ process get_software_versions {
     bamtools --version > v_bamtools.txt
     read_distribution.py --version > v_read_distribution.txt
     infer_experiment.py --version > v_infer_experiment.txt
+    inner_distance.py --version > v_inner_distance.txt
     featureCounts -v > v_featurecounts.txt
+    Rscript -e "library(edgeR); write(x=as.character(packageVersion('edgeR')), file='v_edgeR.txt')"
     scrape_software_versions.py &> software_versions_mqc.yaml
     """
 }
@@ -285,7 +296,7 @@ process get_software_versions {
 process fastqc {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.2"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
     
     publishDir "${params.outdir}/fastqc", mode: 'copy',
         saveAs: { filename ->
@@ -320,7 +331,7 @@ process fastqc {
 process fastqmcf  {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.2"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
 
     publishDir "${params.outdir}/fastqmcf", mode: 'copy', overwrite: true
  
@@ -367,7 +378,7 @@ ch_hisat2_input = ch_trimmed_reads_tohisat2
 process fastqc_trimmed {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.2"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
     
     publishDir "${params.outdir}/fastqc.trim", mode: 'copy',
         saveAs: { filename ->
@@ -402,7 +413,7 @@ process fastqc_trimmed {
 process hisat2 {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.2"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
     
     publishDir "${params.outdir}/hisat2", mode: 'copy', overwrite: true,
         saveAs: { filename ->
@@ -415,7 +426,8 @@ process hisat2 {
 
     output:
     set val(name), file("*.bam"), file("*.bai") into ch_hisat2_bam
-    file "*.hisat2_summary.txt" into ch_alignment_logs
+    file "*.sort.bam" into ch_hisat2_sample_corr
+    file "*.hisat2_summary.txt" into ch_alignment_logs, ch_totalseq
 
     script:
     def strandness = ''
@@ -429,20 +441,20 @@ process hisat2 {
         if (params.stranded) {
             """
             hisat2 $softclipping $threads_num -x $hisat2_idx -U $reads $strandness --summary-file ${name}.hisat2_summary.txt \\
-            | samtools view -bS - | samtools sort - -o ${name}.bam
-            samtools index ${name}.bam
+            | samtools view -bS - | samtools sort - -o ${name}.sort.bam
+            samtools index ${name}.sort.bam
 
-            bamtools filter -in ${name}.bam -out ${name}.forward.bam -script ${tools_dir}/bamtools_f_SE.json
+            bamtools filter -in ${name}.sort.bam -out ${name}.forward.bam -script ${tools_dir}/bamtools_f_SE.json
             samtools index ${name}.forward.bam
 
-            bamtools filter -in ${name}.bam -out ${name}.reverse.bam -script ${tools_dir}/bamtools_r_SE.json
+            bamtools filter -in ${name}.sort.bam -out ${name}.reverse.bam -script ${tools_dir}/bamtools_r_SE.json
             samtools index ${name}.reverse.bam
             """
         } else {
             """
             hisat2 $softclipping $threads_num -x $hisat2_idx -U $reads $strandness --summary-file ${name}.hisat2_summary.txt \\
-            | samtools view -bS - | samtools sort - -o ${name}.bam
-            samtools index ${name}.bam
+            | samtools view -bS - | samtools sort - -o ${name}.sort.bam
+            samtools index ${name}.sort.bam
             """
         }
 
@@ -450,29 +462,46 @@ process hisat2 {
         if (params.stranded) {
             """
             hisat2 $softclipping $threads_num -x $hisat2_idx -1 ${reads[0]} -2 ${reads[1]} $strandness --summary-file ${name}.hisat2_summary.txt \\
-            | samtools view -bS - | samtools sort - -o ${name}.bam
-            samtools index ${name}.bam
+            | samtools view -bS - | samtools sort - -o ${name}.sort.bam
+            samtools index ${name}.sort.bam
 
-            bamtools filter -in ${name}.bam -out ${name}.forward.bam -script ${tools_dir}/bamtools_f_PE.json
+            bamtools filter -in ${name}.sort.bam -out ${name}.forward.bam -script ${tools_dir}/bamtools_f_PE.json
             samtools index ${name}.forward.bam
 
-            bamtools filter -in ${name}.bam -out ${name}.reverse.bam -script ${tools_dir}/bamtools_r_PE.json
+            bamtools filter -in ${name}.sort.bam -out ${name}.reverse.bam -script ${tools_dir}/bamtools_r_PE.json
             samtools index ${name}.reverse.bam
 
-            samtools view -bS -f 0x40 ${name}.bam -o ${name}.R1.bam
+            samtools view -bS -f 0x40 ${name}.sort.bam -o ${name}.R1.bam
             samtools index ${name}.R1.bam
 
-            samtools view -bS -f 0x80 ${name}.bam -o ${name}.R2.bam
+            samtools view -bS -f 0x80 ${name}.sort.bam -o ${name}.R2.bam
             samtools index ${name}.R2.bam
             """
         } else {
             """
             hisat2 $softclipping $threads_num -x $hisat2_idx -1 ${reads[0]} -2 ${reads[1]} $strandness --summary-file ${name}.hisat2_summary.txt \\
-            | samtools view -bS - | samtools sort - -o ${name}.bam
-            samtools index ${name}.bam
+            | samtools view -bS - | samtools sort - -o ${name}.sort.bam
+            samtools index ${name}.sort.bam
             """
         }
     }
+}
+
+process merge_hiast2_totalSeq {
+    publishDir "${params.outdir}/hisat2", mode: 'copy'
+
+    input:
+    file input_files from ch_totalseq.collect()
+
+    output:
+    file 'merged_hisat2_totalseq.txt' into ch_totalseq_merged
+
+    script:
+    command = input_files.collect{filename ->
+        "awk '{if (FNR==1){print FILENAME, FNR, NR, \$0}}' ${filename} | sed 's:.hisat2_summary.txt::' | cut -f1,4 --delim=\" \" >> merged_hisat2_totalseq.txt"}.join(" && ")
+    """
+    $command
+    """
 }
 
 ch_hisat2_bam
@@ -489,6 +518,7 @@ hisat2_output_totranspose
         hisat2_output_torseqc
     }
 
+
 ///////////////////////////////////////////////////////////////////////////////
 /*
 * STEP 5 - Bam to BigWig
@@ -498,7 +528,7 @@ hisat2_output_totranspose
 process bam2wig {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.2"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
     
     publishDir "${params.outdir}/bam_bigwig", mode: 'copy', overwrite: true
 
@@ -512,7 +542,7 @@ process bam2wig {
 
     script:
     """
-    bam2wig.py -i ${name}.bam -s $chrsize -u -o ${name}
+    bam2wig.py -i ${name}.sort.bam -s $chrsize -u -o ${name}
     """
 
 }
@@ -526,12 +556,13 @@ process bam2wig {
 process rseqc  {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.2"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
 
     publishDir "${params.outdir}/rseqc", mode: 'copy',
         saveAs: {filename ->
             if (filename.indexOf("readdist.txt") > 0)          "read_distribution/$filename"
             else if (filename.indexOf("inferexp.txt") > 0)     "infer_experiment/$filename"
+            else if (filename.indexOf("inner_distance") > 0)   "inner_distance/$filename"
             else "$filename"
     }
 
@@ -541,11 +572,38 @@ process rseqc  {
 
     output:
     file "*.{txt,pdf,r,xls}" into rseqc_results
+    file "*.sort.readdist.txt" optional true into ch_totalread
     
     script:
+    if (params.single_end) {
+        """
+        read_distribution.py -i $bam -r $bed > ${bam.baseName}.readdist.txt
+        infer_experiment.py -i $bam -r $bed > ${bam.baseName}.inferexp.txt
+        """
+    } else {
+        """
+        read_distribution.py -i $bam -r $bed > ${bam.baseName}.readdist.txt
+        infer_experiment.py -i $bam -r $bed > ${bam.baseName}.inferexp.txt
+        inner_distance.py -i $bam -o ${bam.baseName} -r $bed
+        """
+    }
+
+}
+
+process merge_readDist_totalRead {
+    publishDir "${params.outdir}/rseqc/read_distribution", mode: 'copy'
+
+    input:
+    file input_files from ch_totalread.collect()
+
+    output:
+    file 'merged_readdist_totalread.txt' into ch_totalread_merged
+
+    script:
+    command = input_files.collect{filename ->
+        "awk '{if (FNR==1){print FILENAME, FNR, NR, \$0}}' ${filename} | sed 's:.sort.readdist.txt::' | cut -f1,24 --delim=\" \" >> merged_readdist_totalread.txt"}.join(" && ")
     """
-    read_distribution.py -i $bam -r $bed > ${bam.baseName}.readdist.txt
-    infer_experiment.py -i $bam -r $bed > ${bam.baseName}.inferexp.txt
+    $command
     """
 }
 
@@ -591,7 +649,7 @@ rseqc_results_merge = rseqc_results
 process featureCounts  {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.2"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
 
     publishDir "${params.outdir}/featureCounts", mode: 'copy',
         saveAs: {filename ->
@@ -607,7 +665,7 @@ process featureCounts  {
     file biotypes_header from ch_biotypes_header.collect()
 
     output:
-    file "${name}_gene.featureCounts.txt" into featureCounts_to_merge
+    file "${name}_gene.featureCounts.txt" into geneCounts, featureCounts_to_merge
     file "${name}_gene.featureCounts.txt.summary" into featureCounts_logs
     file "${name}_biotype_counts*mqc.{txt,tsv}" optional true into featureCounts_biotype
     
@@ -622,12 +680,12 @@ process featureCounts  {
     threads_num = params.fc_threads_num > 0 ? "-T ${params.fc_threads_num}" : ''
     biotype = params.group_features_type
 
-    biotype_qc = "featureCounts -a $gtf -g $biotype -o ${name}_biotype.featureCounts.txt $isPairedEnd $isStrandSpecific ${name}.bam"
+    biotype_qc = "featureCounts -a $gtf -g $biotype -o ${name}_biotype.featureCounts.txt $isPairedEnd $isStrandSpecific ${name}.sort.bam"
     mod_biotype = "cut -f 1,7 ${name}_biotype.featureCounts.txt | tail -n +3 | cat $biotypes_header - >> ${name}_biotype_counts_mqc.txt && mqc_features_stat.py ${name}_biotype_counts_mqc.txt -s ${name} -f rRNA -o ${name}_biotype_counts_gs_mqc.tsv"
 
     """
     featureCounts -a $gtf -g ${params.group_features} -t ${params.count_type} -o ${name}_gene.featureCounts.txt  \\
-    $isPairedEnd $isStrandSpecific $extraAttributes $count_fractionally $allow_multimap $allow_overlap $threads_num ${name}.bam
+    $isPairedEnd $isStrandSpecific $extraAttributes $count_fractionally $allow_multimap $allow_overlap $threads_num ${name}.sort.bam
     
     $biotype_qc
     $mod_biotype
@@ -635,15 +693,13 @@ process featureCounts  {
 }
 
 process merge_featureCounts {
-      label "mid_memory"
-      tag "$name"
       publishDir "${params.outdir}/featureCounts", mode: 'copy'
 
       input:
       file input_files from featureCounts_to_merge.collect()
 
       output:
-      file 'merged_featureCounts_gene.txt' into featurecounts_merged
+      file 'merged_featureCounts_gene.txt' into ch_tpm_count, featurecounts_merged
 
       script:
       // Redirection (the `<()`) for the win!
@@ -657,10 +713,160 @@ process merge_featureCounts {
       """
   }
 
+process calc_TPMCounts {
+      publishDir "${params.outdir}/featureCounts", mode: 'copy'
+      container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
 
+      input:
+      file input_file from ch_tpm_count
 
+      output:
+      file '*_TPM.txt' into tpmcount_plot, tpmcount_merged
+      file '*_ERCC.txt' optional true into ercccount_chk, ercccount_merged
 
+      script:
+      """
+      calc_TPMCounts.r $input_file
+      """
+}
 
+ercc_list = ercccount_chk.toList() 
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+* STEP 9 - edgeR MDS and heatmap
+*/
+///////////////////////////////////////////////////////////////////////////////
+
+process sample_correlation {
+    publishDir "${params.outdir}/sample_correlation", mode: 'copy'
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
+
+    input:
+    file input_files from geneCounts.collect()
+    val num_bams from ch_hisat2_sample_corr.count()
+    file mdsplot_header from ch_mdsplot_header
+    file heatmap_header from ch_heatmap_header
+
+    output:
+    file "*.{txt,pdf,csv}" into sample_correlation_results
+
+    when:
+    num_bams > 2 && (!params.sampleLevel)
+
+    script:
+    """
+    edgeR_heatmap_MDS.r $input_files
+    cat $mdsplot_header edgeR_MDS_Aplot_coordinates_mqc.csv >> tmp_file
+    mv tmp_file edgeR_MDS_Aplot_coordinates_mqc.csv
+    cat $heatmap_header log2CPM_sample_correlation_mqc.csv >> tmp_file
+    mv tmp_file log2CPM_sample_correlation_mqc.csv
+    """
+
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+* STEP 10 - ERCC corr barplot
+*/
+///////////////////////////////////////////////////////////////////////////////
+
+process ercc_correlation {
+    publishDir "${params.outdir}/ercc_correlation", mode: 'copy'
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
+
+    when:
+    ercc_list.val.size()>0
+
+    input:
+    file ercc_count from ercccount_merged
+    file ercc_data from ch_ercc_data
+    file ercc_heater from ch_ercc_corr_header
+
+    output:
+    file "*.{txt,pdf,csv}" into ercc_correlation_results
+
+    script:
+    """
+    drawplot_ERCC_corr.r $ercc_count $ercc_data
+    cat $ercc_heater ercc_countsmol_correlation.csv >> tmp_file
+    mv tmp_file ercc_countsmol_correlation_mqc.csv
+    """
+
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+* STEP 11 - assigned gene rate barplot
+*/
+///////////////////////////////////////////////////////////////////////////////
+
+process create_plots_assignedgene {
+    publishDir "${params.outdir}/plots_bar_assignedgene", mode: 'copy'
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
+
+    input:
+    file totalseq_merged from ch_totalseq_merged
+    file totalread_merged from ch_totalread_merged
+    file assignedgene_heater from ch_assignedgene_header
+
+    output:
+    file "*.{txt,pdf,csv}" into assignedgene_rate_results
+
+    script:
+    isPairedEnd = params.single_end ? "False" : "True"
+    """
+    drawplot_assignedgenerate_bar.r $totalseq_merged $totalread_merged $isPairedEnd
+    cat $assignedgene_heater barplot_assignedgene_rate.csv >> tmp_file
+    mv tmp_file barplot_assignedgene_rate_mqc.csv
+    """
+
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+* STEP 12 - create plot from TPM counts
+*/
+///////////////////////////////////////////////////////////////////////////////
+
+process create_plots_fromTPM {
+    publishDir "${params.outdir}/plots_from_tpmcounts", mode: 'copy'
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
+
+    input:
+    file tpm_count from tpmcount_plot
+    file detgene_header from ch_num_of_detgene_header
+    file pcaplot_header from ch_pcaplot_header
+    file tsneplot_header from ch_tsneplot_header
+    file umapplot_header from ch_umapplot_header
+
+    output:
+    file "*.{txt,pdf,csv}" into plots_from_tpmcounts_results
+
+    script:
+    """
+    drawplot_tpm_counts.r $tpm_count
+    cat $detgene_header barplot_num_of_detectedgene.csv >> tmp_file
+    mv tmp_file barplot_num_of_detectedgene_mqc.csv
+    
+    if [[ -f pcaplot_tpm_allsample.csv ]]; then
+        cat $pcaplot_header pcaplot_tpm_allsample.csv >> tmp_file
+        mv tmp_file pcaplot_tpm_allsample_mqc.csv
+    fi
+    
+    if [[ -f tsneplot_tpm_allsample.csv ]]; then
+        cat $tsneplot_header tsneplot_tpm_allsample.csv >> tmp_file
+        mv tmp_file tsneplot_tpm_allsample_mqc.csv
+    fi
+
+    if [[ -f umapplot_tpm_allsample.csv ]]; then
+        cat $umapplot_header umapplot_tpm_allsample.csv >> tmp_file
+        mv tmp_file umapplot_tpm_allsample_mqc.csv
+    fi
+    
+    """
+
+}
 
 
 
@@ -684,6 +890,10 @@ process multiqc {
     file ('rseqc/*') from rseqc_results_merge.collect().ifEmpty([])
     file ('featureCounts/*') from featureCounts_logs.collect().ifEmpty([])
     file ('featureCounts_biotype/*') from featureCounts_biotype.collect()
+    file ('sample_correlation_results/*') from sample_correlation_results.collect().ifEmpty([]) // If the Edge-R is not run create an Empty array
+    file ('ercc_correlation_results/*') from ercc_correlation_results.collect().ifEmpty([]) 
+    file ('plots_bar_assignedgene/*') from assignedgene_rate_results.collect().ifEmpty([]) 
+    file ('plots_from_tpmcounts/*') from plots_from_tpmcounts_results.collect().ifEmpty([]) 
     file ('software_versions/*') from ch_software_versions_yaml.collect()
     file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
 
@@ -710,7 +920,7 @@ process multiqc {
 
 process output_documentation {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.2"
+    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
 
     input:
     file output_docs from ch_output_docs

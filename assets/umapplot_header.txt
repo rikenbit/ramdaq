@@ -1,0 +1,9 @@
+# id: 'tpm-counts-umapplot'
+# section_name: 'UMAP Plot'
+# description: "show UMAP using all samples."
+# plot_type: 'scatter'
+# anchor: 'tpm-counts-umapplot'
+# pconfig:
+#     xlab: 'V1'
+#     title: 'UMAP Plot'
+#     ylab: 'V2'
