@@ -1,0 +1,9 @@
+# id: 'tpm-counts-pcaplot'
+# section_name: 'PCA Plot'
+# description: "show principal component analysis using all samples."
+# plot_type: 'scatter'
+# anchor: 'tpm-counts-pcaplot'
+# pconfig:
+#     xlab: 'PC1'
+#     title: 'PCA Plot'
+#     ylab: 'PC2'

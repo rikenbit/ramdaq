@@ -1,0 +1,10 @@
+#id: 'num_of_detectedgene'
+#section_name: 'Number of detected genes'
+#description: "show number of detected genes from TPM counts (TPM>0)"
+#plot_type: 'bargraph'
+#anchor: 'num_of_detectedgene'
+#pconfig:
+#    title: 'Number of detected genes'
+#    cpswitch: False
+#    tt_percentages: False
+

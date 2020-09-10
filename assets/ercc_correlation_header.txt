@@ -1,0 +1,11 @@
+#id: 'ercc_correlation'
+#section_name: 'ERCC: counts and mol-log correlation'
+#description: "show correlation coefficient between samples ERCC counts and ERCC mol(log)."
+#plot_type: 'bargraph'
+#anchor: 'ercc_correlation'
+#pconfig:
+#    title: 'ERCC counts and mol-log correlation'
+#    cpswitch: False
+#    tt_decimals: 2
+#    tt_percentages: False
+

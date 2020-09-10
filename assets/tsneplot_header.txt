@@ -1,0 +1,9 @@
+# id: 'tpm-counts-tsneplot'
+# section_name: 'tSNE Plot'
+# description: "show tSNE using all samples."
+# plot_type: 'scatter'
+# anchor: 'tpm-counts-tsneplot'
+# pconfig:
+#     xlab: 'V1'
+#     title: 'tSNE Plot'
+#     ylab: 'V2'
