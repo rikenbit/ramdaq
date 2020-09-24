@@ -30,6 +30,7 @@ def helpMessage() {
       --genome [str]                  Name of iGenomes reference
       --single_end                    Specifies that the input is single-end reads
       --stranded                      Specifies that the input is stranded reads
+      --saveReference                 Save the generated reference files to the results directory
 
     Fastqmcf:
       --maxReadLength [N]             Maximum remaining sequence length (Default: 75)
@@ -98,14 +99,34 @@ params.gtf = params.genome ? params.genomes[ params.genome ].gtf ?: false : fals
 if (params.adapter) { ch_adapter = file(params.adapter, checkIfExists: true) } else { exit 1, "Adapter file not found: ${params.adapter}" }
 
 if (params.hisat2_idx) {
-    check_hisat2_idx = Channel
+    if (params.hisat2_idx.endsWith('.tar.gz')) {
+        file(params.hisat2_idx, checkIfExists: true)
+
+        process untar_hisat2_idx {
+            publishDir path: { params.saveReference ? "${params.outdir}/reference_genome/hisat2" : params.outdir },
+               saveAs: { params.saveReference ? it : null }, mode: 'copy'
+
+            input:
+            path gz from params.hisat2_idx
+
+            output:
+            file "$untar/*.ht2" into ch_hisat2_idx
+
+            script:
+            untar = gz.toString() - '.tar.gz'
+            """
+            tar -xvf $gz
+            """
+        }
+        
+    } else {
+        ch_hisat2_idx = Channel
         .from(params.hisat2_idx)
-        .flatMap{file(params.hisat2_idx + "*", checkIfExists: true)}
+        .flatMap{file(params.hisat2_idx, checkIfExists: true)}
         .ifEmpty { exit 1, "HISAT2 index files not found: ${params.hisat2_idx}" }
-    
-    ch_hisat2_idx = Channel
-        .from(params.hisat2_idx)
-        .map{[it, file(it + "*")]}
+        
+        //ch_hisat2_idx = file(params.hisat2_idx, checkIfExists: true)
+    }
 }
 
 if (params.chrsize) { ch_chrsize= file(params.chrsize, checkIfExists: true) } else { exit 1, "Chromosome size file not found: ${params.chrsize}" }
@@ -193,7 +214,8 @@ summary['Reads']            = params.reads
 //summary['Fasta Ref']        = params.fasta
 summary['Data Type']        = params.single_end ? 'Single-End' : 'Paired-End'
 summary['Strandness']       = params.stranded ? 'Stranded' : 'Unstranded'
-if (params.hisat2_idx)summary['HISAT2 Index'] = params.hisat2_idx
+summary['Save Reference']   = params.saveReference ? 'Yes' : 'No'
+if (params.hisat2_idx) summary['HISAT2 Index'] = params.hisat2_idx
 if (params.bed) summary['BED Annotation'] = params.bed
 if (params.gtf) summary['GTF Annotation'] = params.gtf
 if (params.allow_multimap) summary['Multimap Reads'] = params.allow_multimap ? 'Allow' : 'Disallow'
@@ -365,10 +387,6 @@ ch_trimmed_reads
         ch_trimmed_reads_tohisat2
     }
 
-ch_hisat2_input = ch_trimmed_reads_tohisat2
-    .combine(ch_hisat2_idx)
-
-
 ///////////////////////////////////////////////////////////////////////////////
 /*
 * STEP 3 - FastQC (trimmed reads)
@@ -421,7 +439,8 @@ process hisat2 {
                 }
 
     input:
-    set val(name), file(reads), hisat2_idx, file(hisat2_idx_files) from ch_hisat2_input
+    set val(name), file(reads) from ch_trimmed_reads_tohisat2
+    file hs2_indices from ch_hisat2_idx.collect()
     path tools_dir from ch_tools_dir
 
     output:
@@ -436,11 +455,12 @@ process hisat2 {
     }
     softclipping = params.softclipping ? '' : "--no-softclip"
     threads_num = params.hs_threads_num > 0 ? "-p ${params.hs_threads_num}" : ''
+    index_base = hs2_indices[0].toString() - ~/.\d.ht2l?/
 
     if (params.single_end) {
         if (params.stranded) {
             """
-            hisat2 $softclipping $threads_num -x $hisat2_idx -U $reads $strandness --summary-file ${name}.hisat2_summary.txt \\
+            hisat2 $softclipping $threads_num -x $index_base -U $reads $strandness --summary-file ${name}.hisat2_summary.txt \\
             | samtools view -bS - | samtools sort - -o ${name}.sort.bam
             samtools index ${name}.sort.bam
 
@@ -452,7 +472,7 @@ process hisat2 {
             """
         } else {
             """
-            hisat2 $softclipping $threads_num -x $hisat2_idx -U $reads $strandness --summary-file ${name}.hisat2_summary.txt \\
+            hisat2 $softclipping $threads_num -x $index_base -U $reads $strandness --summary-file ${name}.hisat2_summary.txt \\
             | samtools view -bS - | samtools sort - -o ${name}.sort.bam
             samtools index ${name}.sort.bam
             """
@@ -461,7 +481,7 @@ process hisat2 {
     } else {
         if (params.stranded) {
             """
-            hisat2 $softclipping $threads_num -x $hisat2_idx -1 ${reads[0]} -2 ${reads[1]} $strandness --summary-file ${name}.hisat2_summary.txt \\
+            hisat2 $softclipping $threads_num -x $index_base -1 ${reads[0]} -2 ${reads[1]} $strandness --summary-file ${name}.hisat2_summary.txt \\
             | samtools view -bS - | samtools sort - -o ${name}.sort.bam
             samtools index ${name}.sort.bam
 
@@ -479,7 +499,7 @@ process hisat2 {
             """
         } else {
             """
-            hisat2 $softclipping $threads_num -x $hisat2_idx -1 ${reads[0]} -2 ${reads[1]} $strandness --summary-file ${name}.hisat2_summary.txt \\
+            hisat2 $softclipping $threads_num -x $index_base -1 ${reads[0]} -2 ${reads[1]} $strandness --summary-file ${name}.hisat2_summary.txt \\
             | samtools view -bS - | samtools sort - -o ${name}.sort.bam
             samtools index ${name}.sort.bam
             """
@@ -616,7 +636,7 @@ process merge_readDist_totalRead {
 process readcoverage  {
     tag "$name"
     label 'process_medium'
-    container "yuifu/readcoverage.jl:0.1.2"
+    container "yuifu/readcoverage.jl:0.1.2-workaround"
 
     publishDir "${params.outdir}/rseqc", mode: 'copy',
         saveAs: {filename ->
