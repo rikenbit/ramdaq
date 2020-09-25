@@ -90,7 +90,7 @@ if (params.genomes && params.genome && !params.genomes.containsKey(params.genome
 
 // Configurable variables
 params.adapter = params.genome ? params.genomes[ params.genome ].adapter ?: false : false
-params.hisat2_idx = params.genome ? params.genomes[ params.genome ].hisat2 ?: false : false
+params.hisat2_idx = params.genome ? params.genomes[ params.genome ].hisat2_idx ?: false : false
 params.chrsize = params.genome ? params.genomes[ params.genome ].chrsize ?: false : false
 params.bed = params.genome ? params.genomes[ params.genome ].bed ?: false : false
 params.gtf = params.genome ? params.genomes[ params.genome ].gtf ?: false : false
