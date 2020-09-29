@@ -56,7 +56,9 @@ The nf-core/ramdaq pipeline comes with documentation about the pipeline, found i
 
 ## Credits
 
-nf-core/ramdaq was originally written by Haruka Ozaki.
+nf-core/ramdaq was originally written by Mika Yoshimura and Haruka Ozaki in the collaboration of [Laboratory for Bioinformatics Research, RIKEN Center for Biosystems Dynamics Research](https://bit.riken.jp/) and [Bioinformatics Laboratory, Faculty of Medicine, University of Tsukuba](https://sites.google.com/view/ozakilab).
+
+
 
 ## Contributions and Support
 
