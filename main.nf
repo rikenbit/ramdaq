@@ -275,9 +275,6 @@ Channel.from(summary.collect{ [it.key, it.value] })
 
 process get_software_versions {
 
-    // TODO nf-core: Change all-in-out container later
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
-
     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
         saveAs: { filename ->
                       if (filename.indexOf(".csv") > 0) filename
@@ -319,7 +316,6 @@ process get_software_versions {
 process fastqc {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
     
     publishDir "${params.outdir}/fastqc", mode: 'copy',
         saveAs: { filename ->
@@ -354,7 +350,6 @@ process fastqc {
 process fastqmcf  {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
 
     publishDir "${params.outdir}/fastqmcf", mode: 'copy', overwrite: true
  
@@ -397,7 +392,6 @@ ch_trimmed_reads
 process fastqc_trimmed {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
     
     publishDir "${params.outdir}/fastqc.trim", mode: 'copy',
         saveAs: { filename ->
@@ -432,7 +426,6 @@ process fastqc_trimmed {
 process hisat2 {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
     
     publishDir "${params.outdir}/hisat2", mode: 'copy', overwrite: true,
         saveAs: { filename ->
@@ -584,7 +577,6 @@ ch_hisat2_sample_corr
 process bam2wig {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
     
     publishDir "${params.outdir}/bam_bigwig", mode: 'copy', overwrite: true
 
@@ -612,7 +604,6 @@ process bam2wig {
 process rseqc  {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
 
     publishDir "${params.outdir}/rseqc", mode: 'copy',
         saveAs: {filename ->
@@ -705,7 +696,6 @@ rseqc_results_merge = rseqc_results
 process featureCounts  {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
 
     publishDir "${params.outdir}/featureCounts", mode: 'copy',
         saveAs: {filename ->
@@ -771,7 +761,6 @@ process merge_featureCounts {
 
 process calc_TPMCounts {
       publishDir "${params.outdir}/featureCounts", mode: 'copy'
-      container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
 
       input:
       file input_file from ch_tpm_count
@@ -796,7 +785,6 @@ ercc_list = ercccount_chk.toList()
 
 process sample_correlation {
     publishDir "${params.outdir}/sample_correlation", mode: 'copy'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
 
     input:
     file input_files from geneCounts.collect()
@@ -829,7 +817,6 @@ process sample_correlation {
 
 process ercc_correlation {
     publishDir "${params.outdir}/ercc_correlation", mode: 'copy'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
 
     when:
     ercc_list.val.size()>0
@@ -859,7 +846,6 @@ process ercc_correlation {
 
 process create_plots_assignedgene {
     publishDir "${params.outdir}/plots_bar_assignedgene", mode: 'copy'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
 
     input:
     file totalseq_merged from ch_totalseq_merged
@@ -887,7 +873,6 @@ process create_plots_assignedgene {
 
 process create_plots_fromTPM {
     publishDir "${params.outdir}/plots_from_tpmcounts", mode: 'copy'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
 
     input:
     file tpm_count from tpmcount_plot
@@ -976,7 +961,6 @@ process multiqc {
 
 process output_documentation {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
 
     input:
     file output_docs from ch_output_docs
