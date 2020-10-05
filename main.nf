@@ -222,6 +222,7 @@ if (params.allow_multimap) summary['Multimap Reads'] = params.allow_multimap ? '
 if (params.allow_overlap) summary['Overlap Reads'] = params.allow_overlap ? 'Allow' : 'Disallow'
 if (params.count_fractionally) summary['Fractional counting'] = params.count_fractionally ? 'Enabled' : 'Disabled'
 if (params.group_features_type) summary['Biotype GTF field'] = params.group_features_type
+summary['Min Mapped Reads'] = params.min_mapped_reads
 
 summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
@@ -444,8 +445,8 @@ process hisat2 {
     path tools_dir from ch_tools_dir
 
     output:
-    set val(name), file("*.bam"), file("*.bai") into ch_hisat2_bam
-    file "*.sort.bam" into ch_hisat2_sample_corr
+    set val(name), file("*.bam"), file("*.bai"), file("*.flagstat") into ch_hisat2_bam
+    set val(name), file("*.sort.bam"), file("*.flagstat") into ch_hisat2_sample_corr
     file "*.hisat2_summary.txt" into ch_alignment_logs, ch_totalseq
 
     script:
@@ -475,6 +476,7 @@ process hisat2 {
             hisat2 $softclipping $threads_num -x $index_base -U $reads $strandness --summary-file ${name}.hisat2_summary.txt \\
             | samtools view -bS - | samtools sort - -o ${name}.sort.bam
             samtools index ${name}.sort.bam
+            samtools flagstat ${name}.sort.bam > ${name}.sort.bam.flagstat
             """
         }
 
@@ -524,6 +526,36 @@ process merge_hiast2_totalSeq {
     """
 }
 
+// Get total number of mapped reads from flagstat file
+def get_mapped_from_flagstat(flagstat) {
+    def mapped = 0
+    flagstat.eachLine { line ->
+        if (line.contains(' mapped (')) {
+            mapped = line.tokenize().first().toInteger()
+        }
+    }
+    return mapped
+}
+
+// Function that checks the number of mapped reads from flagstat output
+// and returns true if > params.min_mapped_reads and otherwise false
+def check_mapped(name,flagstat,min_mapped_reads=10) {
+    mapped = get_mapped_from_flagstat(flagstat)
+
+    if (mapped < min_mapped_reads.toInteger()) {
+        log.info ">>>> $name FAILED MAPPED READ THRESHOLD: ${mapped} < ${params.min_mapped_reads}. IGNORING FOR FURTHER DOWNSTREAM ANALYSIS! <<<<"
+        return false
+    } else {
+        return true
+    }
+}
+
+// Remove samples that failed mapped read threshold
+ch_hisat2_bam
+    .filter { name, bam, bai, flagstat -> check_mapped(name,flagstat,params.min_mapped_reads) }
+    .map { it[0..2] }
+    .set { ch_hisat2_bam }
+
 ch_hisat2_bam
     .into{
         hisat2_output_tobam2wig;
@@ -538,6 +570,10 @@ hisat2_output_totranspose
         hisat2_output_torseqc
     }
 
+ch_hisat2_sample_corr
+    .filter { name, bam, flagstat -> check_mapped(name,flagstat,params.min_mapped_reads) }
+    .map { it[1] }
+    .set { ch_hisat2_sample_corr }
 
 ///////////////////////////////////////////////////////////////////////////////
 /*

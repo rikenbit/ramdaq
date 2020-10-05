@@ -32,4 +32,5 @@ dependencies:
   - bioconda::ucsc-wigtobigwig
   - bioconda::bamtools=2.5.1
   - bioconda::subread=2.0.1
+  - bioconda::multiqc=1.9
 
