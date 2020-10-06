@@ -222,6 +222,7 @@ if (params.allow_multimap) summary['Multimap Reads'] = params.allow_multimap ? '
 if (params.allow_overlap) summary['Overlap Reads'] = params.allow_overlap ? 'Allow' : 'Disallow'
 if (params.count_fractionally) summary['Fractional counting'] = params.count_fractionally ? 'Enabled' : 'Disabled'
 if (params.group_features_type) summary['Biotype GTF field'] = params.group_features_type
+summary['Min Mapped Reads'] = params.min_mapped_reads
 
 summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
@@ -274,9 +275,6 @@ Channel.from(summary.collect{ [it.key, it.value] })
 
 process get_software_versions {
 
-    // TODO nf-core: Change all-in-out container later
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
-
     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
         saveAs: { filename ->
                       if (filename.indexOf(".csv") > 0) filename
@@ -318,7 +316,6 @@ process get_software_versions {
 process fastqc {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
     
     publishDir "${params.outdir}/fastqc", mode: 'copy',
         saveAs: { filename ->
@@ -353,7 +350,6 @@ process fastqc {
 process fastqmcf  {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
 
     publishDir "${params.outdir}/fastqmcf", mode: 'copy', overwrite: true
  
@@ -396,7 +392,6 @@ ch_trimmed_reads
 process fastqc_trimmed {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
     
     publishDir "${params.outdir}/fastqc.trim", mode: 'copy',
         saveAs: { filename ->
@@ -431,7 +426,6 @@ process fastqc_trimmed {
 process hisat2 {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
     
     publishDir "${params.outdir}/hisat2", mode: 'copy', overwrite: true,
         saveAs: { filename ->
@@ -444,8 +438,8 @@ process hisat2 {
     path tools_dir from ch_tools_dir
 
     output:
-    set val(name), file("*.bam"), file("*.bai") into ch_hisat2_bam
-    file "*.sort.bam" into ch_hisat2_sample_corr
+    set val(name), file("*.bam"), file("*.bai"), file("*.flagstat") into ch_hisat2_bam
+    set val(name), file("*.sort.bam"), file("*.flagstat") into ch_hisat2_sample_corr
     file "*.hisat2_summary.txt" into ch_alignment_logs, ch_totalseq
 
     script:
@@ -475,6 +469,7 @@ process hisat2 {
             hisat2 $softclipping $threads_num -x $index_base -U $reads $strandness --summary-file ${name}.hisat2_summary.txt \\
             | samtools view -bS - | samtools sort - -o ${name}.sort.bam
             samtools index ${name}.sort.bam
+            samtools flagstat ${name}.sort.bam > ${name}.sort.bam.flagstat
             """
         }
 
@@ -524,6 +519,36 @@ process merge_hiast2_totalSeq {
     """
 }
 
+// Get total number of mapped reads from flagstat file
+def get_mapped_from_flagstat(flagstat) {
+    def mapped = 0
+    flagstat.eachLine { line ->
+        if (line.contains(' mapped (')) {
+            mapped = line.tokenize().first().toInteger()
+        }
+    }
+    return mapped
+}
+
+// Function that checks the number of mapped reads from flagstat output
+// and returns true if > params.min_mapped_reads and otherwise false
+def check_mapped(name,flagstat,min_mapped_reads=10) {
+    mapped = get_mapped_from_flagstat(flagstat)
+
+    if (mapped < min_mapped_reads.toInteger()) {
+        log.info ">>>> $name FAILED MAPPED READ THRESHOLD: ${mapped} < ${params.min_mapped_reads}. IGNORING FOR FURTHER DOWNSTREAM ANALYSIS! <<<<"
+        return false
+    } else {
+        return true
+    }
+}
+
+// Remove samples that failed mapped read threshold
+ch_hisat2_bam
+    .filter { name, bam, bai, flagstat -> check_mapped(name,flagstat,params.min_mapped_reads) }
+    .map { it[0..2] }
+    .set { ch_hisat2_bam }
+
 ch_hisat2_bam
     .into{
         hisat2_output_tobam2wig;
@@ -538,6 +563,10 @@ hisat2_output_totranspose
         hisat2_output_torseqc
     }
 
+ch_hisat2_sample_corr
+    .filter { name, bam, flagstat -> check_mapped(name,flagstat,params.min_mapped_reads) }
+    .map { it[1] }
+    .set { ch_hisat2_sample_corr }
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
@@ -548,7 +577,6 @@ hisat2_output_totranspose
 process bam2wig {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
     
     publishDir "${params.outdir}/bam_bigwig", mode: 'copy', overwrite: true
 
@@ -576,7 +604,6 @@ process bam2wig {
 process rseqc  {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
 
     publishDir "${params.outdir}/rseqc", mode: 'copy',
         saveAs: {filename ->
@@ -669,7 +696,6 @@ rseqc_results_merge = rseqc_results
 process featureCounts  {
     tag "$name"
     label 'process_medium'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
 
     publishDir "${params.outdir}/featureCounts", mode: 'copy',
         saveAs: {filename ->
@@ -735,7 +761,6 @@ process merge_featureCounts {
 
 process calc_TPMCounts {
       publishDir "${params.outdir}/featureCounts", mode: 'copy'
-      container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
 
       input:
       file input_file from ch_tpm_count
@@ -760,7 +785,6 @@ ercc_list = ercccount_chk.toList()
 
 process sample_correlation {
     publishDir "${params.outdir}/sample_correlation", mode: 'copy'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
 
     input:
     file input_files from geneCounts.collect()
@@ -793,7 +817,6 @@ process sample_correlation {
 
 process ercc_correlation {
     publishDir "${params.outdir}/ercc_correlation", mode: 'copy'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
 
     when:
     ercc_list.val.size()>0
@@ -823,7 +846,6 @@ process ercc_correlation {
 
 process create_plots_assignedgene {
     publishDir "${params.outdir}/plots_bar_assignedgene", mode: 'copy'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
 
     input:
     file totalseq_merged from ch_totalseq_merged
@@ -851,7 +873,6 @@ process create_plots_assignedgene {
 
 process create_plots_fromTPM {
     publishDir "${params.outdir}/plots_from_tpmcounts", mode: 'copy'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
 
     input:
     file tpm_count from tpmcount_plot
@@ -940,7 +961,6 @@ process multiqc {
 
 process output_documentation {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
-    container "docker.io/myoshimura080822/nfcore_ramdaq:0.9.3.3"
 
     input:
     file output_docs from ch_output_docs
