@@ -439,7 +439,8 @@ process hisat2 {
 
     output:
     set val(name), file("*.bam"), file("*.bai"), file("*.flagstat") into ch_hisat2_bam
-    set val(name), file("*.sort.bam"), file("*.flagstat") into ch_hisat2_sample_corr
+    set val(name), file("*.sort.bam"), file("*.sort.bam.bai"), file("*.sort.bam.flagstat") into ch_hisat2_bamsort
+    set val(name), file("*.sort.bam"), file("*.sort.bam.flagstat") into ch_hisat2_bamcount
     file "*.hisat2_summary.txt" into ch_alignment_logs, ch_totalseq
 
     script:
@@ -457,12 +458,15 @@ process hisat2 {
             hisat2 $softclipping $threads_num -x $index_base -U $reads $strandness --summary-file ${name}.hisat2_summary.txt \\
             | samtools view -bS - | samtools sort - -o ${name}.sort.bam
             samtools index ${name}.sort.bam
+            samtools flagstat ${name}.sort.bam > ${name}.sort.bam.flagstat
 
             bamtools filter -in ${name}.sort.bam -out ${name}.forward.bam -script ${tools_dir}/bamtools_f_SE.json
             samtools index ${name}.forward.bam
+            samtools flagstat ${name}.forward.bam > ${name}.forward.bam.flagstat
 
             bamtools filter -in ${name}.sort.bam -out ${name}.reverse.bam -script ${tools_dir}/bamtools_r_SE.json
             samtools index ${name}.reverse.bam
+            samtools flagstat ${name}.reverse.bam > ${name}.reverse.bam.flagstat
             """
         } else {
             """
@@ -479,24 +483,30 @@ process hisat2 {
             hisat2 $softclipping $threads_num -x $index_base -1 ${reads[0]} -2 ${reads[1]} $strandness --summary-file ${name}.hisat2_summary.txt \\
             | samtools view -bS - | samtools sort - -o ${name}.sort.bam
             samtools index ${name}.sort.bam
+            samtools flagstat ${name}.sort.bam > ${name}.sort.bam.flagstat
 
             bamtools filter -in ${name}.sort.bam -out ${name}.forward.bam -script ${tools_dir}/bamtools_f_PE.json
             samtools index ${name}.forward.bam
+            samtools flagstat ${name}.forward.bam > ${name}.forward.bam.flagstat
 
             bamtools filter -in ${name}.sort.bam -out ${name}.reverse.bam -script ${tools_dir}/bamtools_r_PE.json
             samtools index ${name}.reverse.bam
+            samtools flagstat ${name}.reverse.bam > ${name}.reverse.bam.flagstat
 
             samtools view -bS -f 0x40 ${name}.sort.bam -o ${name}.R1.bam
             samtools index ${name}.R1.bam
+            samtools flagstat ${name}.R1.bam > ${name}.R1.bam.flagstat
 
             samtools view -bS -f 0x80 ${name}.sort.bam -o ${name}.R2.bam
             samtools index ${name}.R2.bam
+            samtools flagstat ${name}.R2.bam > ${name}.R2.bam.flagstat
             """
         } else {
             """
             hisat2 $softclipping $threads_num -x $index_base -1 ${reads[0]} -2 ${reads[1]} $strandness --summary-file ${name}.hisat2_summary.txt \\
             | samtools view -bS - | samtools sort - -o ${name}.sort.bam
             samtools index ${name}.sort.bam
+            samtools flagstat ${name}.sort.bam > ${name}.sort.bam.flagstat
             """
         }
     }
@@ -520,9 +530,9 @@ process merge_hiast2_totalSeq {
 }
 
 // Get total number of mapped reads from flagstat file
-def get_mapped_from_flagstat(flagstat) {
+def get_mapped_from_flagstat(flagstat_file) {
     def mapped = 0
-    flagstat.eachLine { line ->
+    flagstat_file.eachLine { line ->
         if (line.contains(' mapped (')) {
             mapped = line.tokenize().first().toInteger()
         }
@@ -532,9 +542,9 @@ def get_mapped_from_flagstat(flagstat) {
 
 // Function that checks the number of mapped reads from flagstat output
 // and returns true if > params.min_mapped_reads and otherwise false
-def check_mapped(name,flagstat,min_mapped_reads=10) {
-    mapped = get_mapped_from_flagstat(flagstat)
-
+def check_mapped(name,flagstat_path,min_mapped_reads=10) {
+    def flagstat_file = new File(flagstat_path.toString())
+    mapped = get_mapped_from_flagstat(flagstat_file)
     if (mapped < min_mapped_reads.toInteger()) {
         log.info ">>>> $name FAILED MAPPED READ THRESHOLD: ${mapped} < ${params.min_mapped_reads}. IGNORING FOR FURTHER DOWNSTREAM ANALYSIS! <<<<"
         return false
@@ -545,28 +555,33 @@ def check_mapped(name,flagstat,min_mapped_reads=10) {
 
 // Remove samples that failed mapped read threshold
 ch_hisat2_bam
+    .transpose()
+    .into{ 
+        ch_hisat2_bam_filter
+        ch_debug }
+
+//ch_debug.println()
+
+ch_hisat2_bam_filter
     .filter { name, bam, bai, flagstat -> check_mapped(name,flagstat,params.min_mapped_reads) }
     .map { it[0..2] }
-    .set { ch_hisat2_bam }
-
-ch_hisat2_bam
     .into{
-        hisat2_output_tobam2wig;
-        hisat2_output_tofcount;
-        hisat2_output_totranspose
-    }
-
-hisat2_output_totranspose
-    .transpose()
-    .into{
-        hisat2_output_toreadcoverage;
+        hisat2_output_toreadcoverage
         hisat2_output_torseqc
     }
 
-ch_hisat2_sample_corr
+ch_hisat2_bamsort
+    .filter { name, bam, bai, flagstat -> check_mapped(name,flagstat,params.min_mapped_reads) }
+    .map { it[0..2] }
+    .into { 
+        hisat2_output_tobam2wig
+        hisat2_output_tofcount
+    }
+
+ch_hisat2_bamcount
     .filter { name, bam, flagstat -> check_mapped(name,flagstat,params.min_mapped_reads) }
     .map { it[1] }
-    .set { ch_hisat2_sample_corr }
+    .set { ch_hisat2_bamcount }
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
@@ -590,7 +605,7 @@ process bam2wig {
 
     script:
     """
-    bam2wig.py -i ${name}.sort.bam -s $chrsize -u -o ${name}
+    bam2wig.py -i ${bam} -s $chrsize -u -o ${name}
     """
 
 }
@@ -726,12 +741,12 @@ process featureCounts  {
     threads_num = params.fc_threads_num > 0 ? "-T ${params.fc_threads_num}" : ''
     biotype = params.group_features_type
 
-    biotype_qc = "featureCounts -a $gtf -g $biotype -o ${name}_biotype.featureCounts.txt $isPairedEnd $isStrandSpecific ${name}.sort.bam"
+    biotype_qc = "featureCounts -a $gtf -g $biotype -o ${name}_biotype.featureCounts.txt $isPairedEnd $isStrandSpecific ${bam}"
     mod_biotype = "cut -f 1,7 ${name}_biotype.featureCounts.txt | tail -n +3 | cat $biotypes_header - >> ${name}_biotype_counts_mqc.txt && mqc_features_stat.py ${name}_biotype_counts_mqc.txt -s ${name} -f rRNA -o ${name}_biotype_counts_gs_mqc.tsv"
 
     """
     featureCounts -a $gtf -g ${params.group_features} -t ${params.count_type} -o ${name}_gene.featureCounts.txt  \\
-    $isPairedEnd $isStrandSpecific $extraAttributes $count_fractionally $allow_multimap $allow_overlap $threads_num ${name}.sort.bam
+    $isPairedEnd $isStrandSpecific $extraAttributes $count_fractionally $allow_multimap $allow_overlap $threads_num ${bam}
     
     $biotype_qc
     $mod_biotype
@@ -788,7 +803,7 @@ process sample_correlation {
 
     input:
     file input_files from geneCounts.collect()
-    val num_bams from ch_hisat2_sample_corr.count()
+    val num_bams from ch_hisat2_bamcount.count()
     file mdsplot_header from ch_mdsplot_header
     file heatmap_header from ch_heatmap_header
 
