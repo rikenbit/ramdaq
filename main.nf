@@ -429,7 +429,7 @@ process hisat2 {
     
     publishDir "${params.outdir}/hisat2", mode: 'copy', overwrite: true,
         saveAs: { filename ->
-                    filename.indexOf(".hisat2_summary.txt") > 0 ? "logs/$filename" : "$filename"
+                    filename.indexOf("_summary.txt") > 0 ? "logs/$filename" : "$filename"
                 }
 
     input:
@@ -441,7 +441,7 @@ process hisat2 {
     set val(name), file("*.bam"), file("*.bai"), file("*.flagstat") into ch_hisat2_bam
     set val(name), file("${name}.bam"), file("${name}.bam.bai"), file("${name}.bam.flagstat") into ch_hisat2_bamsort
     set val(name), file("${name}.bam"), file("${name}.bam.flagstat") into ch_hisat2_bamcount
-    file "*.hisat2_summary.txt" into ch_alignment_logs, ch_totalseq
+    file "*_summary.txt" into ch_alignment_logs, ch_totalseq
 
     script:
     def strandness = ''
@@ -455,7 +455,7 @@ process hisat2 {
     if (params.single_end) {
         if (params.stranded) {
             """
-            hisat2 $softclipping $threads_num -x $index_base -U $reads $strandness --summary-file ${name}.hisat2_summary.txt \\
+            hisat2 $softclipping $threads_num -x $index_base -U $reads $strandness --summary-file ${name}_summary.txt \\
             | samtools view -bS - | samtools sort - -o ${name}.bam
             samtools index ${name}.bam
             samtools flagstat ${name}.bam > ${name}.bam.flagstat
@@ -470,7 +470,7 @@ process hisat2 {
             """
         } else {
             """
-            hisat2 $softclipping $threads_num -x $index_base -U $reads $strandness --summary-file ${name}.hisat2_summary.txt \\
+            hisat2 $softclipping $threads_num -x $index_base -U $reads $strandness --summary-file ${name}_summary.txt \\
             | samtools view -bS - | samtools sort - -o ${name}.bam
             samtools index ${name}.bam
             samtools flagstat ${name}.bam > ${name}.bam.flagstat
@@ -480,7 +480,7 @@ process hisat2 {
     } else {
         if (params.stranded) {
             """
-            hisat2 $softclipping $threads_num -x $index_base -1 ${reads[0]} -2 ${reads[1]} $strandness --summary-file ${name}.hisat2_summary.txt \\
+            hisat2 $softclipping $threads_num -x $index_base -1 ${reads[0]} -2 ${reads[1]} $strandness --summary-file ${name}_summary.txt \\
             | samtools view -bS - | samtools sort - -o ${name}.bam
             samtools index ${name}.bam
             samtools flagstat ${name}.bam > ${name}.bam.flagstat
@@ -503,7 +503,7 @@ process hisat2 {
             """
         } else {
             """
-            hisat2 $softclipping $threads_num -x $index_base -1 ${reads[0]} -2 ${reads[1]} $strandness --summary-file ${name}.hisat2_summary.txt \\
+            hisat2 $softclipping $threads_num -x $index_base -1 ${reads[0]} -2 ${reads[1]} $strandness --summary-file ${name}_summary.txt \\
             | samtools view -bS - | samtools sort - -o ${name}.bam
             samtools index ${name}.bam
             samtools flagstat ${name}.bam > ${name}.bam.flagstat
@@ -523,7 +523,7 @@ process merge_hiast2_totalSeq {
 
     script:
     command = input_files.collect{filename ->
-        "awk '{if (FNR==1){print FILENAME, FNR, NR, \$0}}' ${filename} | sed 's:.hisat2_summary.txt::' | cut -f1,4 --delim=\" \" >> merged_hisat2_totalseq.txt"}.join(" && ")
+        "awk '{if (FNR==1){print FILENAME, FNR, NR, \$0}}' ${filename} | sed 's:_summary.txt::' | cut -f1,4 --delim=\" \" >> merged_hisat2_totalseq.txt"}.join(" && ")
     """
     $command
     """
