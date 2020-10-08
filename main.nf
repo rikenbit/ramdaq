@@ -439,8 +439,8 @@ process hisat2 {
 
     output:
     set val(name), file("*.bam"), file("*.bai"), file("*.flagstat") into ch_hisat2_bam
-    set val(name), file("*.sort.bam"), file("*.sort.bam.bai"), file("*.sort.bam.flagstat") into ch_hisat2_bamsort
-    set val(name), file("*.sort.bam"), file("*.sort.bam.flagstat") into ch_hisat2_bamcount
+    set val(name), file("${name}.bam"), file("${name}.bam.bai"), file("${name}.bam.flagstat") into ch_hisat2_bamsort
+    set val(name), file("${name}.bam"), file("${name}.bam.flagstat") into ch_hisat2_bamcount
     file "*.hisat2_summary.txt" into ch_alignment_logs, ch_totalseq
 
     script:
@@ -456,24 +456,24 @@ process hisat2 {
         if (params.stranded) {
             """
             hisat2 $softclipping $threads_num -x $index_base -U $reads $strandness --summary-file ${name}.hisat2_summary.txt \\
-            | samtools view -bS - | samtools sort - -o ${name}.sort.bam
-            samtools index ${name}.sort.bam
-            samtools flagstat ${name}.sort.bam > ${name}.sort.bam.flagstat
+            | samtools view -bS - | samtools sort - -o ${name}.bam
+            samtools index ${name}.bam
+            samtools flagstat ${name}.bam > ${name}.bam.flagstat
 
-            bamtools filter -in ${name}.sort.bam -out ${name}.forward.bam -script ${tools_dir}/bamtools_f_SE.json
+            bamtools filter -in ${name}.bam -out ${name}.forward.bam -script ${tools_dir}/bamtools_f_SE.json
             samtools index ${name}.forward.bam
             samtools flagstat ${name}.forward.bam > ${name}.forward.bam.flagstat
 
-            bamtools filter -in ${name}.sort.bam -out ${name}.reverse.bam -script ${tools_dir}/bamtools_r_SE.json
+            bamtools filter -in ${name}.bam -out ${name}.reverse.bam -script ${tools_dir}/bamtools_r_SE.json
             samtools index ${name}.reverse.bam
             samtools flagstat ${name}.reverse.bam > ${name}.reverse.bam.flagstat
             """
         } else {
             """
             hisat2 $softclipping $threads_num -x $index_base -U $reads $strandness --summary-file ${name}.hisat2_summary.txt \\
-            | samtools view -bS - | samtools sort - -o ${name}.sort.bam
-            samtools index ${name}.sort.bam
-            samtools flagstat ${name}.sort.bam > ${name}.sort.bam.flagstat
+            | samtools view -bS - | samtools sort - -o ${name}.bam
+            samtools index ${name}.bam
+            samtools flagstat ${name}.bam > ${name}.bam.flagstat
             """
         }
 
@@ -481,32 +481,32 @@ process hisat2 {
         if (params.stranded) {
             """
             hisat2 $softclipping $threads_num -x $index_base -1 ${reads[0]} -2 ${reads[1]} $strandness --summary-file ${name}.hisat2_summary.txt \\
-            | samtools view -bS - | samtools sort - -o ${name}.sort.bam
-            samtools index ${name}.sort.bam
-            samtools flagstat ${name}.sort.bam > ${name}.sort.bam.flagstat
+            | samtools view -bS - | samtools sort - -o ${name}.bam
+            samtools index ${name}.bam
+            samtools flagstat ${name}.bam > ${name}.bam.flagstat
 
-            bamtools filter -in ${name}.sort.bam -out ${name}.forward.bam -script ${tools_dir}/bamtools_f_PE.json
+            bamtools filter -in ${name}.bam -out ${name}.forward.bam -script ${tools_dir}/bamtools_f_PE.json
             samtools index ${name}.forward.bam
             samtools flagstat ${name}.forward.bam > ${name}.forward.bam.flagstat
 
-            bamtools filter -in ${name}.sort.bam -out ${name}.reverse.bam -script ${tools_dir}/bamtools_r_PE.json
+            bamtools filter -in ${name}.bam -out ${name}.reverse.bam -script ${tools_dir}/bamtools_r_PE.json
             samtools index ${name}.reverse.bam
             samtools flagstat ${name}.reverse.bam > ${name}.reverse.bam.flagstat
 
-            samtools view -bS -f 0x40 ${name}.sort.bam -o ${name}.R1.bam
+            samtools view -bS -f 0x40 ${name}.bam -o ${name}.R1.bam
             samtools index ${name}.R1.bam
             samtools flagstat ${name}.R1.bam > ${name}.R1.bam.flagstat
 
-            samtools view -bS -f 0x80 ${name}.sort.bam -o ${name}.R2.bam
+            samtools view -bS -f 0x80 ${name}.bam -o ${name}.R2.bam
             samtools index ${name}.R2.bam
             samtools flagstat ${name}.R2.bam > ${name}.R2.bam.flagstat
             """
         } else {
             """
             hisat2 $softclipping $threads_num -x $index_base -1 ${reads[0]} -2 ${reads[1]} $strandness --summary-file ${name}.hisat2_summary.txt \\
-            | samtools view -bS - | samtools sort - -o ${name}.sort.bam
-            samtools index ${name}.sort.bam
-            samtools flagstat ${name}.sort.bam > ${name}.sort.bam.flagstat
+            | samtools view -bS - | samtools sort - -o ${name}.bam
+            samtools index ${name}.bam
+            samtools flagstat ${name}.bam > ${name}.bam.flagstat
             """
         }
     }
@@ -634,7 +634,7 @@ process rseqc  {
 
     output:
     file "*.{txt,pdf,r,xls}" into rseqc_results
-    file "*.sort.readdist.txt" optional true into ch_totalread
+    file "${name}.readdist.txt" optional true into ch_totalread
     
     script:
     if (params.single_end) {
@@ -663,7 +663,7 @@ process merge_readDist_totalRead {
 
     script:
     command = input_files.collect{filename ->
-        "awk '{if (FNR==1){print FILENAME, FNR, NR, \$0}}' ${filename} | sed 's:.sort.readdist.txt::' | cut -f1,24 --delim=\" \" >> merged_readdist_totalread.txt"}.join(" && ")
+        "awk '{if (FNR==1){print FILENAME, FNR, NR, \$0}}' ${filename} | sed 's:.readdist.txt::' | cut -f1,24 --delim=\" \" >> merged_readdist_totalread.txt"}.join(" && ")
     """
     $command
     """
