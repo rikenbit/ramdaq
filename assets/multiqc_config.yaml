@@ -9,3 +9,68 @@ report_section_order:
         order: -1001
 
 export_plots: true
+
+plots_force_interactive: true
+
+module_order:
+    - fastqc:
+        name: 'FastQC (raw, read1)'
+        anchor: 'fastqc_raw_1'
+        info: 'This section of the report shows FastQC results for Read1 before adapter trimming.'
+        path_filters:
+            - '*_1.raw_fastqc.zip'
+    - fastqc:
+        name: 'FastQC (raw, read2)'
+        anchor: 'fastqc_raw_2'
+        info: 'This section of the report shows FastQC results for Read2 before adapter trimming.'
+        path_filters:
+            - '*_2.raw_fastqc.zip'
+    - fastqc:
+        name: 'FastQC (trim, read1)'
+        anchor: 'fastqc_trim_1'
+        info: 'This section of the report shows FastQC results for Read 1 after adapter trimming.'
+        path_filters:
+            - '*_1.trim_fastqc.zip'
+    - fastqc:
+        name: 'FastQC (trim, read2)'
+        anchor: 'fastqc_trim_2'
+        info: 'This section of the report shows FastQC results for Read 2 after adapter trimming.'
+        path_filters:
+            - '*_2.trim_fastqc.zip'
+    - fastqc:
+        name: 'FastQC (raw)'
+        anchor: 'fastqc_raw'
+        info: 'This section of the report shows FastQC results before adapter trimming.'
+        path_filters:
+            - '*.raw_fastqc.zip'
+        path_filters_exclude:
+            - '*_1.raw_fastqc.zip'
+            - '*_2.raw_fastqc.zip'
+    - fastqc:
+        name: 'FastQC (trimmed)'
+        anchor: 'fastqc_trimmed'
+        info: 'This section of the report shows FastQC results after adapter trimming.'
+        target: ''
+        path_filters:
+            - '*.trim_fastqc.zip'
+        path_filters_exclude:
+            - '*_1.trim_fastqc.zip'
+            - '*_2.trim_fastqc.zip'
+
+extra_fn_clean_exts:
+    - type: remove
+      pattern: .trim
+    - type: remove
+      pattern: _1.trim
+    - type: remove
+      pattern: _2.trim
+    - type: remove
+      pattern: .raw
+    - type: remove
+      pattern: _1.raw
+    - type: remove
+      pattern: _2.raw
+    - type: regex
+      pattern: '_1'
+    - type: regex
+      pattern: '_2'

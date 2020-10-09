@@ -330,13 +330,19 @@ process fastqc {
 
     script:
     if (params.single_end) {
+        newfastq = (reads.getName() =~ /\.gz$/) ? "${name}.raw.fastq.gz" : "${name}.raw.fastq"
         """
-        fastqc --quiet --threads $task.cpus $reads
+        ln -s $reads $newfastq
+        fastqc --quiet --threads $task.cpus $newfastq
         """
     } else {
+        newfastq1 = (reads[0].getName() =~ /\.gz$/) ? "${name}_1.raw.fastq.gz" : "${name}_1.raw.fastq"
+        newfastq2 = (reads[1].getName() =~ /\.gz$/) ? "${name}_2.raw.fastq.gz" : "${name}_2.raw.fastq"
         """
-        fastqc --quiet --threads $task.cpus ${reads[0]}
-        fastqc --quiet --threads $task.cpus ${reads[1]}
+        ln -s ${reads[0]} $newfastq1
+        ln -s ${reads[1]} $newfastq2
+        fastqc --quiet --threads $task.cpus $newfastq1
+        fastqc --quiet --threads $task.cpus $newfastq2
         """
     }
 }
