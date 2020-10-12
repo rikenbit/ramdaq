@@ -1,12 +1,11 @@
 # ![nf-core/ramdaq](docs/images/nf-core-ramdaq_logo.png)
 
-**This pipeline analyses data from full-length single-cell RNA sequencing (scRNA-seq) methods.**.
+**This pipeline analyses data from full-length single-cell RNA sequencing (scRNA-seq) methods.**
 
 [![GitHub Actions CI Status](https://github.com/nf-core/ramdaq/workflows/nf-core%20CI/badge.svg)](https://github.com/nf-core/ramdaq/actions)
 [![GitHub Actions Linting Status](https://github.com/nf-core/ramdaq/workflows/nf-core%20linting/badge.svg)](https://github.com/nf-core/ramdaq/actions)
 [![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A519.10.0-brightgreen.svg)](https://www.nextflow.io/)
 
-[![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg)](http://bioconda.github.io/)
 [![Docker](https://img.shields.io/docker/automated/nfcore/ramdaq.svg)](https://hub.docker.com/r/nfcore/ramdaq)
 
 ## Introduction
@@ -17,12 +16,12 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
 i. Install [`nextflow`](https://nf-co.re/usage/installation)
 
-ii. Install either [`Docker`](https://docs.docker.com/engine/installation/) or [`Singularity`](https://www.sylabs.io/guides/3.0/user-guide/) for full pipeline reproducibility (please only use [`Conda`](https://conda.io/miniconda.html) as a last resort; see [docs](https://nf-co.re/usage/configuration#basic-configuration-profiles))
+ii. Install either [`Docker`](https://docs.docker.com/engine/installation/) or [`Singularity`](https://www.sylabs.io/guides/3.0/user-guide/) for full pipeline reproducibility (see [docs](https://nf-co.re/usage/configuration#basic-configuration-profiles))
 
 iii. Download the pipeline and test it on a minimal dataset with a single command
 
 ```bash
-nextflow run nf-core/ramdaq -profile test,<docker/singularity/conda/institute>
+nextflow run nf-core/ramdaq -profile test,<docker/singularity/institute>
 ```
 
 > Please check [nf-core/configs](https://github.com/nf-core/configs#documentation) to see if a custom config file to run nf-core pipelines already exists for your Institute. If so, you can simply use `-profile <institute>` in your command. This will enable either `docker` or `singularity` and set the appropriate execution settings for your local compute environment.
@@ -32,7 +31,7 @@ iv. Start running your own analysis!
 <!-- TODO nf-core: Update the default command above used to run the pipeline -->
 
 ```bash
-nextflow run nf-core/ramdaq -profile <docker/singularity/conda/institute> --reads '*_R{1,2}.fastq.gz' --genome GRCh37
+nextflow run nf-core/ramdaq -profile <docker/singularity/institute> --reads '*_R{1,2}.fastq.gz' --genome GRCh37
 ```
 
 See [usage docs](docs/usage.md) for all of the available options when running the pipeline.
