@@ -29,9 +29,7 @@ def helpMessage() {
     Options:
       --genome [str]                  Name of iGenomes reference
       --single_end                    Specifies that the input is single-end reads
-      --stranded [str]                unstranded : default
-                                      fr-firststrand : First read corresponds to the reverse complemented counterpart of a transcript
-                                      fr-secondstrand : First read corresponds to a transcript
+      --stranded                      Specifies that the input is stranded reads
       --saveReference                 Save the generated reference files to the results directory
 
     Fastqmcf:
@@ -98,11 +96,6 @@ params.bed = params.genome ? params.genomes[ params.genome ].bed ?: false : fals
 params.gtf = params.genome ? params.genomes[ params.genome ].gtf ?: false : false
 
 // Validate inputs
-
-if (params.stranded && params.stranded != 'unstranded' && params.stranded != 'fr-firststrand' && params.stranded != 'fr-secondstrand') {
-    exit 1, "Invalid stranded option: ${params.stranded}. Valid options: 'unstranded' or 'fr-firststrand' or 'fr-secondstrand'!"
-}
-
 if (params.adapter) { ch_adapter = file(params.adapter, checkIfExists: true) } else { exit 1, "Adapter file not found: ${params.adapter}" }
 
 if (params.hisat2_idx) {
@@ -220,13 +213,7 @@ summary['Run Name']         = custom_runName ?: workflow.runName
 summary['Reads']            = params.reads
 //summary['Fasta Ref']        = params.fasta
 summary['Data Type']        = params.single_end ? 'Single-End' : 'Paired-End'
-if (params.stranded)  {
-    if (params.stranded == 'unstranded') summary['Strandness'] = 'Unstranded'
-    if (params.stranded == 'fr-firststrand') summary['Strandness'] = 'Forward stranded'
-    if (params.stranded == 'fr-secondstrand') summary['Strandness'] = 'Reverse stranded'
-} else {
-    summary['Strandness'] = 'Unstranded'
-}
+summary['Strandness']       = params.stranded ? 'Stranded' : 'Unstranded'
 summary['Save Reference']   = params.saveReference ? 'Yes' : 'No'
 if (params.hisat2_idx) summary['HISAT2 Index'] = params.hisat2_idx
 if (params.bed) summary['BED Annotation'] = params.bed
@@ -464,17 +451,15 @@ process hisat2 {
 
     script:
     def strandness = ''
-    if (params.stranded == 'fr-firststrand') {
+    if (params.stranded) {
         strandness = params.single_end ? "--rna-strandness R" : "--rna-strandness RF"
-    } else if (params.stranded == 'fr-secondstrand'){
-        strandness = params.single_end ? "--rna-strandness F" : "--rna-strandness FR"
     }
     softclipping = params.softclipping ? '' : "--no-softclip"
     threads_num = params.hs_threads_num > 0 ? "-p ${params.hs_threads_num}" : ''
     index_base = hs2_indices[0].toString() - ~/.\d.ht2l?/
 
     if (params.single_end) {
-        if (params.stranded && params.stranded != 'unstranded') {
+        if (params.stranded) {
             """
             hisat2 $softclipping $threads_num -x $index_base -U $reads $strandness --summary-file ${name}_summary.txt \\
             | samtools view -bS - | samtools sort - -o ${name}.bam
@@ -491,7 +476,7 @@ process hisat2 {
             """
         } else {
             """
-            hisat2 $softclipping $threads_num -x $index_base -U $reads --summary-file ${name}_summary.txt \\
+            hisat2 $softclipping $threads_num -x $index_base -U $reads $strandness --summary-file ${name}_summary.txt \\
             | samtools view -bS - | samtools sort - -o ${name}.bam
             samtools index ${name}.bam
             samtools flagstat ${name}.bam > ${name}.bam.flagstat
@@ -499,7 +484,7 @@ process hisat2 {
         }
 
     } else {
-        if (params.stranded && params.stranded != 'unstranded') {
+        if (params.stranded) {
             """
             hisat2 $softclipping $threads_num -x $index_base -1 ${reads[0]} -2 ${reads[1]} $strandness --summary-file ${name}_summary.txt \\
             | samtools view -bS - | samtools sort - -o ${name}.bam
@@ -524,7 +509,7 @@ process hisat2 {
             """
         } else {
             """
-            hisat2 $softclipping $threads_num -x $index_base -1 ${reads[0]} -2 ${reads[1]} --summary-file ${name}_summary.txt \\
+            hisat2 $softclipping $threads_num -x $index_base -1 ${reads[0]} -2 ${reads[1]} $strandness --summary-file ${name}_summary.txt \\
             | samtools view -bS - | samtools sort - -o ${name}.bam
             samtools index ${name}.bam
             samtools flagstat ${name}.bam > ${name}.bam.flagstat
@@ -754,13 +739,7 @@ process featureCounts  {
     script:
 
     isPairedEnd = params.single_end ? '' : "-p"
-    if (params.stranded && params.stranded == 'fr-firststrand') {
-        isStrandSpecific = "-s 2"
-    } else if (params.stranded && params.stranded == 'fr-secondstrand'){
-        isStrandSpecific = "-s 1"
-    } else {
-        isStrandSpecific = ''
-    }
+    isStrandSpecific = params.stranded ? "-s 2" : ''
     extraAttributes = params.extra_attributes ? "--extraAttributes ${params.extra_attributes}" : ''
     allow_multimap = params.allow_multimap ? "-M" : ''
     allow_overlap = params.allow_overlap ? "-O" : ''
