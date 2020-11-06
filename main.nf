@@ -96,6 +96,9 @@ params.hisat2_idx = params.genome ? params.genomes[ params.genome ].hisat2_idx ?
 params.chrsize = params.genome ? params.genomes[ params.genome ].chrsize ?: false : false
 params.bed = params.genome ? params.genomes[ params.genome ].bed ?: false : false
 params.gtf = params.genome ? params.genomes[ params.genome ].gtf ?: false : false
+params.mt_gtf = params.genome ? params.genomes[ params.genome ].mt_gtf ?: false : false
+params.rrna_gtf = params.genome ? params.genomes[ params.genome ].rrna_gtf ?: false : false
+params.histone_gtf = params.genome ? params.genomes[ params.genome ].histone_gtf ?: false : false
 
 // Validate inputs
 
@@ -137,10 +140,11 @@ if (params.hisat2_idx) {
 }
 
 if (params.chrsize) { ch_chrsize= file(params.chrsize, checkIfExists: true) } else { exit 1, "Chromosome size file not found: ${params.chrsize}" }
-
 if (params.bed) { ch_bed= file(params.bed, checkIfExists: true) } else { exit 1, "BED file not found: ${params.bed}" }
-
 if (params.gtf) { ch_gtf= file(params.gtf, checkIfExists: true) } else { exit 1, "GTF annotation file not found: ${params.gtf}" }
+if (params.mt_gtf) { ch_mt_gtf= file(params.mt_gtf, checkIfExists: true) } else { exit 1, "Mitocondria GTF annotation file not found: ${params.mt_gtf}" }
+if (params.rrna_gtf) { ch_rrna_gtf= file(params.rrna_gtf, checkIfExists: true) } else { exit 1, "rRNA GTF annotation file not found: ${params.rrna_gtf}" }
+if (params.histone_gtf) { ch_histone_gtf= file(params.histone_gtf, checkIfExists: true) } else { exit 1, "Histone GTF annotation file not found: ${params.histone_gtf}" }
 
 // Has the run name been specified by the user?
 //  this has the bonus effect of catching both -name and --name
@@ -231,6 +235,9 @@ summary['Save Reference']   = params.saveReference ? 'Yes' : 'No'
 if (params.hisat2_idx) summary['HISAT2 Index'] = params.hisat2_idx
 if (params.bed) summary['BED Annotation'] = params.bed
 if (params.gtf) summary['GTF Annotation'] = params.gtf
+if (params.mt_gtf) summary['Mitocondria GTF Annotation'] = params.mt_gtf
+if (params.rrna_gtf) summary['rRNA GTF Annotation'] = params.rrna_gtf
+if (params.histone_gtf) summary['Histone GTF Annotation'] = params.histone_gtf
 if (params.allow_multimap) summary['Multimap Reads'] = params.allow_multimap ? 'Allow' : 'Disallow'
 if (params.allow_overlap) summary['Overlap Reads'] = params.allow_overlap ? 'Allow' : 'Disallow'
 if (params.count_fractionally) summary['Fractional counting'] = params.count_fractionally ? 'Enabled' : 'Disabled'
@@ -597,6 +604,9 @@ ch_hisat2_bamsort
     .into { 
         hisat2_output_tobam2wig
         hisat2_output_tofcount
+        hisat2_output_tofcount_mt
+        hisat2_output_tofcount_rrna
+        hisat2_output_tofcount_histone
     }
 
 ch_hisat2_bamcount
@@ -725,7 +735,7 @@ rseqc_results_merge = rseqc_results
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
-* STEP 8 - FeatureCounts
+* STEP 8-1 - FeatureCounts (All-genes GTF) 
 */
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -818,6 +828,150 @@ process calc_TPMCounts {
 }
 
 ercc_list = ercccount_chk.toList() 
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+* STEP 8-2 - FeatureCounts (Mitocondrial GTF) 
+*/
+///////////////////////////////////////////////////////////////////////////////
+
+process featureCounts_mt  {
+    tag "$name"
+    label 'process_medium'
+
+    publishDir "${params.outdir}/featureCounts_Mitocondria", mode: 'copy',
+        saveAs: {filename ->
+            if (filename.indexOf("_mt.featureCounts.txt.summary") > 0) "mt_count_summaries/$filename"
+            else if (filename.indexOf("_mt.featureCounts.txt") > 0) "mt_counts/$filename"
+            else "$filename"
+    }
+
+    input:
+    set val(name), file(bam), file(bai) from hisat2_output_tofcount_mt
+    file gtf from ch_mt_gtf
+
+    output:
+    file "${name}_mt.featureCounts.txt" into geneCounts_mt
+    file "${name}_mt.featureCounts.txt.summary" into featureCounts_logs_mt
+
+    script:
+
+    isPairedEnd = params.single_end ? '' : "-p"
+    if (params.stranded && params.stranded == 'fr-firststrand') {
+        isStrandSpecific = "-s 2"
+    } else if (params.stranded && params.stranded == 'fr-secondstrand'){
+        isStrandSpecific = "-s 1"
+    } else {
+        isStrandSpecific = ''
+    }
+    extraAttributes = params.extra_attributes ? "--extraAttributes ${params.extra_attributes}" : ''
+    allow_multimap = params.allow_multimap ? "-M" : ''
+    allow_overlap = params.allow_overlap ? "-O" : ''
+    count_fractionally = params.count_fractionally ? "--fraction" : ''
+    threads_num = params.fc_threads_num > 0 ? "-T ${params.fc_threads_num}" : ''
+
+    """
+    featureCounts -a $gtf -g ${params.group_features} -t ${params.count_type} -o ${name}_mt.featureCounts.txt  \\
+    $isPairedEnd $isStrandSpecific $extraAttributes $count_fractionally $allow_multimap $allow_overlap $threads_num ${bam}
+    
+    """
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+* STEP 8-3 - FeatureCounts (rRNA GTF) 
+*/
+///////////////////////////////////////////////////////////////////////////////
+
+process featureCounts_rrna  {
+    tag "$name"
+    label 'process_medium'
+
+    publishDir "${params.outdir}/featureCounts_rRNA", mode: 'copy',
+        saveAs: {filename ->
+            if (filename.indexOf("_rrna.featureCounts.txt.summary") > 0) "rrna_count_summaries/$filename"
+            else if (filename.indexOf("_rrna.featureCounts.txt") > 0) "rrna_counts/$filename"
+            else "$filename"
+    }
+
+    input:
+    set val(name), file(bam), file(bai) from hisat2_output_tofcount_rrna
+    file gtf from ch_rrna_gtf
+
+    output:
+    file "${name}_rrna.featureCounts.txt" into geneCounts_rrna
+    file "${name}_rrna.featureCounts.txt.summary" into featureCounts_logs_rrna
+
+    script:
+
+    isPairedEnd = params.single_end ? '' : "-p"
+    if (params.stranded && params.stranded == 'fr-firststrand') {
+        isStrandSpecific = "-s 2"
+    } else if (params.stranded && params.stranded == 'fr-secondstrand'){
+        isStrandSpecific = "-s 1"
+    } else {
+        isStrandSpecific = ''
+    }
+    extraAttributes = params.extra_attributes ? "--extraAttributes ${params.extra_attributes}" : ''
+    allow_multimap = params.allow_multimap ? "-M" : ''
+    allow_overlap = params.allow_overlap ? "-O" : ''
+    count_fractionally = params.count_fractionally ? "--fraction" : ''
+    threads_num = params.fc_threads_num > 0 ? "-T ${params.fc_threads_num}" : ''
+
+    """
+    featureCounts -a $gtf -g ${params.group_features} -t ${params.count_type} -o ${name}_rrna.featureCounts.txt  \\
+    $isPairedEnd $isStrandSpecific $extraAttributes $count_fractionally $allow_multimap $allow_overlap $threads_num ${bam}
+    
+    """
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+* STEP 8-4 - FeatureCounts (Histone GTF) 
+*/
+///////////////////////////////////////////////////////////////////////////////
+
+process featureCounts_histone  {
+    tag "$name"
+    label 'process_medium'
+
+    publishDir "${params.outdir}/featureCounts_Histone", mode: 'copy',
+        saveAs: {filename ->
+            if (filename.indexOf("_histone.featureCounts.txt.summary") > 0) "histone_count_summaries/$filename"
+            else if (filename.indexOf("_histone.featureCounts.txt") > 0) "histone_counts/$filename"
+            else "$filename"
+    }
+
+    input:
+    set val(name), file(bam), file(bai) from hisat2_output_tofcount_histone
+    file gtf from ch_histone_gtf
+
+    output:
+    file "${name}_histone.featureCounts.txt" into geneCounts_histone
+    file "${name}_histone.featureCounts.txt.summary" into featureCounts_logs_histone
+
+    script:
+
+    isPairedEnd = params.single_end ? '' : "-p"
+    if (params.stranded && params.stranded == 'fr-firststrand') {
+        isStrandSpecific = "-s 2"
+    } else if (params.stranded && params.stranded == 'fr-secondstrand'){
+        isStrandSpecific = "-s 1"
+    } else {
+        isStrandSpecific = ''
+    }
+    extraAttributes = params.extra_attributes ? "--extraAttributes ${params.extra_attributes}" : ''
+    allow_multimap = params.allow_multimap ? "-M" : ''
+    allow_overlap = params.allow_overlap ? "-O" : ''
+    count_fractionally = params.count_fractionally ? "--fraction" : ''
+    threads_num = params.fc_threads_num > 0 ? "-T ${params.fc_threads_num}" : ''
+
+    """
+    featureCounts -a $gtf -g ${params.group_features} -t ${params.count_type} -o ${name}_histone.featureCounts.txt  \\
+    $isPairedEnd $isStrandSpecific $extraAttributes $count_fractionally $allow_multimap $allow_overlap $threads_num ${bam}
+    
+    """
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
@@ -973,6 +1127,9 @@ process multiqc {
     file ('rseqc/*') from rseqc_results_merge.collect().ifEmpty([])
     file ('featureCounts/*') from featureCounts_logs.collect().ifEmpty([])
     file ('featureCounts_biotype/*') from featureCounts_biotype.collect()
+    file ('featureCounts_mt/*') from featureCounts_logs_mt.collect().ifEmpty([])
+    file ('featureCounts_rrna/*') from featureCounts_logs_rrna.collect().ifEmpty([])
+    file ('featureCounts_histone/*') from featureCounts_logs_histone.collect().ifEmpty([])
     file ('sample_correlation_results/*') from sample_correlation_results.collect().ifEmpty([]) // If the Edge-R is not run create an Empty array
     file ('ercc_correlation_results/*') from ercc_correlation_results.collect().ifEmpty([]) 
     file ('plots_bar_assignedgene/*') from assignedgene_rate_results.collect().ifEmpty([]) 
