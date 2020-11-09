@@ -20,19 +20,19 @@ module_order:
         path_filters:
             - './featureCounts/*'
     - featureCounts:
-        name: 'featureCounts (mitocondria genes)'
+        name: 'featureCounts (Mitochondrial genes)'
         anchor: 'featureCounts_summary_mt'
         info: 'This section of the report shows FeatureCounts summary of assignments mitocondorial-genes.'
         path_filters:
             - './featureCounts_mt/*'
     - featureCounts:
-        name: 'featureCounts (rrna)'
+        name: 'featureCounts (rRNA)'
         anchor: 'featureCounts_summary_rrna'
         info: 'This section of the report shows FeatureCounts summary of assignments rrna.'
         path_filters:
             - './featureCounts_rrna/*'
     - featureCounts:
-        name: 'featureCounts (histone)'
+        name: 'featureCounts (Histone genes)'
         anchor: 'featureCounts_summary_histone'
         info: 'This section of the report shows FeatureCounts summary of assignments histone.'
         path_filters:
