@@ -13,6 +13,30 @@ export_plots: true
 plots_force_interactive: true
 
 module_order:
+    - featureCounts:
+        name: 'featureCounts (all genes)'
+        anchor: 'featureCounts_summary_all'
+        info: 'This section of the report shows FeatureCounts summary of assignments all-genes.'
+        path_filters:
+            - './featureCounts/*'
+    - featureCounts:
+        name: 'featureCounts (Mitochondrial genes)'
+        anchor: 'featureCounts_summary_mt'
+        info: 'This section of the report shows FeatureCounts summary of assignments mitocondorial-genes.'
+        path_filters:
+            - './featureCounts_mt/*'
+    - featureCounts:
+        name: 'featureCounts (rRNA)'
+        anchor: 'featureCounts_summary_rrna'
+        info: 'This section of the report shows FeatureCounts summary of assignments rrna.'
+        path_filters:
+            - './featureCounts_rrna/*'
+    - featureCounts:
+        name: 'featureCounts (Histone genes)'
+        anchor: 'featureCounts_summary_histone'
+        info: 'This section of the report shows FeatureCounts summary of assignments histone.'
+        path_filters:
+            - './featureCounts_histone/*'
     - fastqc:
         name: 'FastQC (raw, read1)'
         anchor: 'fastqc_raw_1'
@@ -56,6 +80,7 @@ module_order:
         path_filters_exclude:
             - '*_1.trim_fastqc.zip'
             - '*_2.trim_fastqc.zip'
+
 
 extra_fn_clean_exts:
     - type: remove
