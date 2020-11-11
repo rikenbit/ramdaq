@@ -57,3 +57,35 @@ The parameters are:
 - `--reads`: Specifies the path of FASTQ files.
   - Single-end data example: `--reads fastq_files/*.R1.fastq.gz`
   - Paired-end data example: `--reads fastq_files/*.{R1,R2}.fastq.gz`
+
+## Specification of mitocondorial gene, rrna, histone gene GTF
+
+- All three annotations are based on the primary assembly annotation available at https://www.gencodegenes.org/.
+
+- Mitochondrial GTFs were created by extracting the lines matching "chromosome M" from the primary assembly annotations.
+
+- Histone GTFs were created by listing the gene names of histones concerning the following database and extracting the corresponding lines from primary assembly annotation.
+  - human histone genes list : https://www.genenames.org/data/genegroup/#!/group/864
+  - mouse histone genes list : http://www.informatics.jax.org/mgihome/nomen/gene_name_initiative.shtml
+- Also, "H[0-9]" string search for gene names in GENCODE annotation found a histone that was not in the database above, so the following was added to GTFs.
+  - "H1f0" "H4c11" "H4c12" "H2az2" "H1-10-AS1" "H2AZ1-DT" "H2AZP2" "H2AZP7" "H2AZP5" "H2AZP4" "H2AZP3" "H2AZ2P1" "H2AZP1" "H2AZP6" "H2ACP2" "H2ACP1" (human)
+  - "H1f0" "H4c14" "H4c11" "H4c12" "H2az2" (mouse)
+
+- The rRNA GTF is based on annotations obtained from the UCSC Table Browser (http://genome.ucsc.edu/cgi-bin/hgTables).
+  - mouse rRNA annotation
+    - Set mouse genome and Dec.2011(GRCm38/mm10) assembly in UCSC Table Browser.
+    - Select Variation and Repeats group, RepeatMasker track, and specify "rRNA" in repClass column of Filter.
+    - Output "RepeatMasker rRNA" GTF.
+    - Next, select Genes and Gene Predictions group, NCBI RefSeq track, UCSC RefSeq(refGene) table, and set "NR_046233" in the name column of the filter.
+    - Output "Rn45s 45S pre-ribosomal RNA" GTF.
+    - Merge two GTFs.
+  - human rRNA annotation
+    - Set human genome and Dec.2013(GRCh38/hg38) assembly in UCSC Table Browser.
+    - Select Repeats group, RepeatMasker track, and specify "rRNA" in repClass column of Filter.
+    - Output "RepeatMasker rRNA" GTF.
+    - Next, select Genes and Gene Predictions group, NCBI RefSeq track, UCSC RefSeq(refGene) table, and set "NR_046235" in the name column of the filter.
+    - Output "45S pre-ribosomal RNA" GTF.
+    - Merge two GTFs.
+  - Since the format of chromosome names is different between UCSC and Gencode, rename the chromosome names of "scaffolds" chromosomes annotated by UCSC to "GenBank.Accn" format in the corresponding table below.
+    - ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.28_GRCh38.p13
+      - Please refer to GenBank-Accn column and UCSC-style-name column.
