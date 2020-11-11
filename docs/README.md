@@ -1,6 +1,6 @@
-# nf-core/ramdaq: Documentation
+# ramdaq: Documentation
 
-The nf-core/ramdaq documentation is split into the following files:
+The ramdaq documentation is split into the following files:
 
 1. [Installation](https://nf-co.re/usage/installation)
 2. Pipeline configuration

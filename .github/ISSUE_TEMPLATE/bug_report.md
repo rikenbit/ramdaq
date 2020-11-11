@@ -1,4 +1,4 @@
-# nf-core/ramdaq bug report
+# ramdaq bug report
 
 Hi there!
 
@@ -35,7 +35,7 @@ A clear and concise description of what you expected to happen.
 
 - Engine: <!-- [e.g. Conda, Docker or Singularity] -->
 - version: <!-- [e.g. 1.0.0] -->
-- Image tag: <!-- [e.g. nfcore/ramdaq:1.0.0] -->
+- Image tag: <!-- [e.g. myoshimura080822/nfcore_ramdaq:0.9.3.6] -->
 
 ## Additional context
 

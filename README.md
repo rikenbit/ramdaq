@@ -1,12 +1,12 @@
-# ![nf-core/ramdaq](docs/images/nf-core-ramdaq_logo.png)
+# ![ramdaq](docs/images/ramdaq_logo.svg)
 
 **This pipeline analyses data from full-length single-cell RNA sequencing (scRNA-seq) methods.**
 
-[![GitHub Actions CI Status](https://github.com/nf-core/ramdaq/workflows/nf-core%20CI/badge.svg)](https://github.com/nf-core/ramdaq/actions)
-[![GitHub Actions Linting Status](https://github.com/nf-core/ramdaq/workflows/nf-core%20linting/badge.svg)](https://github.com/nf-core/ramdaq/actions)
+[![GitHub Actions CI Status](https://github.com/rikenbit/ramdaq.nf/workflows/nf-core%20CI/badge.svg)](https://github.com/rikenbit/ramdaq.nf/actions)
+[![GitHub Actions Linting Status](https://github.com/rikenbit/ramdaq.nf/workflows/nf-core%20linting/badge.svg)](https://github.com/rikenbit/ramdaq.nf/actions)
 [![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A519.10.0-brightgreen.svg)](https://www.nextflow.io/)
 
-[![Docker](https://img.shields.io/docker/automated/nfcore/ramdaq.svg)](https://hub.docker.com/r/nfcore/ramdaq)
+<!-- [![Docker](https://img.shields.io/docker/automated/nfcore/ramdaq.svg)](https://hub.docker.com/r/myoshimura080822/nfcore_ramdaq) -->
 
 ## Introduction
 
@@ -21,24 +21,24 @@ ii. Install either [`Docker`](https://docs.docker.com/engine/installation/) or [
 iii. Download the pipeline and test it on a minimal dataset with a single command
 
 ```bash
-nextflow run nf-core/ramdaq -profile test,<docker/singularity/institute>
+nextflow run rikenbit/ramdaq.nf -profile test,<docker/singularity/institute>
 ```
 
 > Please check [nf-core/configs](https://github.com/nf-core/configs#documentation) to see if a custom config file to run nf-core pipelines already exists for your Institute. If so, you can simply use `-profile <institute>` in your command. This will enable either `docker` or `singularity` and set the appropriate execution settings for your local compute environment.
 
 iv. Start running your own analysis!
 
-<!-- TODO nf-core: Update the default command above used to run the pipeline -->
+<!-- TODO: Update the default command above used to run the pipeline -->
 
 ```bash
-nextflow run nf-core/ramdaq -profile <docker/singularity/institute> --reads '*_R{1,2}.fastq.gz' --genome GRCh37
+nextflow run rikenbit/ramdaq.nf -profile <docker/singularity/institute> --reads '*_R{1,2}.fastq.gz' --genome GRCh37
 ```
 
 See [usage docs](docs/usage.md) for all of the available options when running the pipeline.
 
 ## Documentation
 
-The nf-core/ramdaq pipeline comes with documentation about the pipeline, found in the `docs/` directory:
+The ramdaq pipeline comes with documentation about the pipeline, found in the `docs/` directory:
 
 1. [Installation](https://nf-co.re/usage/installation)
 2. Pipeline configuration
@@ -51,30 +51,15 @@ The nf-core/ramdaq pipeline comes with documentation about the pipeline, found i
 4. [Output and how to interpret the results](docs/output.md)
 5. [Troubleshooting](https://nf-co.re/usage/troubleshooting)
 
-<!-- TODO nf-core: Add a brief overview of what the pipeline does and how it works -->
+The ramdaq pipeline was originally developed based on the [nf-core](https://nf-co.re/) template. 
+
+<!-- TODO: Add a brief overview of what the pipeline does and how it works -->
 
 ## Credits
 
-nf-core/ramdaq was originally written by Mika Yoshimura and Haruka Ozaki in the collaboration of [Laboratory for Bioinformatics Research, RIKEN Center for Biosystems Dynamics Research](https://bit.riken.jp/) and [Bioinformatics Laboratory, Faculty of Medicine, University of Tsukuba](https://sites.google.com/view/ozakilab).
-
-
-
-## Contributions and Support
-
-If you would like to contribute to this pipeline, please see the [contributing guidelines](.github/CONTRIBUTING.md).
-
-For further information or help, don't hesitate to get in touch on [Slack](https://nfcore.slack.com/channels/ramdaq) (you can join with [this invite](https://nf-co.re/join/slack)).
+ramdaq was originally written by [Mika Yoshimura](https://github.com/myoshimura080822) and [Haruka Ozaki](https://github.com/yuifu) in the collaboration of [Laboratory for Bioinformatics Research, RIKEN Center for Biosystems Dynamics Research](https://bit.riken.jp/) and [Bioinformatics Laboratory, Faculty of Medicine, University of Tsukuba](https://sites.google.com/view/ozakilab).
 
 ## Citation
 
-<!-- TODO nf-core: Add citation for pipeline after first release. Uncomment lines below and update Zenodo doi. -->
-<!-- If you use  nf-core/ramdaq for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->
-
-You can cite the `nf-core` publication as follows:
-
-> **The nf-core framework for community-curated bioinformatics pipelines.**
->
-> Philip Ewels, Alexander Peltzer, Sven Fillinger, Harshil Patel, Johannes Alneberg, Andreas Wilm, Maxime Ulysse Garcia, Paolo Di Tommaso & Sven Nahnsen.
->
-> _Nat Biotechnol._ 2020 Feb 13. doi: [10.1038/s41587-020-0439-x](https://dx.doi.org/10.1038/s41587-020-0439-x).  
-> ReadCube: [Full Access Link](https://rdcu.be/b1GjZ)
+<!-- TODO: Add citation for pipeline after first release. Uncomment lines below and update Zenodo doi. -->
+<!-- If you use  ramdaq for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->You can cite the `nf-core` publication as follows:

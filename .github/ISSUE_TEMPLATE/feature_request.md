@@ -1,4 +1,4 @@
-# nf-core/ramdaq feature request
+# ramdaq feature request
 
 Hi there!
 

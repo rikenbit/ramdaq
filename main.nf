@@ -1,16 +1,15 @@
 #!/usr/bin/env nextflow
 /*
 ========================================================================================
-                         nf-core/ramdaq
+                         ramdaq
 ========================================================================================
- nf-core/ramdaq Analysis Pipeline.
+ ramdaq Analysis Pipeline.
  #### Homepage / Documentation
- https://github.com/nf-core/ramdaq
+ https://github.com/rikenbit/ramdaq.nf
 ----------------------------------------------------------------------------------------
 */
 
 def helpMessage() {
-    // TODO nf-core: Add to this help message with new command line parameters
     log.info nfcoreHeader()
     log.info"""
 
@@ -18,7 +17,7 @@ def helpMessage() {
 
     The typical command for running the pipeline is as follows:
 
-    nextflow run nf-core/ramdaq --reads '*_R{1,2}.fastq.gz' -profile docker
+    nextflow run rikenbit/ramdaq.nf --reads '*_R{1,2}.fastq.gz' -profile docker
 
     Mandatory arguments:
       --reads [file]                  Path to input data (must be surrounded with quotes)
@@ -220,7 +219,6 @@ log.info nfcoreHeader()
 def summary = [:]
 if (workflow.revision) summary['Pipeline Release'] = workflow.revision
 summary['Run Name']         = custom_runName ?: workflow.runName
-// TODO nf-core: Report custom parameters here
 summary['Reads']            = params.reads
 //summary['Fasta Ref']        = params.fasta
 summary['Data Type']        = params.single_end ? 'Single-End' : 'Paired-End'
@@ -275,10 +273,10 @@ Channel.from(summary.collect{ [it.key, it.value] })
     .map { k,v -> "<dt>$k</dt><dd><samp>${v ?: '<span style=\"color:#999999;\">N/A</a>'}</samp></dd>" }
     .reduce { a, b -> return [a, b].join("\n            ") }
     .map { x -> """
-    id: 'nf-core-ramdaq-summary'
+    id: 'ramdaq-summary'
     description: " - this information is collected when the pipeline is started."
-    section_name: 'nf-core/ramdaq Workflow Summary'
-    section_href: 'https://github.com/nf-core/ramdaq'
+    section_name: 'ramdaq Workflow Summary'
+    section_href: 'https://github.com/rikenbit/ramdaq.nf'
     plot_type: 'html'
     data: |
         <dl class=\"dl-horizontal\">
@@ -306,7 +304,6 @@ process get_software_versions {
     file "software_versions.csv"
 
     script:
-    // TODO nf-core: Get all tools to print their version number here
     """
     echo $workflow.manifest.version > v_pipeline.txt
     echo $workflow.nextflow.version > v_nextflow.txt
@@ -1120,7 +1117,6 @@ process multiqc {
     input:
     file (multiqc_config) from ch_multiqc_config
     file (mqc_custom_config) from ch_multiqc_custom_config.collect().ifEmpty([])
-    // TODO nf-core: Add in log files from your new processes for MultiQC to find!
     file ('fastqc/*') from ch_fastqc_results.collect().ifEmpty([])
     file ('fastqc/*') from ch_trimmed_reads_fastqc_results.collect().ifEmpty([])
     file ('alignment/*') from ch_alignment_logs.collect().ifEmpty([])
@@ -1146,7 +1142,7 @@ process multiqc {
     rtitle = custom_runName ? "--title \"$custom_runName\"" : ''
     rfilename = custom_runName ? "--filename " + custom_runName.replaceAll('\\W','_').replaceAll('_+','_') + "_multiqc_report" : ''
     custom_config_file = params.multiqc_config ? "--config $mqc_custom_config" : ''
-    // TODO nf-core: Specify which MultiQC modules to use with -m for a faster run time
+    // TODO: Specify which MultiQC modules to use with -m for a faster run time
     """
     multiqc -f $rtitle $rfilename $custom_config_file .
     """
@@ -1182,9 +1178,9 @@ process output_documentation {
 workflow.onComplete {
 
     // Set up the e-mail variables
-    def subject = "[nf-core/ramdaq] Successful: $workflow.runName"
+    def subject = "[ramdaq] Successful: $workflow.runName"
     if (!workflow.success) {
-        subject = "[nf-core/ramdaq] FAILED: $workflow.runName"
+        subject = "[ramdaq] FAILED: $workflow.runName"
     }
     def email_fields = [:]
     email_fields['version'] = workflow.manifest.version
@@ -1209,19 +1205,18 @@ workflow.onComplete {
     email_fields['summary']['Nextflow Build'] = workflow.nextflow.build
     email_fields['summary']['Nextflow Compile Timestamp'] = workflow.nextflow.timestamp
 
-    // TODO nf-core: If not using MultiQC, strip out this code (including params.max_multiqc_email_size)
     // On success try attach the multiqc report
     def mqc_report = null
     try {
         if (workflow.success) {
             mqc_report = ch_multiqc_report.getVal()
             if (mqc_report.getClass() == ArrayList) {
-                log.warn "[nf-core/ramdaq] Found multiple reports from process 'multiqc', will use only one"
+                log.warn "[ramdaq] Found multiple reports from process 'multiqc', will use only one"
                 mqc_report = mqc_report[0]
             }
         }
     } catch (all) {
-        log.warn "[nf-core/ramdaq] Could not attach MultiQC report to summary email"
+        log.warn "[ramdaq] Could not attach MultiQC report to summary email"
     }
 
     // Check if we are only sending emails on failure
@@ -1253,11 +1248,11 @@ workflow.onComplete {
             if (params.plaintext_email) { throw GroovyException('Send plaintext e-mail, not HTML') }
             // Try to send HTML e-mail using sendmail
             [ 'sendmail', '-t' ].execute() << sendmail_html
-            log.info "[nf-core/ramdaq] Sent summary e-mail to $email_address (sendmail)"
+            log.info "[ramdaq] Sent summary e-mail to $email_address (sendmail)"
         } catch (all) {
             // Catch failures and try with plaintext
             [ 'mail', '-s', subject, email_address ].execute() << email_txt
-            log.info "[nf-core/ramdaq] Sent summary e-mail to $email_address (mail)"
+            log.info "[ramdaq] Sent summary e-mail to $email_address (mail)"
         }
     }
 
@@ -1283,10 +1278,10 @@ workflow.onComplete {
     }
 
     if (workflow.success) {
-        log.info "-${c_purple}[nf-core/ramdaq]${c_green} Pipeline completed successfully${c_reset}-"
+        log.info "-${c_purple}[ramdaq]${c_green} Pipeline completed successfully${c_reset}-"
     } else {
         checkHostname()
-        log.info "-${c_purple}[nf-core/ramdaq]${c_red} Pipeline completed with errors${c_reset}-"
+        log.info "-${c_purple}[ramdaq]${c_red} Pipeline completed with errors${c_reset}-"
     }
 
 }
@@ -1304,14 +1299,9 @@ def nfcoreHeader() {
     c_white = params.monochrome_logs ? '' : "\033[0;37m";
     c_yellow = params.monochrome_logs ? '' : "\033[0;33m";
 
-    return """    -${c_dim}--------------------------------------------------${c_reset}-
-                                            ${c_green},--.${c_black}/${c_green},-.${c_reset}
-    ${c_blue}        ___     __   __   __   ___     ${c_green}/,-._.--~\'${c_reset}
-    ${c_blue}  |\\ | |__  __ /  ` /  \\ |__) |__         ${c_yellow}}  {${c_reset}
-    ${c_blue}  | \\| |       \\__, \\__/ |  \\ |___     ${c_green}\\`-._,-`-,${c_reset}
-                                            ${c_green}`._,._,\'${c_reset}
-    ${c_purple}  nf-core/ramdaq v${workflow.manifest.version}${c_reset}
-    -${c_dim}--------------------------------------------------${c_reset}-
+    return """    ----------------------------------------------------
+            ramdaq v${workflow.manifest.version}
+    ----------------------------------------------------
     """.stripIndent()
 }
 

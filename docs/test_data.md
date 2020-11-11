@@ -1,4 +1,4 @@
-# nf-core/ramdaq: Usage: Using test data
+# ramdaq: Usage: Using test data
 
 Below commands automatically download annotation data and test FASTQ data and run the pipeline.
 

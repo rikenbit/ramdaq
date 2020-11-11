@@ -1,4 +1,4 @@
-# nf-core/ramdaq: Usage: Using provided annotations
+# ramdaq: Usage: Using provided annotations
 
 ## Download provided annotation (mouse)
 
@@ -35,7 +35,6 @@ The parameters are:
 - `--reads`: Specifies the path of FASTQ files.
   - Single-end data example: `--reads fastq_files/*.R1.fastq.gz`
   - Paired-end data example: `--reads fastq_files/*.{R1,R2}.fastq.gz`
-
 
 ## Run pipeline (human)
 
