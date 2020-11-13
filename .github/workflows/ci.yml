@@ -21,10 +21,10 @@ jobs:
           sudo mv nextflow /usr/local/bin/
       - name: Pull docker image
         run: |
-          docker pull myoshimura080822/nfcore_ramdaq:dev
-          docker tag myoshimura080822/nfcore_ramdaq:dev myoshimura080822/nfcore_ramdaq:dev
+          docker pull myoshimura080822/nfcore_ramdaq:latest
+          docker tag myoshimura080822/nfcore_ramdaq:latest myoshimura080822/nfcore_ramdaq:latest
       - name: Run pipeline with test data
         run: |
           # TODO: You can customise CI pipeline run tests as required
           # (eg. adding multiple test runs with different parameters)
-          nextflow run ${GITHUB_WORKSPACE} -profile test,docker
+          nextflow run ${GITHUB_WORKSPACE} -profile test_SE_UST_M,docker
