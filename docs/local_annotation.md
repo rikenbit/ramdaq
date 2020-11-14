@@ -78,7 +78,7 @@ The parameters are:
     - (3) Second GTF: Select Genes and Gene Predictions group, NCBI RefSeq track, UCSC RefSeq(refGene) table, and set "NR_046233" in the name column of the filter. Output "Rn45s 45S pre-ribosomal RNA" GTF.
     - (4) Merge the two GTFs.
   - Procedures to create the human rRNA annotation:
-    - (1) Set human genome and Dec.2013(GRCh38/hg38) assembly in UCSC Table Browser. 
+    - (1) Set human genome and Dec.2013(GRCh38/hg38) assembly in UCSC Table Browser.
     - (2) First GTF: Select Repeats group, RepeatMasker track, and specify "rRNA" in repClass column of Filter. Output "RepeatMasker rRNA" GTF.
     - (3) Second GTF: select Genes and Gene Predictions group, NCBI RefSeq track, UCSC RefSeq(refGene) table, and set "NR_046235" in the name column of the filter. Output "45S pre-ribosomal RNA" GTF.
     - (4) Merge the two GTFs.
