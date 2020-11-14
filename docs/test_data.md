@@ -2,7 +2,6 @@
 
 Below commands automatically download annotation data and test FASTQ data and run the pipeline.
 
-
 Currently, 8 combinations of annotations/data types are availabe:
 
 - Species: mouse and human

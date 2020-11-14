@@ -104,20 +104,20 @@ They are loaded in sequence, so later profiles can overwrite earlier profiles.
 
 If `-profile` is not specified, the pipeline will run locally and expect all software to be installed and available on the `PATH`. This is _not_ recommended.
 
-* `docker`
-  * A generic configuration profile to be used with [Docker](http://docker.com/)
-  * Pulls software from dockerhub: [`myoshimura080822/nfcore_ramdaq`](http://hub.docker.com/r/myoshimura080822/nfcore_ramdaq/)
-* `singularity`
-  * A generic configuration profile to be used with [Singularity](http://singularity.lbl.gov/)
-  * Pulls software from DockerHub: [`myoshimura080822/nfcore_ramdaq`](http://hub.docker.com/r/myoshimura080822/nfcore_ramdaq/)
-* `conda`
+- `docker`
+  - A generic configuration profile to be used with [Docker](http://docker.com/)
+  - Pulls software from dockerhub: [`myoshimura080822/nfcore_ramdaq`](http://hub.docker.com/r/myoshimura080822/nfcore_ramdaq/)
+- `singularity`
+  - A generic configuration profile to be used with [Singularity](http://singularity.lbl.gov/)
+  - Pulls software from DockerHub: [`myoshimura080822/nfcore_ramdaq`](http://hub.docker.com/r/myoshimura080822/nfcore_ramdaq/)
+- `test`
+  - A profile with a complete configuration for automated testing
+  - Includes links to test data so needs no other parameters
+
+<!-- - `conda`
   * Please only use Conda as a last resort i.e. when it's not possible to run the pipeline with Docker or Singularity.
   * A generic configuration profile to be used with [Conda](https://conda.io/docs/)
-  * Pulls most software from [Bioconda](https://bioconda.github.io/)
-* `test`
-  * A profile with a complete configuration for automated testing
-  * Includes links to test data so needs no other parameters
-
+  * Pulls most software from [Bioconda](https://bioconda.github.io/) -->
 <!-- TODO: Document required command line parameters -->
 
 ### `--reads`

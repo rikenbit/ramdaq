@@ -51,7 +51,7 @@ The ramdaq pipeline comes with documentation about the pipeline, found in the `d
 4. [Output and how to interpret the results](docs/output.md)
 5. [Troubleshooting](https://nf-co.re/usage/troubleshooting)
 
-The ramdaq pipeline was originally developed based on the [nf-core](https://nf-co.re/) template. 
+The ramdaq pipeline was originally developed based on the [nf-core](https://nf-co.re/) template.
 
 <!-- TODO: Add a brief overview of what the pipeline does and how it works -->
 
