@@ -106,10 +106,10 @@ If `-profile` is not specified, the pipeline will run locally and expect all sof
 
 - `docker`
   - A generic configuration profile to be used with [Docker](http://docker.com/)
-  - Pulls software from dockerhub: [`myoshimura080822/nfcore_ramdaq`](http://hub.docker.com/r/myoshimura080822/nfcore_ramdaq/)
+  - Pulls software from dockerhub: [`myoshimura080822/ramdaq`](http://hub.docker.com/r/myoshimura080822/ramdaq/)
 - `singularity`
   - A generic configuration profile to be used with [Singularity](http://singularity.lbl.gov/)
-  - Pulls software from DockerHub: [`myoshimura080822/nfcore_ramdaq`](http://hub.docker.com/r/myoshimura080822/nfcore_ramdaq/)
+  - Pulls software from DockerHub: [`myoshimura080822/ramdaq`](http://hub.docker.com/r/myoshimura080822/ramdaq/)
 - `test`
   - A profile with a complete configuration for automated testing
   - Includes links to test data so needs no other parameters

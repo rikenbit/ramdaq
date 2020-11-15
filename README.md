@@ -6,7 +6,7 @@
 [![GitHub Actions Linting Status](https://github.com/rikenbit/ramdaq.nf/workflows/nf-core%20linting/badge.svg)](https://github.com/rikenbit/ramdaq.nf/actions)
 [![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A519.10.0-brightgreen.svg)](https://www.nextflow.io/)
 
-<!-- [![Docker](https://img.shields.io/docker/automated/nfcore/ramdaq.svg)](https://hub.docker.com/r/myoshimura080822/nfcore_ramdaq) -->
+<!-- [![Docker](https://img.shields.io/docker/automated/nfcore/ramdaq.svg)](https://hub.docker.com/r/myoshimura080822/ramdaq) -->
 
 ## Introduction
 

@@ -35,7 +35,7 @@ A clear and concise description of what you expected to happen.
 
 - Engine: <!-- [e.g. Conda, Docker or Singularity] -->
 - version: <!-- [e.g. 1.0.0] -->
-- Image tag: <!-- [e.g. myoshimura080822/nfcore_ramdaq:0.9.3.6] -->
+- Image tag: <!-- [e.g. myoshimura080822/ramdaq:0.9.3.6] -->
 
 ## Additional context
 
