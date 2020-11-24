@@ -47,7 +47,7 @@ The ramdaq pipeline comes with documentation about the pipeline, found in the `d
 3. [Running the pipeline](docs/usage.md)
     * [Using test data](docs/test_data.md)
     * [Using provided reference genome and annotations](docs/local_annotation.md)
-        - the current version supports human(GRCh38) and mouse(GRCm38).
+        - the current version supports human (GRCh38) and mouse (GRCm38).
 4. [Output and how to interpret the results](docs/output.md)
 5. [Troubleshooting](https://nf-co.re/usage/troubleshooting)
 
