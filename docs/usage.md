@@ -3,7 +3,6 @@
 ## Table of contents
 
 - [ramdaq: Usage](#ramdaq-usage)
-  - [Table of contents](#table-of-contents)
   - [Introduction](#introduction)
   - [Running the pipeline](#running-the-pipeline)
     - [Updating the pipeline](#updating-the-pipeline)
@@ -57,7 +56,7 @@ NXF_OPTS='-Xms1g -Xmx4g'
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run rikenbit/ramdaq.nf --reads '*_R{1,2}.fastq.gz' -profile docker
+nextflow run rikenbit/ramdaq.nf --reads '*_R{1,2}.fastq.gz' -profile docker  --genome GRCh37 --local_annot_dir <annotation directory path>
 ```
 
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
@@ -79,6 +78,7 @@ When you run the above command, Nextflow automatically pulls the pipeline code f
 nextflow pull rikenbit/ramdaq.nf
 ```
 
+<!-- -
 ### Reproducibility
 
 It's a good idea to specify a pipeline version when running the pipeline on your data. This ensures that a specific version of the pipeline code and software are used when you run your pipeline. If you keep using the same tag, you'll be running the same version of the pipeline, even if there have been changes to the code since.
@@ -86,16 +86,17 @@ It's a good idea to specify a pipeline version when running the pipeline on your
 First, go to the [ramdaq releases page](https://github.com/rikenbit/ramdaq.nf/releases) and find the latest version number - numeric only (eg. `1.3.1`). Then specify this when running the pipeline with `-r` (one hyphen) - eg. `-r 1.3.1`.
 
 This version number will be logged in reports when you run the pipeline, so that you'll know what you used when you look back in the future.
-
+ -->
+ 
 ## Main arguments
 
 ### `-profile`
 
 Use this parameter to choose a configuration profile. Profiles can give configuration presets for different compute environments.
 
-Several generic profiles are bundled with the pipeline which instruct the pipeline to use software packaged using different methods (Docker, Singularity, Conda) - see below.
+Several generic profiles are bundled with the pipeline which instruct the pipeline to use software packaged using different methods (Docker, Singularity) - see below.
 
-> We highly recommend the use of Docker or Singularity containers for full pipeline reproducibility, however when this is not possible, Conda is also supported.
+> We highly recommend the use of Docker or Singularity containers for full pipeline reproducibility.
 
 The pipeline also dynamically loads configurations from [https://github.com/nf-core/configs](https://github.com/nf-core/configs) when it runs, making multiple config profiles for various institutional clusters available at run time. For more information and to see if your system is available in these configs please see the [nf-core/configs documentation](https://github.com/nf-core/configs#documentation).
 
@@ -125,7 +126,7 @@ If `-profile` is not specified, the pipeline will run locally and expect all sof
 Use this to specify the location of your input FastQ files. For example:
 
 ```bash
---reads 'path/to/data/sample_*_{1,2}.fastq'
+--reads 'path/to/data/sample_*_R{1,2}.fastq'
 ```
 
 Please note the following requirements:
