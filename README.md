@@ -16,22 +16,22 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
 i. Install [`nextflow`](https://nf-co.re/usage/installation)
 
-ii. Install either [`Docker`](https://docs.docker.com/engine/installation/) or [`Singularity`](https://www.sylabs.io/guides/3.0/user-guide/) for full pipeline reproducibility (see [docs](https://nf-co.re/usage/configuration#basic-configuration-profiles))
+ii. Install either [`Docker`](https://docs.docker.com/engine/installation/) or [`Singularity`](https://www.sylabs.io/guides/3.0/user-guide/) for full pipeline reproducibility (see [docs](https://nf-co.re/usage/configuration#basic-configuration-profiles)). Note that ramdaq does not support conda.
 
 iii. Download the pipeline and test it on a minimal dataset with a single command
 
 ```bash
-nextflow run rikenbit/ramdaq.nf -profile test,<docker/singularity/institute>
+nextflow run rikenbit/ramdaq.nf -profile test,<docker/singularity>
 ```
 
-> Please check [nf-core/configs](https://github.com/nf-core/configs#documentation) to see if a custom config file to run nf-core pipelines already exists for your Institute. If so, you can simply use `-profile <institute>` in your command. This will enable either `docker` or `singularity` and set the appropriate execution settings for your local compute environment.
+> Please check [nf-core/configs](https://github.com/nf-core/configs#documentation) and enable either `docker` or `singularity` to set the appropriate execution settings for your local computing environment.
 
 iv. Start running your own analysis!
 
 <!-- TODO: Update the default command above used to run the pipeline -->
 
 ```bash
-nextflow run rikenbit/ramdaq.nf -profile <docker/singularity/institute> --reads '*_R{1,2}.fastq.gz' --genome GRCh37
+nextflow run rikenbit/ramdaq.nf -profile <docker/singularity> --reads '*_R{1,2}.fastq.gz' --genome GRCh37 --local_annot_dir <The directory path where the regerence genome and annotations are placed>
 ```
 
 See [usage docs](docs/usage.md) for all of the available options when running the pipeline.
@@ -44,10 +44,12 @@ The ramdaq pipeline comes with documentation about the pipeline, found in the `d
 2. Pipeline configuration
     * [Local installation](https://nf-co.re/usage/local_installation)
     * [Adding your own system config](https://nf-co.re/usage/adding_own_config)
-    * [Reference genomes](https://nf-co.re/usage/reference_genomes)
 3. [Running the pipeline](docs/usage.md)
     * [Using test data](docs/test_data.md)
-    * [Using provided annotations](docs/local_annotation.md)
+    * [Using bcl2fastq](bcl2fastq/README.md)
+        - [bcl2fastq](https://support.illumina.com/sequencing/sequencing_software/bcl2fastq-conversion-software.html) is conversion software, which can be used to demultiplex data and convert BCL files to FASTQ file formats for downstream analysis.
+    * [Using provided reference genome and annotations](docs/local_annotation.md)
+        - the current version supports human (GRCh38) and mouse (GRCm38).
 4. [Output and how to interpret the results](docs/output.md)
 5. [Troubleshooting](https://nf-co.re/usage/troubleshooting)
 
