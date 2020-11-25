@@ -61,7 +61,7 @@ NXF_OPTS='-Xms1g -Xmx4g'
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run rikenbit/ramdaq.nf --reads '*_R{1,2}.fastq.gz' -profile docker  --genome GRCh37 --local_annot_dir <annotation directory path>
+nextflow run rikenbit/ramdaq.nf --reads '*_R{1,2}.fastq.gz' -profile docker  --genome GRCh38 --local_annot_dir <annotation directory path>
 ```
 
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
@@ -178,7 +178,7 @@ The pipeline config files come bundled with paths to the illumina iGenomes refer
 There are human (GRCh38) and mouse (GRCm38) supported in the ramdaq. To run the pipeline, you must specify which to use with the `--genome` flag.
 
 - Human
-  - `--genome GRCh37`
+  - `--genome GRCh38`
 - Mouse
   - `--genome GRCm38`
 
@@ -193,7 +193,7 @@ The syntax for this reference configuration is as follows:
 ```nextflow
 params {
   genomes {
-    'GRCh37' {
+    'GRCh38' {
       gtf   = '<path to the gtf file>' // Used if no star index given
     }
     // Any number of additional genomes, key is used with --genome
