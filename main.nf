@@ -32,6 +32,7 @@ def helpMessage() {
                                       fr-firststrand : First read corresponds to the reverse complemented counterpart of a transcript
                                       fr-secondstrand : First read corresponds to a transcript
       --saveReference                 Save the generated reference files to the results directory
+      --outdir [str]                  The output directory where the results will be saved
 
     Fastqmcf:
       --maxReadLength [N]             Maximum remaining sequence length (Default: 75)
@@ -53,9 +54,8 @@ def helpMessage() {
       --fc_threads_num [N]            Number of the threads (Default: 1)
       --group_features_type           Define the type attribute used to group features based on the group attribute (default: 'gene_type')
 
-    Other options:
+    Others:
       --sampleLevel                   Used to turn off the edgeR MDS and heatmap. Set automatically when running on fewer than 3 samples
-      --outdir [file]                 The output directory where the results will be saved
 
     """.stripIndent()
 }

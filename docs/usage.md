@@ -12,12 +12,18 @@
     - [`--reads`](#--reads)
     - [`--single_end`](#--single_end)
     - [`--stranded`](#--stranded)
-  - [Reference genomes and annotations](#reference-genomes)
+  - [Reference genomes and annotations](#reference-genomes-and-annotations)
     - [`--genome`](#--genome)
   - [Other command line parameters](#other-command-line-parameters)
     - [`--outdir`](#--outdir)
     - [`-resume`](#-resume)
     - [`-c`](#-c)
+  - [Parameters for each tools](#parameters-for-each-tools)
+    - [`Fastqmcf`](#Fastqmcf) 
+    - [`Hisat2`](#Hisat2)
+    - [`featureCounts`](#featureCounts)
+  - [Results report options](#results-report-options)
+    - [`--sampleLevel`](#--sampleLevel)
 <!--
     - [`--fasta`](#--fasta)
     - [`--igenomes_ignore`](#--igenomes_ignore)
@@ -356,3 +362,53 @@ Set to disable colourful command line output and live life in monochrome.
 Specify a path to a custom MultiQC configuration file.
 
 -->
+
+## Parameters for each tools
+
+### Fastqmcf
+
+> [Fastqmcf](https://expressionanalysis.github.io/ea-utils/) : Scans a sequence file for adapters, and, based on a log-scaled threshold, determines a set of clipping parameters and performs clipping. Also does skewing detection and quality filtering.
+
+- `--maxReadLength [N]`
+    - Maximum remaining sequence length (Default: 75)
+- `--minReadLength [N]`
+    - Minimum remaining sequence length (Default: 36)
+- `--skew [N]`
+    - Skew percentage-less-than causing cycle removal (Default: 4)
+- `--quality [N]`
+    - Quality threshold causing base removal (Default: 30)
+
+### Hisat2
+
+> [HISAT2](http://daehwankimlab.github.io/hisat2/) : A fast and sensitive alignment program for mapping next-generation sequencing reads (both DNA and RNA) to a population of human genomes as well as to a single reference genome.
+
+- `--softclipping`
+   - HISAT2 allow soft-clip reads near their 5' and 3' ends (Default: disallow)
+- `--hs_threads_num [N]`
+   - HISAT2 to launch a specified number of parallel search threads (Default: 1)
+
+### featureCounts
+
+> [featureCounts](http://subread.sourceforge.net/) : a software program developed for counting reads to genomic features such as genes, exons, promoters and genomic bins.
+
+- `--extra_attributes`
+    - Define which extra parameters should also be included in featureCounts (Default: 'gene_name')
+- `--group_features`
+    - Define the attribute type used to group features (Default: 'gene_id')
+- `--count_type`
+    - Define the type used to assign reads (Default: 'exon')
+- `--allow_multimap`
+    - Multi-mapping reads/fragments will be counted (Default: true)
+- `--allow_overlap`
+    - Reads will be allowed to be assigned to more than one matched meta-feature (Default: true)
+- `--count_fractionally`
+    - Assign fractional counts to features  (Default: true / This option must be used together with ‘--allow_multimap’ or ‘--allow_overlap’ or both)
+- `--fc_threads_num [N]`
+    - Number of the threads (Default: 1)
+- `--group_features_type`
+    - Define the type attribute used to group features based on the group attribute (default: 'gene_type')
+
+## Results report options
+
+### `--sampleLevel`
+Used to turn off the edgeR MDS and heatmap. Set automatically when running on fewer than 3 samples.
