@@ -11,8 +11,20 @@
     - [`-profile`](#-profile)
     - [`--reads`](#--reads)
     - [`--single_end`](#--single_end)
-  - [Reference genomes](#reference-genomes)
-    - [`--genome` (using iGenomes)](#--genome-using-igenomes)
+    - [`--stranded`](#--stranded)
+  - [Reference genomes and annotations](#reference-genomes-and-annotations)
+    - [`--genome`](#--genome)
+  - [Other command line parameters](#other-command-line-parameters)
+    - [`--outdir`](#--outdir)
+    - [`-resume`](#-resume)
+    - [`-c`](#-c)
+  - [Parameters for each tools](#parameters-for-each-tools)
+    - [`Fastqmcf`](#Fastqmcf) 
+    - [`Hisat2`](#Hisat2)
+    - [`featureCounts`](#featureCounts)
+  - [Results report options](#results-report-options)
+    - [`--sampleLevel`](#--sampleLevel)
+<!--
     - [`--fasta`](#--fasta)
     - [`--igenomes_ignore`](#--igenomes_ignore)
   - [Job resources](#job-resources)
@@ -22,14 +34,12 @@
     - [`--awsqueue`](#--awsqueue)
     - [`--awsregion`](#--awsregion)
     - [`--awscli`](#--awscli)
-  - [Other command line parameters](#other-command-line-parameters)
-    - [`--outdir`](#--outdir)
+
     - [`--email`](#--email)
     - [`--email_on_fail`](#--email_on_fail)
     - [`--max_multiqc_email_size`](#--max_multiqc_email_size)
     - [`-name`](#-name)
-    - [`-resume`](#-resume)
-    - [`-c`](#-c)
+
     - [`--custom_config_version`](#--custom_config_version)
     - [`--custom_config_base`](#--custom_config_base)
     - [`--max_memory`](#--max_memory)
@@ -38,6 +48,7 @@
     - [`--plaintext_email`](#--plaintext_email)
     - [`--monochrome_logs`](#--monochrome_logs)
     - [`--multiqc_config`](#--multiqc_config)
+-->
 
 ## Introduction
 
@@ -56,7 +67,7 @@ NXF_OPTS='-Xms1g -Xmx4g'
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run rikenbit/ramdaq.nf --reads '*_R{1,2}.fastq.gz' -profile docker  --genome GRCh37 --local_annot_dir <annotation directory path>
+nextflow run rikenbit/ramdaq.nf --reads '*_R{1,2}.fastq.gz' -profile docker  --genome GRCh38 --local_annot_dir <annotation directory path>
 ```
 
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
@@ -115,10 +126,13 @@ If `-profile` is not specified, the pipeline will run locally and expect all sof
   - A profile with a complete configuration for automated testing
   - Includes links to test data so needs no other parameters
 
-<!-- - `conda`
+<!-- - 
+`conda`
   * Please only use Conda as a last resort i.e. when it's not possible to run the pipeline with Docker or Singularity.
   * A generic configuration profile to be used with [Conda](https://conda.io/docs/)
-  * Pulls most software from [Bioconda](https://bioconda.github.io/) -->
+  * Pulls most software from [Bioconda](https://bioconda.github.io/) 
+-->
+
 <!-- TODO: Document required command line parameters -->
 
 ### `--reads`
@@ -126,7 +140,7 @@ If `-profile` is not specified, the pipeline will run locally and expect all sof
 Use this to specify the location of your input FastQ files. For example:
 
 ```bash
---reads 'path/to/data/sample_*_R{1,2}.fastq'
+--reads 'path/to/data/sample_*_R{1,2}.fastq.gz'
 ```
 
 Please note the following requirements:
@@ -135,7 +149,7 @@ Please note the following requirements:
 2. The path must have at least one `*` wildcard character
 3. When using the pipeline with paired end data, the path must use `{1,2}` notation to specify read pairs.
 
-If left unspecified, a default pattern is used: `data/*{1,2}.fastq.gz`
+If left unspecified, a default pattern is used: `fastq_files/*{1,2}.fastq.gz`
 
 ### `--single_end`
 
@@ -147,28 +161,36 @@ By default, the pipeline expects paired-end data. If you have single-end data, y
 
 It is not possible to run a mixture of single-end and paired-end files in one run.
 
-## Reference genomes
+### `--stranded`
 
+By default, the pipeline expects unstranded data. If you use the library preparation kit for NGS with orientation information, you need to specify the orientation of fastq in the stranded option. For example:
+
+```bash
+--stranded fr-firststrand
+```
+
+- unstranded : default (If not specified setting)
+- fr-firststrand : First read corresponds to the reverse complemented counterpart of a transcript
+- fr-secondstrand : First read corresponds to a transcript
+
+## Reference genomes and annotations
+
+<!-- -
 The pipeline config files come bundled with paths to the illumina iGenomes reference index files. If running with docker or AWS, the configuration is set up to use the [AWS-iGenomes](https://ewels.github.io/AWS-iGenomes/) resource.
+-->
 
-### `--genome` (using iGenomes)
+### `--genome`
 
-There are 31 different species supported in the iGenomes references. To run the pipeline, you must specify which to use with the `--genome` flag.
-
-You can find the keys to specify the genomes in the [iGenomes config file](../conf/igenomes.config). Common genomes that are supported are:
+There are human (GRCh38) and mouse (GRCm38) supported in the ramdaq. To run the pipeline, you must specify which to use with the `--genome` flag.
 
 - Human
-  - `--genome GRCh37`
+  - `--genome GRCh38`
 - Mouse
   - `--genome GRCm38`
-- _Drosophila_
-  - `--genome BDGP6`
-- _S. cerevisiae_
-  - `--genome 'R64-1-1'`
 
-> There are numerous others - check the config file for more.
+> For the implementation of the workflow, you need to download some mapping index or annotation files. Check the [this document](docs/local_annotation.md) for details.
 
-Note that you can use the same configuration setup to save sets of reference files for your own use, even if they are not part of the iGenomes resource. See the [Nextflow documentation](https://www.nextflow.io/docs/latest/config.html) for instructions on where to save such a file.
+Note that you can use the same configuration setup to save sets of reference files for your own use. See the [Nextflow documentation](https://www.nextflow.io/docs/latest/config.html) for instructions on where to save such a file.
 
 The syntax for this reference configuration is as follows:
 
@@ -177,8 +199,8 @@ The syntax for this reference configuration is as follows:
 ```nextflow
 params {
   genomes {
-    'GRCh37' {
-      fasta   = '<path to the genome fasta file>' // Used if no star index given
+    'GRCh38' {
+      gtf   = '<path to the gtf file>' // Used if no star index given
     }
     // Any number of additional genomes, key is used with --genome
   }
@@ -187,6 +209,7 @@ params {
 
 <!-- TODO: Describe reference path flags -->
 
+<!-- -
 ### `--fasta`
 
 If you prefer, you can specify the full path to your reference genome when you run the pipeline:
@@ -230,6 +253,7 @@ The AWS region in which to run your job. Default is set to `eu-west-1` but can b
 The [AWS CLI](https://www.nextflow.io/docs/latest/awscloud.html#aws-cli-installation) path in your custom AMI. Default: `/home/ec2-user/miniconda/bin/aws`.
 
 Please make sure to also set the `-w/--work-dir` and `--outdir` parameters to a S3 storage bucket of your choice - you'll get an error message notifying you if you didn't.
+-->
 
 ## Other command line parameters
 
@@ -239,6 +263,7 @@ Please make sure to also set the `-w/--work-dir` and `--outdir` parameters to a 
 
 The output directory where the results will be saved.
 
+<!-- 
 ### `--email`
 
 Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits. If set in your user config file (`~/.nextflow/config`) then you don't need to specify this on the command line for every run.
@@ -259,6 +284,8 @@ This is used in the MultiQC report (if not default) and in the summary HTML / e-
 
 **NB:** Single hyphen (core Nextflow option)
 
+ -->
+
 ### `-resume`
 
 Specify this when restarting a pipeline. Nextflow will used cached results from any pipeline steps where the inputs are the same, continuing from where it got to previously.
@@ -274,6 +301,8 @@ Specify the path to a specific config file (this is a core NextFlow command).
 **NB:** Single hyphen (core Nextflow option)
 
 Note - you can use this to override pipeline defaults.
+
+<!--
 
 ### `--custom_config_version`
 
@@ -331,3 +360,55 @@ Set to disable colourful command line output and live life in monochrome.
 ### `--multiqc_config`
 
 Specify a path to a custom MultiQC configuration file.
+
+-->
+
+## Parameters for each tools
+
+### Fastqmcf
+
+> [Fastqmcf](https://expressionanalysis.github.io/ea-utils/) : Scans a sequence file for adapters, and, based on a log-scaled threshold, determines a set of clipping parameters and performs clipping. Also does skewing detection and quality filtering.
+
+- `--maxReadLength [N]`
+    - Maximum remaining sequence length (Default: 75)
+- `--minReadLength [N]`
+    - Minimum remaining sequence length (Default: 36)
+- `--skew [N]`
+    - Skew percentage-less-than causing cycle removal (Default: 4)
+- `--quality [N]`
+    - Quality threshold causing base removal (Default: 30)
+
+### Hisat2
+
+> [HISAT2](http://daehwankimlab.github.io/hisat2/) : A fast and sensitive alignment program for mapping next-generation sequencing reads (both DNA and RNA) to a population of human genomes as well as to a single reference genome.
+
+- `--softclipping`
+   - HISAT2 allow soft-clip reads near their 5' and 3' ends (Default: disallow)
+- `--hs_threads_num [N]`
+   - HISAT2 to launch a specified number of parallel search threads (Default: 1)
+
+### featureCounts
+
+> [featureCounts](http://subread.sourceforge.net/) : a software program developed for counting reads to genomic features such as genes, exons, promoters and genomic bins.
+
+- `--extra_attributes`
+    - Define which extra parameters should also be included in featureCounts (Default: 'gene_name')
+- `--group_features`
+    - Define the attribute type used to group features (Default: 'gene_id')
+- `--count_type`
+    - Define the type used to assign reads (Default: 'exon')
+- `--allow_multimap`
+    - Multi-mapping reads/fragments will be counted (Default: true)
+- `--allow_overlap`
+    - Reads will be allowed to be assigned to more than one matched meta-feature (Default: true)
+- `--count_fractionally`
+    - Assign fractional counts to features  (Default: true / This option must be used together with ‘--allow_multimap’ or ‘--allow_overlap’ or both)
+- `--fc_threads_num [N]`
+    - Number of the threads (Default: 1)
+- `--group_features_type`
+    - Define the type attribute used to group features based on the group attribute (default: 'gene_type')
+
+## Results report options
+
+### `--sampleLevel`
+Used to turn off the edgeR MDS and heatmap. Set automatically when running on fewer than 3 samples.
