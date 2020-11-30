@@ -19,6 +19,8 @@ and processes data using the following steps:
 * [MultiQC](#multiqc) - aggregate report, describing results of the whole pipeline
 * [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
 
+All output files are saved at `results` directory. If you want to name it arbitrarily, you can change the directory name with the `--outdir [dirname]` option.
+
 ## FastQC
 
 [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/) gives general quality metrics about your reads. It provides information about the quality score distribution across your reads, the per base sequence content (%T/A/G/C). You get information about adapter contamination and other overrepresented sequences.
@@ -27,7 +29,7 @@ For further reading and documentation see the [FastQC help](http://www.bioinform
 
 > **NB:** FastQC outputs two types of plots: before trimming (raw) and after trimming (trimmed). Trimming removes adapter sequences and potentially poor quality regions (use Fastqmcf, described below).
 
-**Output directory: `results/fastqc (raw)`, `results/fastqc.trim (trimmed)` **
+**Output directory: `results/fastqc (raw) and results/fastqc.trim (trimmed)`**
 
 * `*.raw_fastqc.html`(raw),  `*.trim_fastqc.html`(trimmed)
   * FastQC report, containing quality metrics for your untrimmed raw fastq files
