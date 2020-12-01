@@ -33,6 +33,8 @@ if (isPairedEnd=="True"){
     plotdata$assignedGeneRate = (plotdata$totalread / plotdata$totalseq) *100
 }
 
+plotdata = plotdata[order(plotdata$samplename),]
+
 ### draw barplot
 g = ggplot(plotdata, aes(x=samplename,y=assignedGeneRate)) +
     geom_bar(alpha=0.7, stat="identity") +
