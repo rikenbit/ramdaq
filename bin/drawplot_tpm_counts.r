@@ -66,7 +66,7 @@ countdata = read.table(inputfile, sep="\t", comment.char = "", header=T, strings
 counts_detgenenum = data.frame(colSums(countdata >0))
 colnames(counts_detgenenum) = c("NumOfGenes")
 counts_detgenenum$samplename = rownames(counts_detgenenum)
-
+counts_detgenenum = counts_detgenenum[order(counts_detgenenum$samplename),]
 ### draw barplot
 g = ggplot(counts_detgenenum, aes(x=samplename,y=NumOfGenes)) +
     geom_bar(alpha=0.7, stat="identity") +

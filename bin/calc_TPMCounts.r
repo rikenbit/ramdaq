@@ -56,7 +56,7 @@ write.table(count_tpm,"merged_featureCounts_gene_TPM.txt",sep="\t", append=F, qu
 # create ERCC counts
 count_ercc = trim_countfc_sample(raw_countdata, ERCC=T)
 
-if (nrow(count_ercc) > 1){
+if (nrow(count_ercc) > 1 && sum(colSums(count_ercc)) > 0){
   write.table(count_ercc,"merged_featureCounts_gene_ERCC.txt",sep="\t", append=F, quote=F, row.names=T, col.names=T)
 }
 
