@@ -15,6 +15,8 @@
     - [`--stranded`](#--stranded)
   - [Reference genomes and annotations](#reference-genomes-and-annotations)
     - [`--genome`](#--genome)
+    - [`--saveReference`](#--saveReference)
+    - [`--local_annot_dir`](#--local_annot_dir)
   - [Other command line parameters](#other-command-line-parameters)
     - [`--outdir`](#--outdir)
     - [`-name`](#-name)
@@ -194,6 +196,7 @@ params {
 Save the downloded reference files to the results directory
 
 ### `--local_annot_dir`
+
 Specifes the location of local path to a directiory containing annotation files. See [local_annotation](local_annotation.md)
 
 ## Other command line parameters
