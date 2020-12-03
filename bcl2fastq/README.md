@@ -5,7 +5,7 @@
 First, pull a Docker container for bcl2fastq with the following command.
 
 ```bash
-cd rikenbit/ramdaq.nf/bcl2fastq
+cd rikenbit/ramdaq/bcl2fastq
 docker build -t bcl2fastq2:1.0 .
 ```
 
@@ -26,12 +26,12 @@ Then, follow the below instructions.
 mkdir XXXXXX;cd XXXXXX
 
 # Copy a config file (The example here is in case of SE)
-cp rikenbit/ramdaq.nf/bcl2fastq/bcl2fastq.config .
+cp rikenbit/ramdaq/bcl2fastq/bcl2fastq.config .
 
 # Rewrite config (with vi, vim, emacs, or your favorite editors)
 # Setting requires a BaseCalls directory path(full) containing the binary base call files (BCL files) and output directory name.
 vi bcl2fastq.config
 
 # Run bcl2fastq via nextflow
-nextflow run rikenbit/ramdaq.nf/bcl2fastq/bcl2fastq.nf -c bcl2fastq.config
+nextflow run rikenbit/ramdaq/bcl2fastq/bcl2fastq.nf -c bcl2fastq.config
 ```

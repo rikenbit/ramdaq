@@ -2,8 +2,8 @@
 
 **This pipeline analyses data from full-length single-cell RNA sequencing (scRNA-seq) methods.**
 
-[![GitHub Actions CI Status](https://github.com/rikenbit/ramdaq.nf/workflows/CI/badge.svg)](https://github.com/rikenbit/ramdaq.nf/actions)
-[![GitHub Actions Linting Status](https://github.com/rikenbit/ramdaq.nf/workflows/linting/badge.svg)](https://github.com/rikenbit/ramdaq.nf/actions)
+[![GitHub Actions CI Status](https://github.com/rikenbit/ramdaq/workflows/CI/badge.svg)](https://github.com/rikenbit/ramdaq/actions)
+[![GitHub Actions Linting Status](https://github.com/rikenbit/ramdaq/workflows/linting/badge.svg)](https://github.com/rikenbit/ramdaq/actions)
 [![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A519.10.0-brightgreen.svg)](https://www.nextflow.io/)
 
 <!-- [![Docker](https://img.shields.io/docker/automated/nfcore/ramdaq.svg)](https://hub.docker.com/r/myoshimura080822/ramdaq) -->
@@ -21,7 +21,7 @@ ii. Install either [`Docker`](https://docs.docker.com/engine/installation/) or [
 iii. Download the pipeline and test it on a minimal dataset with a single command
 
 ```bash
-nextflow run rikenbit/ramdaq.nf -profile test,<docker/singularity>
+nextflow run rikenbit/ramdaq -profile test,<docker/singularity>
 ```
 
 > Please check [nf-core/configs](https://github.com/nf-core/configs#documentation) and enable either `docker` or `singularity` to set the appropriate execution settings for your local computing environment.
@@ -31,7 +31,7 @@ iv. Start running your own analysis!
 <!-- TODO: Update the default command above used to run the pipeline -->
 
 ```bash
-nextflow run rikenbit/ramdaq.nf -profile <docker/singularity> --reads '*_R{1,2}.fastq.gz' --genome GRCh37 --local_annot_dir <The directory path where the regerence genome and annotations are placed>
+nextflow run rikenbit/ramdaq -profile <docker/singularity> --reads '*_R{1,2}.fastq.gz' --genome GRCh37 --local_annot_dir <The directory path where the regerence genome and annotations are placed>
 ```
 
 See [usage docs](docs/usage.md) for all of the available options when running the pipeline.

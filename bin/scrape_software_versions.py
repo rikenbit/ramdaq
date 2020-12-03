@@ -36,7 +36,7 @@ for k in list(results):
 print ('''
 id: 'software_versions'
 section_name: 'ramdaq Software Versions'
-section_href: 'https://github.com/rikenbit/ramdaq.nf'
+section_href: 'https://github.com/rikenbit/ramdaq'
 plot_type: 'html'
 description: 'are collected at run time from the software output.'
 data: |

@@ -32,4 +32,4 @@ Pipeline Configuration:
 
 --
 ramdaq
-https://github.com/rikenbit/ramdaq.nf
+https://github.com/rikenbit/ramdaq

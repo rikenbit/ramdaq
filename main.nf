@@ -5,7 +5,7 @@
 ========================================================================================
  ramdaq Analysis Pipeline.
  #### Homepage / Documentation
- https://github.com/rikenbit/ramdaq.nf
+ https://github.com/rikenbit/ramdaq
 ----------------------------------------------------------------------------------------
 */
 
@@ -17,7 +17,7 @@ def helpMessage() {
 
     The typical command for running the pipeline is as follows:
 
-    nextflow run rikenbit/ramdaq.nf --reads '*_R{1,2}.fastq.gz' -profile docker
+    nextflow run rikenbit/ramdaq --reads '*_R{1,2}.fastq.gz' -profile docker
 
     Pipeline setting:
       -profile [str]                  Configuration profile to use. Can use multiple (comma separated)
@@ -255,7 +255,7 @@ Channel.from(summary.collect{ [it.key, it.value] })
     id: 'ramdaq-summary'
     description: " - this information is collected when the pipeline is started."
     section_name: 'ramdaq Workflow Summary'
-    section_href: 'https://github.com/rikenbit/ramdaq.nf'
+    section_href: 'https://github.com/rikenbit/ramdaq'
     plot_type: 'html'
     data: |
         <dl class=\"dl-horizontal\">

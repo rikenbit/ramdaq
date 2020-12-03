@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://raw.githubusercontent.com/rikenbit/ramdaq.nf/master/nextflow_schema.json",
-    "title": "rikenbit/ramdaq.nf pipeline parameters",
+    "$id": "https://raw.githubusercontent.com/rikenbit/ramdaq/master/nextflow_schema.json",
+    "title": "rikenbit/ramdaq pipeline parameters",
     "description": "This pipeline analyses data from full-length single-cell RNA sequencing (scRNA-seq) methods.",
     "type": "object",
     "definitions": {
