@@ -131,7 +131,7 @@ RSeQC documentation: [infer_experiment.py](http://rseqc.sourceforge.net/#infer-e
 
 ### Read distribution
 
-This tool calculates how mapped reads are distributed over genomic features. 
+This tool calculates how mapped reads are distributed over genomic features.
 
 RSeQC documentation: [read_distribution.py](http://rseqc.sourceforge.net/#read-distribution-py)
 

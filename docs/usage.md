@@ -88,7 +88,7 @@ First, go to the [ramdaq releases page](https://github.com/rikenbit/ramdaq.nf/re
 
 This version number will be logged in reports when you run the pipeline, so that you'll know what you used when you look back in the future.
  -->
- 
+
 ## Main arguments
 
 ### `-profile`
