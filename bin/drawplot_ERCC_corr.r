@@ -42,6 +42,7 @@ if (nrow(ercc_countdata_tpm_log) > 1){
 
 plotdata = cor(ercc_countdata_tpm_log, ercc_ref$mollog)
 plotdata = data.frame(corr=plotdata[,1],sample_name=as.character(rownames(plotdata)))
+plotdata = plotdata[order(plotdata$sample_name),]
 plotdata = SDset(plotdata$sample_name, plotdata$corr)
 
 ### draw plot
