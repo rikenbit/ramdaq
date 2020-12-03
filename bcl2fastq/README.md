@@ -1,23 +1,27 @@
 # Nextflow pipeline for bcl2fastq
 
 ## Converting FASTQ files from a BCL file
+
 First, pull a Docker container for bcl2fastq with the following command.
-```
+
+```bash
 cd rikenbit/ramdaq.nf/bcl2fastq
 docker build -t bcl2fastq2:1.0 .
 ```
 
 Then, run test.
-```
+
+```bash
 $ docker run --rm bcl2fastq2:1.0 bcl2fastq --help
 BCL to FASTQ file converter
 bcl2fastq v2.17.1.14
 Copyright (c) 2007-2015 Illumina, Inc.
 ...
 ```
+
 Then, follow the below instructions.
 
-```
+```bash
 # Make a working directory with your favorite name and move into the directory
 mkdir XXXXXX;cd XXXXXX
 
