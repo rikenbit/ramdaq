@@ -19,20 +19,27 @@ def helpMessage() {
 
     nextflow run rikenbit/ramdaq.nf --reads '*_R{1,2}.fastq.gz' -profile docker
 
-    Mandatory arguments:
-      --reads [file]                  Path to input data (must be surrounded with quotes)
+    Pipeline setting:
       -profile [str]                  Configuration profile to use. Can use multiple (comma separated)
-                                      Available: docker, singularity, test, awsbatch, <institute> and more
-      --local_annot_dir [str]         Base path for local annotation files
-
-    Options:
-      --genome [str]                  Name of human (GRCh38) or mouse (GRCm38) reference
+                                      Available: docker, singularity, test, and more
+      -c                              Specify the path to a specific config file
+      --reads [file]                  Path to input data (must be surrounded with quotes)
       --single_end                    Specifies that the input is single-end reads
       --stranded [str]                unstranded : default
                                       fr-firststrand : First read corresponds to the reverse complemented counterpart of a transcript
                                       fr-secondstrand : First read corresponds to a transcript
+      --genome [str]                  Name of human (GRCh38) or mouse (GRCm38) reference
       --saveReference                 Save the generated reference files to the results directory
+      --local_annot_dir [str]         Base path for local annotation files
+        
+    Other:
       --outdir [str]                  The output directory where the results will be saved
+      -name [str]                     Name for the pipeline run. If not specified, Nextflow will automatically generate a random mnemonic
+      -resume                         Specify this when restarting a pipeline
+      --max_memory [str]              Memory limit for each step of pipeline. Should be in form e.g. --max_memory '8.GB'. Default: '${params.max_memory}'
+      --max_time [str]                Time limit for each step of the pipeline. Should be in form e.g. --max_time '2.h'. Default: '${params.max_time}'
+      --max_cpus [str]                Maximum number of CPUs to use for each step of the pipeline. Should be in form e.g. Default: '${params.max_cpus}'
+      --monochrome_logs               Set to disable colourful command line output and live life in monochrome
 
     Fastqmcf:
       --maxReadLength [N]             Maximum remaining sequence length (Default: 75)
@@ -53,8 +60,8 @@ def helpMessage() {
       --count_fractionally            Assign fractional counts to features  (Default: true / This option must be used together with ‘--allow_multimap’ or ‘--allow_overlap’ or both)
       --fc_threads_num [N]            Number of the threads (Default: 1)
       --group_features_type           Define the type attribute used to group features based on the group attribute (default: 'gene_type')
-
-    Others:
+    
+    MultiQC report:
       --sampleLevel                   Used to turn off the edgeR MDS and heatmap. Set automatically when running on fewer than 3 samples
 
     """.stripIndent()
@@ -74,7 +81,7 @@ if (params.help) {
 
 // Check if genome exists in the config file
 if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
-    exit 1, "The provided genome '${params.genome}' is not available in the iGenomes file. Currently the available genomes are ${params.genomes.keySet().join(", ")}"
+    exit 1, "The provided genome '${params.genome}' is not available. Currently the available genomes are ${params.genomes.keySet().join(", ")}"
 }
 
 // Configurable variables
@@ -140,16 +147,6 @@ if (!(workflow.runName ==~ /[a-z]+_[a-z]+/)) {
     custom_runName = workflow.runName
 }
 
-if (workflow.profile.contains('awsbatch')) {
-    // AWSBatch sanity checking
-    if (!params.awsqueue || !params.awsregion) exit 1, "Specify correct --awsqueue and --awsregion parameters on AWSBatch!"
-    // Check outdir paths to be S3 buckets if running on AWSBatch
-    // related: https://github.com/nextflow-io/nextflow/issues/813
-    if (!params.outdir.startsWith('s3:')) exit 1, "Outdir not on S3 - specify S3 Bucket to run on AWSBatch!"
-    // Prevent trace files to be stored on S3 since S3 does not support rolling files.
-    if (params.tracedir.startsWith('s3:')) exit 1, "Specify a local tracedir or run without trace! S3 cannot be used for tracefiles."
-}
-
 // Stage config files
 ch_multiqc_config = file("$baseDir/assets/multiqc_config.yaml", checkIfExists: true)
 ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multiqc_config, checkIfExists: true) : Channel.empty()
@@ -200,8 +197,6 @@ if (params.readPaths) {
                 ch_debug }
 }
 
-//ch_debug.println()
-
 // Header log info
 log.info nfcoreHeader()
 def summary = [:]
@@ -237,11 +232,7 @@ summary['Launch dir']       = workflow.launchDir
 summary['Working dir']      = workflow.workDir
 summary['Script dir']       = workflow.projectDir
 summary['User']             = workflow.userName
-if (workflow.profile.contains('awsbatch')) {
-    summary['AWS Region']   = params.awsregion
-    summary['AWS Queue']    = params.awsqueue
-    summary['AWS CLI']      = params.awscli
-}
+
 summary['Config Profile'] = workflow.profile
 if (params.config_profile_description) summary['Config Description'] = params.config_profile_description
 if (params.config_profile_contact)     summary['Config Contact']     = params.config_profile_contact
