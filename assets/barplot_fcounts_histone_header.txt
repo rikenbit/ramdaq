@@ -1,0 +1,10 @@
+#id: 'rate_of_histone'
+#section_name: 'Rate of assigned to Histone genes [%]'
+#description: "show rate of assigned to histone genes from featureCounts"
+#plot_type: 'bargraph'
+#anchor: 'rate_of_histone'
+#pconfig:
+#    title: 'Rate of assigned to Histone genes [%]'
+#    cpswitch: False
+#    tt_percentages: False
+
