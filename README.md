@@ -1,4 +1,4 @@
-# ![ramdaq](docs/images/ramdaq_logo.svg)
+# ![ramdaq](docs/images/ramdaq_logo_vectorized.svg)
 
 **This pipeline analyses data from full-length single-cell RNA sequencing (scRNA-seq) methods.**
 
