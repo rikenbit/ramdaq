@@ -53,15 +53,12 @@ The ramdaq pipeline comes with documentation about the pipeline, found in the `d
 4. [Output and how to interpret the results](docs/output.md)
 5. [Troubleshooting](https://nf-co.re/usage/troubleshooting)
 
-The ramdaq pipeline was originally developed based on the [nf-core](https://nf-co.re/) template.
-
-<!-- TODO: Add a brief overview of what the pipeline does and how it works -->
-
 ## Credits
 
-ramdaq was originally written by [Mika Yoshimura](https://github.com/myoshimura080822) and [Haruka Ozaki](https://github.com/yuifu) in the collaboration of [Laboratory for Bioinformatics Research, RIKEN Center for Biosystems Dynamics Research](https://bit.riken.jp/) and [Bioinformatics Laboratory, Faculty of Medicine, University of Tsukuba](https://sites.google.com/view/ozakilab).
+ramdaq is written and maintained by [Mika Yoshimura](https://github.com/myoshimura080822) and [Haruka Ozaki](https://github.com/yuifu) in the collaboration of [Laboratory for Bioinformatics Research, RIKEN Center for Biosystems Dynamics Research](https://bit.riken.jp/) and [Bioinformatics Laboratory, Faculty of Medicine, University of Tsukuba](https://sites.google.com/view/ozakilab).
+
+ramdaq was originally developed based on the [nf-core](https://nf-co.re/) template.
 
 ## Citation
 
-<!-- TODO: Add citation for pipeline after first release. Uncomment lines below and update Zenodo doi. -->
-<!-- If you use  ramdaq for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->You can cite the `nf-core` publication as follows:
+[![DOI](https://zenodo.org/badge/269006630.svg)](https://zenodo.org/badge/latestdoi/269006630)
