@@ -1,10 +1,11 @@
 #id: 'rate_of_assignedgene'
-#section_name: 'Rate of assigned to gene'
+#section_name: 'Rate of assigned to genes [%]'
 #description: "show rate of assigned to genes from total reads"
 #plot_type: 'bargraph'
 #anchor: 'rate_of_assignedgene'
 #pconfig:
-#    title: 'Rate of assigned to genes'
+#    id: 'rate_of_assignedgene_barplot'
+#    title: 'Rate of assigned to genes [%]'
 #    cpswitch: False
 #    tt_percentages: False
 
