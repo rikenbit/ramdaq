@@ -88,6 +88,12 @@ qsub -pe def_slot 4 -l short qsub_test.sh
 >
 > For example, the test config set `max_cpus = 2` and we add the option `-pe def_slot 3` on `qsub`.
 
+## References
+
+- [遺伝研スパコンで Singularity とか CWL を使う上での tips - Qiita](https://qiita.com/nigyta/items/8de4412e590dad7bf2f8)
+- [Singularityの使い方 - NIG Supercomputer System](https://sc.ddbj.nig.ac.jp/ja/guide/software/singularity)
+- [一般解析環境におけるUniva Grid Engineの利用方法 - NIG Supercomputer System](https://sc.ddbj.nig.ac.jp/ja/guide/usage-for-general-analysis-environment/uge)
+
 ## Acknowlegements
 
 - [Yasuhiro Tanizawa](https://github.com/nigyta)
