@@ -18,7 +18,7 @@ i. Install [`nextflow`](https://nf-co.re/usage/installation)
 
 ii. Install either [`Docker`](https://docs.docker.com/engine/installation/) or [`Singularity`](https://www.sylabs.io/guides/3.0/user-guide/) for full pipeline reproducibility (see [docs](https://nf-co.re/usage/configuration#basic-configuration-profiles)). Note that ramdaq does not support conda.
 
-iii. Download the pipeline and test it on a minimal dataset with a single command
+iii. Download the pipeline automatically and test it on a minimal dataset with a single command
 
 ```bash
 nextflow run rikenbit/ramdaq -profile test,<docker/singularity>
@@ -41,10 +41,9 @@ See [usage docs](docs/usage.md) for all of the available options when running th
 The ramdaq pipeline comes with documentation about the pipeline, found in the `docs/` directory:
 
 1. [Installation](https://nf-co.re/usage/installation)
-2. Pipeline configuration
-    * [Local installation](https://nf-co.re/usage/local_installation)
-    * [Adding your own system config](https://nf-co.re/usage/adding_own_config)
-3. [Running the pipeline](docs/usage.md)
+2. [Pipeline configuration](https://nf-co.re/usage/adding_own_config)
+3. Running the pipeline
+    * [Usage](docs/usage.md)
     * [Using test data](docs/test_data.md)
     * [Using bcl2fastq](bcl2fastq/README.md)
         * [bcl2fastq](https://support.illumina.com/sequencing/sequencing_software/bcl2fastq-conversion-software.html) is conversion software, which can be used to demultiplex data and convert BCL files to FASTQ file formats for downstream analysis.
