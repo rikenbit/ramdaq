@@ -4,6 +4,7 @@
 #plot_type: 'bargraph'
 #anchor: 'ercc_correlation'
 #pconfig:
+#    id: 'ercc_correlation_barplot'
 #    title: 'ERCC counts and mol-log correlation'
 #    cpswitch: False
 #    tt_decimals: 2

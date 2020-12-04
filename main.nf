@@ -162,6 +162,7 @@ ch_ercc_data = Channel.fromPath("$baseDir/assets/ercc_dataset.txt", checkIfExist
 ch_ercc_corr_header = Channel.fromPath("$baseDir/assets/ercc_correlation_header.txt", checkIfExists: true)
 ch_assignedgene_header = Channel.fromPath("$baseDir/assets/barplot_assignedgene_rate_header.txt", checkIfExists: true)
 ch_num_of_detgene_header = Channel.fromPath("$baseDir/assets/barplot_num_of_detgene_header.txt", checkIfExists: true)
+ch_fcounts_histone_header = Channel.fromPath("$baseDir/assets/barplot_fcounts_histone_header.txt", checkIfExists: true)
 ch_pcaplot_header = Channel.fromPath("$baseDir/assets/pcaplot_header.txt", checkIfExists: true)
 ch_tsneplot_header = Channel.fromPath("$baseDir/assets/tsneplot_header.txt", checkIfExists: true)
 ch_umapplot_header = Channel.fromPath("$baseDir/assets/umapplot_header.txt", checkIfExists: true)
@@ -949,6 +950,25 @@ process featureCounts_histone  {
     """
 }
 
+process merge_featureCounts_histone {
+    publishDir "${params.outdir}/featureCounts_Histone", mode: 'copy'
+
+    input:
+    file input_files from featureCounts_logs_histone.collect()
+
+    output:
+    file 'merged_featureCounts_histone.txt' into ch_fcounts_histone_merged
+
+    script:
+    rownames = "<(less ${input_files[0]} | cut -f1 )"
+    counts = input_files.collect{filename ->
+      "<(less ${filename} | sed 's:.bam::' | cut -f2)"}.join(" ")
+    """
+    paste $rownames $counts > merged_featureCounts_histone.txt
+    """
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 /*
 * STEP 9 - edgeR MDS and heatmap
@@ -1039,7 +1059,33 @@ process create_plots_assignedgene {
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
-* STEP 12 - create plot from TPM counts
+* STEP 12 - featureCounts mapped rate (Histone) barplot
+*/
+///////////////////////////////////////////////////////////////////////////////
+
+process create_plots_fcounts_histone {
+    publishDir "${params.outdir}/plots_bar_fcounts_histone", mode: 'copy'
+
+    input:
+    file histone_merged from ch_fcounts_histone_merged
+    file fcounts_histone_header from ch_fcounts_histone_header
+
+    output:
+    file "*.{txt,pdf,csv}" into fcounts_histone_results
+
+    script:
+    """
+    drawplot_fcounts_histone_bar.r $histone_merged
+    cat $fcounts_histone_header barplot_fcounts_histone_rate.csv >> tmp_file
+    mv tmp_file barplot_fcounts_histone_rate_mqc.csv
+    """
+
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+* STEP 13 - create plot from TPM counts
 */
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1083,6 +1129,7 @@ process create_plots_fromTPM {
 
 
 
+
 ///////////////////////////////////////////////////////////////////////////////
 /*
 * STEP X - MultiQC
@@ -1104,10 +1151,11 @@ process multiqc {
     file ('featureCounts_biotype/*') from featureCounts_biotype.collect()
     file ('featureCounts_mt/*') from featureCounts_logs_mt.collect().ifEmpty([])
     file ('featureCounts_rrna/*') from featureCounts_logs_rrna.collect().ifEmpty([])
-    file ('featureCounts_histone/*') from featureCounts_logs_histone.collect().ifEmpty([])
+    // file ('featureCounts_histone/*') from featureCounts_logs_histone.collect().ifEmpty([])
     file ('sample_correlation_results/*') from sample_correlation_results.collect().ifEmpty([]) // If the Edge-R is not run create an Empty array
     file ('ercc_correlation_results/*') from ercc_correlation_results.collect().ifEmpty([]) 
     file ('plots_bar_assignedgene/*') from assignedgene_rate_results.collect().ifEmpty([]) 
+    file ('plots_bar_fcounts_histone/*') from fcounts_histone_results.collect().ifEmpty([]) 
     file ('plots_from_tpmcounts/*') from plots_from_tpmcounts_results.collect().ifEmpty([]) 
     file ('software_versions/*') from ch_software_versions_yaml.collect()
     file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")

@@ -4,6 +4,7 @@
 #plot_type: 'bargraph'
 #anchor: 'num_of_detectedgene'
 #pconfig:
+#    id: 'num_of_detectedgene_barplot'
 #    title: 'Number of detected genes'
 #    cpswitch: False
 #    tt_percentages: False
