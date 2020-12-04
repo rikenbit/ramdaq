@@ -91,7 +91,7 @@ qsub -pe def_slot 4 -l short qsub_test.sh
 
 ## Acknowlegements
 
-- Tanizawa-san
-- Manabu Ishii
-- Tanjo-san
+- [Yasuhiro Tanizawa](https://github.com/nigyta)
+- [Manabu Ishii](https://github.com/manabuishii)
+- [Tomoya Tanjo](https://github.com/tom-tan)
 - [Workflow Meetup](https://github.com/workflow-meetup-jp/workflow-meetup)
