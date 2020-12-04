@@ -25,6 +25,9 @@ Then, follow the below instructions.
 # Make a working directory with your favorite name and move into the directory
 mkdir XXXXXX;cd XXXXXX
 
+# Download the pipeline code
+git clone https://github.com/rikenbit/ramdaq.git
+
 # Copy a config file (The example here is in case of SE)
 cp rikenbit/ramdaq/bcl2fastq/bcl2fastq.config .
 
