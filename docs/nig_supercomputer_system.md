@@ -88,7 +88,6 @@ qsub -pe def_slot 4 -l short qsub_test.sh
 >
 > For example, the test config set `max_cpus = 2` and we add the option `-pe def_slot 3` on `qsub`.
 
-
 ## Acknowlegements
 
 - [Yasuhiro Tanizawa](https://github.com/nigyta)
