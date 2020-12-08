@@ -30,8 +30,16 @@ iv. Start running your own analysis!
 
 <!-- TODO: Update the default command above used to run the pipeline -->
 
+iv-i. You can run ramdaq without donwloading reference annotation data.
+
 ```bash
-nextflow run rikenbit/ramdaq -profile <docker/singularity> --reads '*_R{1,2}.fastq.gz' --genome GRCh37 --local_annot_dir <The directory path where the regerence genome and annotations are placed>
+nextflow run rikenbit/ramdaq -profile <docker/singularity> --reads '*_R{1,2}.fastq.gz' --genome GRCh38
+```
+
+iv-i. You can also run ramdaq by specifying local paths to reference annotation (See ['Using provided reference genome and annotations'](docs/local_annotation.md)).
+
+```bash
+nextflow run rikenbit/ramdaq -profile <docker/singularity> --reads '*_R{1,2}.fastq.gz' --genome GRCh38 --local_annot_dir <The directory path where the regerence genome and annotations are placed>
 ```
 
 See [usage docs](docs/usage.md) for all of the available options when running the pipeline.
