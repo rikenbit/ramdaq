@@ -9,4 +9,5 @@
 #    cpswitch: False
 #    tt_decimals: 2
 #    tt_percentages: False
+#    hide_zero_cats: False
 
