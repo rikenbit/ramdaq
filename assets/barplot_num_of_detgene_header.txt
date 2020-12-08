@@ -8,4 +8,5 @@
 #    title: 'Number of detected genes'
 #    cpswitch: False
 #    tt_percentages: False
+#    hide_zero_cats: False
 

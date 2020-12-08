@@ -8,4 +8,5 @@
 #    title: 'Rate of assigned to genes [%]'
 #    cpswitch: False
 #    tt_percentages: False
+#    hide_zero_cats: False
 
