@@ -624,6 +624,21 @@ process bam2wig {
 */
 ///////////////////////////////////////////////////////////////////////////////
 
+process adjust_bed_noncoding {
+    publishDir "${params.outdir}/rseqc/", mode: 'copy'
+
+    input:
+    file bed from ch_bed
+
+    output:
+    file 'adjusted.bed' into ch_bed_adjusted
+
+    script:
+    """
+    adjust_bed_noncoding.r $bed
+    """
+}
+
 process rseqc  {
     tag "$name"
     label 'process_medium'
@@ -638,7 +653,7 @@ process rseqc  {
 
     input:
     set val(name), file(bam), file(bai) from hisat2_output_torseqc
-    file bed from ch_bed
+    file bed from ch_bed_adjusted
 
     output:
     file "*.{txt,pdf,r,xls}" into rseqc_results
