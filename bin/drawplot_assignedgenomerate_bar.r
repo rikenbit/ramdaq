@@ -28,28 +28,28 @@ plotdata = dplyr::left_join(totalseqdata, totalreaddata, by=c("V1"))
 colnames(plotdata) = c("samplename", "totalseq", "totalread")
 
 if (isPairedEnd=="True"){
-    plotdata$assignedGeneRate = (plotdata$totalread / (plotdata$totalseq*2)) *100
+    plotdata$assignedGenomeRate = (plotdata$totalread / (plotdata$totalseq*2)) *100
 } else {
-    plotdata$assignedGeneRate = (plotdata$totalread / plotdata$totalseq) *100
+    plotdata$assignedGenomeRate = (plotdata$totalread / plotdata$totalseq) *100
 }
 
 plotdata = plotdata[order(plotdata$samplename),]
 
 ### draw barplot
-g = ggplot(plotdata, aes(x=samplename,y=assignedGeneRate)) +
+g = ggplot(plotdata, aes(x=samplename,y=assignedGenomeRate)) +
     geom_bar(alpha=0.7, stat="identity") +
     ylim(0, 100) +
-    xlab("Sample")+ylab("Assigned gene rate") +
+    xlab("Sample")+ylab("Assigned genome rate") +
     #scale_x_discrete(labels=plotdata$x) + 
     theme(axis.text.x=element_text(size=6, angle=90, hjust=1), legend.text=element_text(size=8)) +
-    ggtitle("Rate of assigned to genes")
+    ggtitle("Rate of assigned to genome")
 
-ggsave(file = "barplot_assignedgene_rate.pdf", plot=g, dpi=100, width=12, height=5)
+ggsave(file = "barplot_assignedgenome_rate.pdf", plot=g, dpi=100, width=12, height=5)
 
 # Write rate values to file
-outputdata = data.frame(name = plotdata$samplename, assignedGeneRate=plotdata$assignedGeneRate)
+outputdata = data.frame(name = plotdata$samplename, assignedGenomeRate=plotdata$assignedGenomeRate)
 rownames(outputdata) = outputdata$name
-write.csv(outputdata, 'barplot_assignedgene_rate.csv', quote=FALSE, append=TRUE)
+write.csv(outputdata, 'barplot_assignedgenome_rate.csv', quote=FALSE, append=TRUE)
 
 # Printing sessioninfo to standard out
 print("Draw plot info:")

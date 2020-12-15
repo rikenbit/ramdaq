@@ -1,0 +1,12 @@
+#id: 'rate_of_assignedgenome'
+#section_name: 'Rate of assigned to genome [%]'
+#description: "show rate of assigned to genome from total reads"
+#plot_type: 'bargraph'
+#anchor: 'rate_of_assignedgenome'
+#pconfig:
+#    id: 'rate_of_assignedgenome_barplot'
+#    title: 'Rate of assigned to genome [%]'
+#    cpswitch: False
+#    tt_percentages: False
+#    hide_zero_cats: False
+
