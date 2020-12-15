@@ -160,7 +160,7 @@ ch_heatmap_header = Channel.fromPath("$baseDir/assets/heatmap_header.txt", check
 ch_biotypes_header = Channel.fromPath("$baseDir/assets/biotypes_header.txt", checkIfExists: true)
 ch_ercc_data = Channel.fromPath("$baseDir/assets/ercc_dataset.txt", checkIfExists: true)
 ch_ercc_corr_header = Channel.fromPath("$baseDir/assets/ercc_correlation_header.txt", checkIfExists: true)
-ch_assignedgene_header = Channel.fromPath("$baseDir/assets/barplot_assignedgene_rate_header.txt", checkIfExists: true)
+ch_assignedgenome_header = Channel.fromPath("$baseDir/assets/barplot_assignedgenome_rate_header.txt", checkIfExists: true)
 ch_num_of_detgene_header = Channel.fromPath("$baseDir/assets/barplot_num_of_detgene_header.txt", checkIfExists: true)
 ch_fcounts_histone_header = Channel.fromPath("$baseDir/assets/barplot_fcounts_histone_header.txt", checkIfExists: true)
 ch_pcaplot_header = Channel.fromPath("$baseDir/assets/pcaplot_header.txt", checkIfExists: true)
@@ -1047,27 +1047,27 @@ process ercc_correlation {
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
-* STEP 11 - assigned gene rate barplot
+* STEP 11 - assigned to genome rate barplot
 */
 ///////////////////////////////////////////////////////////////////////////////
 
-process create_plots_assignedgene {
-    publishDir "${params.outdir}/plots_bar_assignedgene", mode: 'copy'
+process create_plots_assignedgenome {
+    publishDir "${params.outdir}/plots_bar_assignedgenome", mode: 'copy'
 
     input:
     file totalseq_merged from ch_totalseq_merged
     file totalread_merged from ch_totalread_merged
-    file assignedgene_heater from ch_assignedgene_header
+    file assignedgenome_heater from ch_assignedgenome_header
 
     output:
-    file "*.{txt,pdf,csv}" into assignedgene_rate_results
+    file "*.{txt,pdf,csv}" into assignedgenome_rate_results
 
     script:
     isPairedEnd = params.single_end ? "False" : "True"
     """
-    drawplot_assignedgenerate_bar.r $totalseq_merged $totalread_merged $isPairedEnd
-    cat $assignedgene_heater barplot_assignedgene_rate.csv >> tmp_file
-    mv tmp_file barplot_assignedgene_rate_mqc.csv
+    drawplot_assignedgenomerate_bar.r $totalseq_merged $totalread_merged $isPairedEnd
+    cat $assignedgenome_heater barplot_assignedgenome_rate.csv >> tmp_file
+    mv tmp_file barplot_assignedgenome_rate_mqc.csv
     """
 
 }
@@ -1169,7 +1169,7 @@ process multiqc {
     // file ('featureCounts_histone/*') from featureCounts_logs_histone.collect().ifEmpty([])
     file ('sample_correlation_results/*') from sample_correlation_results.collect().ifEmpty([]) // If the Edge-R is not run create an Empty array
     file ('ercc_correlation_results/*') from ercc_correlation_results.collect().ifEmpty([]) 
-    file ('plots_bar_assignedgene/*') from assignedgene_rate_results.collect().ifEmpty([]) 
+    file ('plots_bar_assignedgenome/*') from assignedgenome_rate_results.collect().ifEmpty([]) 
     file ('plots_bar_fcounts_histone/*') from fcounts_histone_results.collect().ifEmpty([]) 
     file ('plots_from_tpmcounts/*') from plots_from_tpmcounts_results.collect().ifEmpty([]) 
     file ('software_versions/*') from ch_software_versions_yaml.collect()
