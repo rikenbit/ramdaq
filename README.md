@@ -53,8 +53,10 @@ The ramdaq pipeline comes with documentation about the pipeline, found in the `d
 3. Running the pipeline
     * [Usage](docs/usage.md)
     * [Using test data](docs/test_data.md)
-    * [Using bcl2fastq](bcl2fastq/README.md)
+    * [Using bcl2fastq](https://github.com/rikenbit/ramdaq_bcl2fastq)
+        * If you need to use BCL files produced by Illumina sequencing machines, execute [ramdaq_bcl2fastq](https://github.com/rikenbit/ramdaq_bcl2fastq).
         * [bcl2fastq](https://support.illumina.com/sequencing/sequencing_software/bcl2fastq-conversion-software.html) is conversion software, which can be used to demultiplex data and convert BCL files to FASTQ file formats for downstream analysis.
+        * Please see the README of [ramdaq_bcl2fastq](https://github.com/rikenbit/ramdaq_bcl2fastq) for details.
     * [Using provided reference genome and annotations](docs/local_annotation.md)
         * the current version supports human (GRCh38) and mouse (GRCm38).
     * [Using ramdaq on the NIG Supercomputer System](docs/nig_supercomputer_system.md)
