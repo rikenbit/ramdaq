@@ -771,7 +771,7 @@ process featureCounts  {
     biotype = params.group_features_type
 
     biotype_qc = "featureCounts -a $gtf -g $biotype -o ${name}_biotype.featureCounts.txt $isPairedEnd $isStrandSpecific ${bam}"
-    mod_biotype = "cut -f 1,7 ${name}_biotype.featureCounts.txt | tail -n +3 | cat $biotypes_header - >> ${name}_biotype_counts_mqc.txt && mqc_features_stat.py ${name}_biotype_counts_mqc.txt -s ${name} -f rRNA -o ${name}_biotype_counts_gs_mqc.tsv"
+    mod_biotype = "cut -f 1,7 ${name}_biotype.featureCounts.txt | tail -n +3 | cat $biotypes_header - >> ${name}_biotype_counts_mqc.txt"
 
     """
     featureCounts -a $gtf -g ${params.group_features} -t ${params.count_type} -o ${name}_gene.featureCounts.txt  \\
