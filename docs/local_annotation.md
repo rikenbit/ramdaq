@@ -3,15 +3,15 @@
 ## Download provided annotation (mouse)
 
 ```bash
-wget -r -np -nH --cut-dirs=1 -l 1 -R "index.html*" https://bioinformatics.riken.jp/ramdaq_nfcore/ramdaq_annotation/mouse/
-tar -xvf ramdaq_annotation/mouse/*.tar.gz -C ramdaq_annotation/mouse
+wget -r -np -nH --cut-dirs=1 -l 1 -R "index.html*" https://bioinformatics.riken.jp/ramdaq/ramdaq_annotation/mouse/
+for i in ramdaq_annotation/mouse/*.tar.gz; do tar -xvf $i -C ramdaq_annotation/mouse; done
 ```
 
 ## Download provided annotation (human)
 
 ```bash
-wget -r -np -nH --cut-dirs=1 -l 1 -R "index.html*" https://bioinformatics.riken.jp/ramdaq_nfcore/ramdaq_annotation/human/
-tar -xvf ramdaq_annotation/human/*.tar.gz -C ramdaq_annotation/human
+wget -r -np -nH --cut-dirs=1 -l 1 -R "index.html*" https://bioinformatics.riken.jp/ramdaq/ramdaq_annotation/human/
+for i in ramdaq_annotation/human/*.tar.gz; do tar -xvf $i -C ramdaq_annotation/human; done
 ```
 
 ## Run pipeline (mouse)
@@ -19,7 +19,7 @@ tar -xvf ramdaq_annotation/human/*.tar.gz -C ramdaq_annotation/human
 The below command processes a single-end and stranded FASTQ file using the GRCm38 mouse reference annotation:
 
 ```bash
-nextflow run rikenbit/ramdaq -profile docker --genome GRCm38 --local_annot_dir ramdaq_annotation/mouse --single_end --stranded --outdir results_test --reads 'https://bioinformatics.riken.jp/ramdaq_nfcore/ramdaq_test_data/mouse/stranded_SE/SRR7993829_1.100K.fastq.gz'
+nextflow run rikenbit/ramdaq -profile docker --genome GRCm38 --local_annot_dir ramdaq_annotation/mouse --single_end --stranded --outdir results_test --reads 'https://bioinformatics.riken.jp/ramdaq/ramdaq_test_data/mouse/stranded_SE/SRR7993829_1.100K.fastq.gz'
 ```
 
 The parameters are:
@@ -41,8 +41,8 @@ The parameters are:
 The below command processes a paired-end and unstranded FASTQ file using the GRCh38 human reference annotation:
 
 ```bash
-wget https://bioinformatics.riken.jp/ramdaq_nfcore/ramdaq_test_data/human/unstranded_PE/SRR12594145_1.100K.fastq.gz
-wget https://bioinformatics.riken.jp/ramdaq_nfcore/ramdaq_test_data/human/unstranded_PE/SRR12594145_2.100K.fastq.gz
+wget https://bioinformatics.riken.jp/ramdaq/ramdaq_test_data/human/unstranded_PE/SRR12594145_1.100K.fastq.gz
+wget https://bioinformatics.riken.jp/ramdaq/ramdaq_test_data/human/unstranded_PE/SRR12594145_2.100K.fastq.gz
 
 nextflow run rikenbit/ramdaq -profile docker --genome GRCh38 --local_annot_dir ramdaq_annotation/human --outdir results_test --reads 'SRR12594145_{1,2}.100K.fastq.gz'
 ```
