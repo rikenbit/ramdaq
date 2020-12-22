@@ -21,14 +21,19 @@ input_histone <- args[1]
 ### function ###
 histone_summary= read.table(input_histone, sep="", comment.char = "", header=T, stringsAsFactors=F)
 rownames(histone_summary) = histone_summary[,1]
-histone_summary = as.data.frame(t(histone_summary[,-1]))
-histone_summary$Total_Counts = rowSums(histone_summary)
-histone_summary$Assigned_Rate =  (histone_summary$Assigned/histone_summary$Total_Counts)*100
-histone_summary$Sample_Name = rownames(histone_summary)
-
-plotdata = histone_summary[,c("Sample_Name","Assigned_Rate")]
-colnames(plotdata) = c("samplename", "assignedHistoneRate")
-plotdata = plotdata[order(plotdata$samplename),]
+if (ncol(histone_summary) > 2) {
+    histone_summary = as.data.frame(t(histone_summary[,-1]))
+    histone_summary$Total_Counts = rowSums(histone_summary)
+    histone_summary$Assigned_Rate =  (histone_summary$Assigned/histone_summary$Total_Counts)*100
+    histone_summary$Sample_Name = rownames(histone_summary)
+    plotdata = histone_summary[,c("Sample_Name","Assigned_Rate")]
+    colnames(plotdata) = c("samplename", "assignedHistoneRate")
+    plotdata = plotdata[order(plotdata$samplename),]
+} else {
+    Total_Counts = sum(histone_summary[,2])
+    Assigned_Rate =  (histone_summary["Assigned",2]/Total_Counts)*100
+    plotdata = data.frame(samplename=colnames(histone_summary)[2], assignedHistoneRate=Assigned_Rate)
+}
 
 ### draw barplot
 g = ggplot(plotdata, aes(x=samplename,y=assignedHistoneRate)) +
