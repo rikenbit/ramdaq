@@ -19,7 +19,7 @@ for i in ramdaq_annotation/human/*.tar.gz; do tar -xvf $i -C ramdaq_annotation/h
 The below command processes a single-end and stranded FASTQ file using the GRCm38 mouse reference annotation:
 
 ```bash
-nextflow run rikenbit/ramdaq -profile docker --genome GRCm38 --local_annot_dir ramdaq_annotation/mouse --single_end --stranded fr-stranded --outdir results_test --reads 'https://bioinformatics.riken.jp/ramdaq/ramdaq_test_data/mouse/stranded_SE/SRR7993829_1.100K.fastq.gz'
+nextflow run rikenbit/ramdaq -profile docker --genome GRCm38 --local_annot_dir ramdaq_annotation/mouse --single_end --stranded fr-firststrand --outdir results_test --reads 'https://bioinformatics.riken.jp/ramdaq/ramdaq_test_data/mouse/stranded_SE/SRR7993829_1.100K.fastq.gz'
 ```
 
 The parameters are:
