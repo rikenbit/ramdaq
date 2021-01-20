@@ -99,3 +99,11 @@ extra_fn_clean_exts:
       pattern: '_1'
     - type: regex
       pattern: '_2'
+    - type: remove
+      pattern: _biotype
+    - type: remove
+      pattern: .bam
+    - type: remove
+      pattern: .readdist
+    - type: remove
+      pattern: .inferexp

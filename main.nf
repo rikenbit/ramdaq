@@ -1220,9 +1220,9 @@ process output_documentation {
 workflow.onComplete {
 
     // Set up the e-mail variables
-    def subject = "[ramdaq] Successful: $workflow.runName"
+    def subject = "[ramdaq] Successful: " + workflow.runName
     if (!workflow.success) {
-        subject = "[ramdaq] FAILED: $workflow.runName"
+        subject = "[ramdaq] FAILED: " + workflow.runName
     }
     def email_fields = [:]
     email_fields['version'] = workflow.manifest.version
