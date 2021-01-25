@@ -52,6 +52,7 @@ The ramdaq pipeline comes with documentation about the pipeline, found in the `d
 2. [Pipeline configuration](https://nf-co.re/usage/adding_own_config)
 3. Running the pipeline
     * [Usage](docs/usage.md)
+    * [Examples](docs/examples.md)
     * [Using test data](docs/test_data.md)
     * [Using bcl2fastq](https://github.com/rikenbit/ramdaq_bcl2fastq)
         * If you need to use BCL files produced by Illumina sequencing machines, execute [ramdaq_bcl2fastq](https://github.com/rikenbit/ramdaq_bcl2fastq).
