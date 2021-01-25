@@ -13,47 +13,69 @@
 ## Case 1: Unstranded, Paired-end, Mouse
 
 ```bash
-nextflow run rikenbit/ramdaq -profile docker --genome GRCm38 --local_annot_dir <path to annotation> --reads '*_{R1,R2}_001.fastq.gz' --outdir <path to outdir>
+nextflow run rikenbit/ramdaq -profile docker \
+  --genome GRCm38 --local_annot_dir <path to annotation> \
+  --reads '*_{R1,R2}_001.fastq.gz' --outdir <path to outdir>
 ```
 
 ## Case 2: Stranded, Paired-end, Mouse
 
 ```bash
-nextflow run rikenbit/ramdaq -profile docker --genome GRCm38 --local_annot_dir <path to annotation> --stranded fr-firststrand --reads '*_{R1,R2}_001.fastq.gz' --outdir <path to outdir>
+nextflow run rikenbit/ramdaq -profile docker \
+  --genome GRCm38 --local_annot_dir <path to annotation> \
+  --stranded fr-firststrand \
+  --reads '*_{R1,R2}_001.fastq.gz' --outdir <path to outdir>
 ```
 
 ## Case 3: Unstranded, Single-end, Mouse
 
 ```bash
-nextflow run rikenbit/ramdaq -profile docker --genome GRCm38 --local_annot_dir <path to annotation> --single_end --reads '*_{R1}_001.fastq.gz' --outdir <path to outdir>
+nextflow run rikenbit/ramdaq -profile docker \
+  --genome GRCm38 --local_annot_dir <path to annotation> \
+  --single_end \
+  --reads '*_{R1}_001.fastq.gz' --outdir <path to outdir>
 ```
 
 ## Case 4: Stranded, Single-end, Mouse
 
 ```bash
-nextflow run rikenbit/ramdaq -profile docker --genome GRCm38 --local_annot_dir <path to annotation> --stranded fr-firststrand --single_end --reads '*_{R1}_001.fastq.gz' --outdir <path to outdir>
+nextflow run rikenbit/ramdaq -profile docker
+  --genome GRCm38  --local_annot_dir <path to annotation> \
+  --stranded fr-firststrand --single_end \
+  --reads '*_{R1}_001.fastq.gz' --outdir <path to outdir>
 ```
 
 ## Case 5: Unstranded, Paired-end, Human
 
 ```bash
-nextflow run rikenbit/ramdaq -profile docker --genome GRCh38 --local_annot_dir <path to annotation> --reads '*_{R1,R2}_001.fastq.gz' --outdir <path to outdir>
+nextflow run rikenbit/ramdaq -profile docker \
+  --genome GRCh38 --local_annot_dir <path to annotation> ＼
+  --reads '*_{R1,R2}_001.fastq.gz' --outdir <path to outdir>
 ```
 
 ## Case 6: Stranded, Paired-end, Human
 
 ```bash
-nextflow run rikenbit/ramdaq -profile docker --genome GRCh38 --local_annot_dir <path to annotation> --stranded fr-firststrand --reads '*_{R1,R2}_001.fastq.gz' --outdir <path to outdir>
+nextflow run rikenbit/ramdaq -profile docker \
+  --genome GRCh38 --local_annot_dir <path to annotation> \
+  --stranded fr-firststrand \
+  --reads '*_{R1,R2}_001.fastq.gz' --outdir <path to outdir>
 ```
 
 ## Case 7: Unstranded, Single-end, Human
 
 ```bash
-nextflow run rikenbit/ramdaq -profile docker --genome GRCh38 --local_annot_dir <path to annotation> --single_end --reads '*_{R1}_001.fastq.gz' --outdir <path to outdir>
+nextflow run rikenbit/ramdaq -profile docker \
+  --genome GRCh38 --local_annot_dir <path to annotation> \
+  --single_end \
+  --reads '*_{R1}_001.fastq.gz' --outdir <path to outdir>
 ```
 
 ## Case 8: Stranded, Single-end, Human
 
 ```bash
-nextflow run rikenbit/ramdaq -profile docker --genome GRCh38 --local_annot_dir <path to annotation> --stranded fr-firststrand --single_end --reads '*_{R1}_001.fastq.gz' --outdir <path to outdir>
+nextflow run rikenbit/ramdaq -profile docker \
+  --genome GRCh38 --local_annot_dir <path to annotation> \
+  --stranded fr-firststrand --single_end \
+  --reads '*_{R1}_001.fastq.gz' --outdir <path to outdir>
 ```
