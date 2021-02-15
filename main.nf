@@ -298,6 +298,7 @@ process get_software_versions {
     read_distribution.py --version > v_read_distribution.txt
     infer_experiment.py --version > v_infer_experiment.txt
     inner_distance.py --version > v_inner_distance.txt
+    junction_annotation.py --version > v_junction_annotation.txt
     featureCounts -v > v_featurecounts.txt
     Rscript -e "library(edgeR); write(x=as.character(packageVersion('edgeR')), file='v_edgeR.txt')"
     scrape_software_versions.py &> software_versions_mqc.yaml
@@ -652,9 +653,11 @@ process rseqc  {
 
     publishDir "${params.outdir}/rseqc", mode: 'copy',
         saveAs: {filename ->
-            if (filename.indexOf("readdist.txt") > 0)          "read_distribution/$filename"
-            else if (filename.indexOf("inferexp.txt") > 0)     "infer_experiment/$filename"
-            else if (filename.indexOf("inner_distance") > 0)   "inner_distance/$filename"
+            if (filename.indexOf("readdist.txt") > 0)         "read_distribution/$filename"
+            else if (filename.indexOf("inferexp.txt") > 0)    "infer_experiment/$filename"
+            else if (filename.indexOf("inner_distance") > 0)  "inner_distance/$filename"
+            else if (filename.indexOf("junction") > 0)        "junction_annotation/$filename"
+            else if (filename.indexOf("splice_events") > 0)   "junction_annotation/$filename"
             else "$filename"
     }
 
@@ -663,7 +666,7 @@ process rseqc  {
     file bed from ch_bed_adjusted
 
     output:
-    file "*.{txt,pdf,r,xls}" into rseqc_results
+    file "*.{txt,pdf,r,xls,log}" into rseqc_results
     file "${name}.readdist.txt" optional true into ch_totalread
     
     script:
@@ -671,12 +674,14 @@ process rseqc  {
         """
         read_distribution.py -i $bam -r $bed > ${bam.baseName}.readdist.txt
         infer_experiment.py -i $bam -r $bed > ${bam.baseName}.inferexp.txt
+        junction_annotation.py -i $bam -o ${bam.baseName} -r $bed 2> ${bam.baseName}.junction_annotation.log
         """
     } else {
         """
         read_distribution.py -i $bam -r $bed > ${bam.baseName}.readdist.txt
         infer_experiment.py -i $bam -r $bed > ${bam.baseName}.inferexp.txt
         inner_distance.py -i $bam -o ${bam.baseName} -r $bed
+        junction_annotation.py -i $bam -o ${bam.baseName} -r $bed 2> ${bam.baseName}.junction_annotation.log
         """
     }
 
