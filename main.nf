@@ -107,6 +107,7 @@ if (params.hisat2_idx) {
         file(params.hisat2_idx, checkIfExists: true)
 
         process untar_hisat2_idx {
+            label 'process_low'
             publishDir path: { params.saveReference ? "${params.outdir}/reference_genome/hisat2" : params.outdir },
                saveAs: { params.saveReference ? it : null }, mode: 'copy'
 
@@ -272,7 +273,7 @@ Channel.from(summary.collect{ [it.key, it.value] })
 ///////////////////////////////////////////////////////////////////////////////
 
 process get_software_versions {
-
+    label 'process_low'
     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
         saveAs: { filename ->
                       if (filename.indexOf(".csv") > 0) filename
@@ -297,6 +298,7 @@ process get_software_versions {
     read_distribution.py --version > v_read_distribution.txt
     infer_experiment.py --version > v_infer_experiment.txt
     inner_distance.py --version > v_inner_distance.txt
+    junction_annotation.py --version > v_junction_annotation.txt
     featureCounts -v > v_featurecounts.txt
     Rscript -e "library(edgeR); write(x=as.character(packageVersion('edgeR')), file='v_edgeR.txt')"
     scrape_software_versions.py &> software_versions_mqc.yaml
@@ -311,8 +313,8 @@ process get_software_versions {
 ///////////////////////////////////////////////////////////////////////////////
 
 process fastqc {
+    label 'process_low'
     tag "$name"
-    label 'process_medium'
     
     publishDir "${params.outdir}/fastqc", mode: 'copy',
         saveAs: { filename ->
@@ -352,7 +354,6 @@ process fastqc {
 
 process fastqmcf  {
     tag "$name"
-    label 'process_medium'
 
     publishDir "${params.outdir}/fastqmcf", mode: 'copy', overwrite: true
  
@@ -393,8 +394,8 @@ ch_trimmed_reads
 ///////////////////////////////////////////////////////////////////////////////
 
 process fastqc_trimmed {
+    label 'process_low'
     tag "$name"
-    label 'process_medium'
     
     publishDir "${params.outdir}/fastqc.trim", mode: 'copy',
         saveAs: { filename ->
@@ -428,7 +429,7 @@ process fastqc_trimmed {
 
 process hisat2 {
     tag "$name"
-    label 'process_medium'
+    label 'process_high'
     
     publishDir "${params.outdir}/hisat2", mode: 'copy', overwrite: true,
         saveAs: { filename ->
@@ -549,7 +550,13 @@ def get_mapped_from_flagstat(flagstat_file) {
 // and returns true if > params.min_mapped_reads and otherwise false
 def check_mapped(name,flagstat_path,min_mapped_reads=10) {
     def flagstat_file = new File(flagstat_path.toString())
-    mapped = get_mapped_from_flagstat(flagstat_file)
+    //mapped = get_mapped_from_flagstat(flagstat_file)
+    def mapped = 0
+    flagstat_file.eachLine { line ->
+        if (line.contains(' mapped (')) {
+            mapped = line.tokenize().first().toInteger()
+        }
+    }
     if (mapped < min_mapped_reads.toInteger()) {
         log.info ">>>> $name FAILED MAPPED READ THRESHOLD: ${mapped} < ${params.min_mapped_reads}. IGNORING FOR FURTHER DOWNSTREAM ANALYSIS! <<<<"
         return false
@@ -625,6 +632,7 @@ process bam2wig {
 ///////////////////////////////////////////////////////////////////////////////
 
 process adjust_bed_noncoding {
+    label 'process_low'
     publishDir "${params.outdir}/rseqc/", mode: 'copy'
 
     input:
@@ -645,9 +653,11 @@ process rseqc  {
 
     publishDir "${params.outdir}/rseqc", mode: 'copy',
         saveAs: {filename ->
-            if (filename.indexOf("readdist.txt") > 0)          "read_distribution/$filename"
-            else if (filename.indexOf("inferexp.txt") > 0)     "infer_experiment/$filename"
-            else if (filename.indexOf("inner_distance") > 0)   "inner_distance/$filename"
+            if (filename.indexOf("readdist.txt") > 0)         "read_distribution/$filename"
+            else if (filename.indexOf("inferexp.txt") > 0)    "infer_experiment/$filename"
+            else if (filename.indexOf("inner_distance") > 0)  "inner_distance/$filename"
+            else if (filename.indexOf("junction") > 0)        "junction_annotation/$filename"
+            else if (filename.indexOf("splice_events") > 0)   "junction_annotation/$filename"
             else "$filename"
     }
 
@@ -656,7 +666,7 @@ process rseqc  {
     file bed from ch_bed_adjusted
 
     output:
-    file "*.{txt,pdf,r,xls}" into rseqc_results
+    file "*.{txt,pdf,r,xls,log}" into rseqc_results
     file "${name}.readdist.txt" optional true into ch_totalread
     
     script:
@@ -664,12 +674,14 @@ process rseqc  {
         """
         read_distribution.py -i $bam -r $bed > ${bam.baseName}.readdist.txt
         infer_experiment.py -i $bam -r $bed > ${bam.baseName}.inferexp.txt
+        junction_annotation.py -i $bam -o ${bam.baseName} -r $bed 2> ${bam.baseName}.junction_annotation.log
         """
     } else {
         """
         read_distribution.py -i $bam -r $bed > ${bam.baseName}.readdist.txt
         infer_experiment.py -i $bam -r $bed > ${bam.baseName}.inferexp.txt
         inner_distance.py -i $bam -o ${bam.baseName} -r $bed
+        junction_annotation.py -i $bam -o ${bam.baseName} -r $bed 2> ${bam.baseName}.junction_annotation.log
         """
     }
 
@@ -700,7 +712,6 @@ process merge_readDist_totalRead {
 
 process readcoverage  {
     tag "$name"
-    label 'process_medium'
     container "yuifu/readcoverage.jl:0.1.2-workaround"
 
     publishDir "${params.outdir}/rseqc", mode: 'copy',
@@ -733,7 +744,6 @@ rseqc_results_merge = rseqc_results
 
 process featureCounts  {
     tag "$name"
-    label 'process_medium'
 
     publishDir "${params.outdir}/featureCounts", mode: 'copy',
         saveAs: {filename ->
@@ -783,40 +793,41 @@ process featureCounts  {
 }
 
 process merge_featureCounts {
-      publishDir "${params.outdir}/featureCounts", mode: 'copy'
+    publishDir "${params.outdir}/featureCounts", mode: 'copy'
 
-      input:
-      file input_files from featureCounts_to_merge.collect()
+    input:
+    file input_files from featureCounts_to_merge.collect()
 
-      output:
-      file 'merged_featureCounts_gene.txt' into ch_tpm_count, featurecounts_merged
+    output:
+    file 'merged_featureCounts_gene.txt' into ch_tpm_count, featurecounts_merged
 
-      script:
-      // Redirection (the `<()`) for the win!
-      // Geneid in 1st column and gene_name in 7th
-      gene_ids = "<(tail -n +2 ${input_files[0]} | cut -f1,6,7 )"
-      counts = input_files.collect{filename ->
-        // Remove first line and take third column
-        "<(tail -n +2 ${filename} | sed 's:.bam::' | cut -f8)"}.join(" ")
-      """
-      paste $gene_ids $counts > merged_featureCounts_gene.txt
-      """
+    script:
+    // Redirection (the `<()`) for the win!
+    // Geneid in 1st column and gene_name in 7th
+    gene_ids = "<(tail -n +2 ${input_files[0]} | cut -f1,6,7 )"
+    counts = input_files.collect{filename ->
+      // Remove first line and take third column
+      "<(tail -n +2 ${filename} | sed 's:.bam::' | cut -f8)"}.join(" ")
+    """
+    paste $gene_ids $counts > merged_featureCounts_gene.txt
+    """
   }
 
 process calc_TPMCounts {
-      publishDir "${params.outdir}/featureCounts", mode: 'copy'
+    label 'process_low'
+    publishDir "${params.outdir}/featureCounts", mode: 'copy'
 
-      input:
-      file input_file from ch_tpm_count
+    input:
+    file input_file from ch_tpm_count
 
-      output:
-      file '*_TPM.txt' into tpmcount_plot, tpmcount_merged
-      file '*_ERCC.txt' optional true into ercccount_chk, ercccount_merged
+    output:
+    file '*_TPM.txt' into tpmcount_plot, tpmcount_merged
+    file '*_ERCC.txt' optional true into ercccount_chk, ercccount_merged
 
-      script:
-      """
-      calc_TPMCounts.r $input_file
-      """
+    script:
+    """
+    calc_TPMCounts.r $input_file
+    """
 }
 
 ercc_list = ercccount_chk.toList() 
@@ -829,7 +840,6 @@ ercc_list = ercccount_chk.toList()
 
 process featureCounts_mt  {
     tag "$name"
-    label 'process_medium'
 
     publishDir "${params.outdir}/featureCounts_Mitocondria", mode: 'copy',
         saveAs: {filename ->
@@ -877,7 +887,6 @@ process featureCounts_mt  {
 
 process featureCounts_rrna  {
     tag "$name"
-    label 'process_medium'
 
     publishDir "${params.outdir}/featureCounts_rRNA", mode: 'copy',
         saveAs: {filename ->
@@ -925,7 +934,6 @@ process featureCounts_rrna  {
 
 process featureCounts_histone  {
     tag "$name"
-    label 'process_medium'
 
     publishDir "${params.outdir}/featureCounts_Histone", mode: 'copy',
         saveAs: {filename ->
@@ -991,6 +999,7 @@ process merge_featureCounts_histone {
 ///////////////////////////////////////////////////////////////////////////////
 
 process sample_correlation {
+    label 'process_medium'
     publishDir "${params.outdir}/sample_correlation", mode: 'copy'
 
     input:
@@ -1023,6 +1032,7 @@ process sample_correlation {
 ///////////////////////////////////////////////////////////////////////////////
 
 process ercc_correlation {
+    label 'process_low'
     publishDir "${params.outdir}/ercc_correlation", mode: 'copy'
 
     when:
@@ -1052,6 +1062,7 @@ process ercc_correlation {
 ///////////////////////////////////////////////////////////////////////////////
 
 process create_plots_assignedgenome {
+    label 'process_low'
     publishDir "${params.outdir}/plots_bar_assignedgenome", mode: 'copy'
 
     input:
@@ -1079,6 +1090,7 @@ process create_plots_assignedgenome {
 ///////////////////////////////////////////////////////////////////////////////
 
 process create_plots_fcounts_histone {
+    label 'process_low'
     publishDir "${params.outdir}/plots_bar_fcounts_histone", mode: 'copy'
 
     input:
@@ -1105,6 +1117,7 @@ process create_plots_fcounts_histone {
 ///////////////////////////////////////////////////////////////////////////////
 
 process create_plots_fromTPM {
+    label 'process_medium'
     publishDir "${params.outdir}/plots_from_tpmcounts", mode: 'copy'
 
     input:
@@ -1220,9 +1233,9 @@ process output_documentation {
 workflow.onComplete {
 
     // Set up the e-mail variables
-    def subject = "[ramdaq] Successful: $workflow.runName"
+    def subject = "[ramdaq] Successful: " + workflow.runName
     if (!workflow.success) {
-        subject = "[ramdaq] FAILED: $workflow.runName"
+        subject = "[ramdaq] FAILED: " + workflow.runName
     }
     def email_fields = [:]
     email_fields['version'] = workflow.manifest.version
