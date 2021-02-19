@@ -17,6 +17,7 @@
     - [`--genome`](#--genome)
     - [`--saveReference`](#--savereference)
     - [`--local_annot_dir`](#--local_annot_dir)
+    - [`--sirv`](#--sirv)
   - [Other command line parameters](#other-command-line-parameters)
     - [`--outdir`](#--outdir)
     - [`-name`](#-name)
@@ -199,6 +200,10 @@ Save the downloded reference files to the results directory
 ### `--local_annot_dir`
 
 Specifes the location of local path to a directiory containing annotation files. See [local_annotation](local_annotation.md)
+
+### `--sirv`
+
+Lexogen's Spike-In RNA Variant (SIRV) Control (https://www.lexogen.com/sirvs/) is a set of artificial transcripts that mimic the complexity of the transcriptome and are added to samples for use. The use of SIRVs provides values such as accuracy and precision for evaluating the RNA sequencing pipeline and the procedural noise of each sample preparation. If the user wants to quantify SIRVs, ramdaq can optionally run a mapping pipeline dedicated to SIRVs with the --sirv option.
 
 ## Other command line parameters
 
