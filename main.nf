@@ -28,9 +28,10 @@ def helpMessage() {
       --stranded [str]                unstranded : default
                                       fr-firststrand : First read corresponds to the reverse complemented counterpart of a transcript
                                       fr-secondstrand : First read corresponds to a transcript
-      --genome [str]                  Name of human (GRCh38) or mouse (GRCm38) reference
+      --genome [str]                  Name of human (GRCh38) or mouse (GRCm38) latest reference
       --saveReference                 Save the generated reference files to the results directory
       --local_annot_dir [str]         Base path for local annotation files
+      --sirv                          If a Spike-In RNA Variant (SIRV) Control is added to the sample, ramdaq run a pipeline to quantify each transcripts.
         
     Other:
       --outdir [str]                  The output directory where the results will be saved
@@ -93,9 +94,10 @@ params.gtf = params.genome ? params.genomes[ params.genome ].gtf ?: false : fals
 params.mt_gtf = params.genome ? params.genomes[ params.genome ].mt_gtf ?: false : false
 params.rrna_gtf = params.genome ? params.genomes[ params.genome ].rrna_gtf ?: false : false
 params.histone_gtf = params.genome ? params.genomes[ params.genome ].histone_gtf ?: false : false
+params.hisat2_sirv_idx = params.genome ? params.genomes[ params.genome ].hisat2_sirv_idx ?: false : false
+params.sirv_gtf = params.genome ? params.genomes[ params.genome ].sirv_gtf ?: false : false
 
 // Validate inputs
-
 if (params.stranded && params.stranded != 'unstranded' && params.stranded != 'fr-firststrand' && params.stranded != 'fr-secondstrand') {
     exit 1, "Invalid stranded option: ${params.stranded}. Valid options: 'unstranded' or 'fr-firststrand' or 'fr-secondstrand'!"
 }
@@ -134,6 +136,41 @@ if (params.hisat2_idx) {
     }
 }
 
+if (params.sirv) {
+    if (params.hisat2_sirv_idx) {
+        if (params.hisat2_sirv_idx.endsWith('.tar.gz')) {
+            file(params.hisat2_sirv_idx, checkIfExists: true)
+
+            process untar_hisat2_sirv_idx {
+                label 'process_low'
+                publishDir path: { params.saveReference ? "${params.outdir}/reference_genome/sirv" : params.outdir },
+                   saveAs: { params.saveReference ? it : null }, mode: 'copy'
+
+                input:
+                path gz from params.hisat2_sirv_idx
+
+                output:
+                file "$untar/*.ht2" into ch_hisat2_sirv_idx
+
+                script:
+                untar = gz.toString() - '.tar.gz'
+                """
+                tar -xvf $gz
+                """
+            }
+        } else {
+            ch_hisat2_sirv_idx = Channel
+            .from(params.hisat2_sirv_idx)
+            .flatMap{file(params.hisat2_sirv_idx, checkIfExists: true)}
+            .ifEmpty { exit 1, "HISAT2 SIRVome index files not found: ${params.hisat2_sirv_idx}" }
+        }
+    } else { exit 1, "HISAT2 SIRVome index files not found: ${params.hisat2_sirv_idx}" } 
+    if (params.sirv_gtf) { ch_sirv_gtf= file(params.sirv_gtf, checkIfExists: true) } else { exit 1, "SIRVome annotation file not found: ${params.sirv_gtf}" } 
+} else {
+    ch_hisat2_sirv_idx = false
+    ch_sirv_gtf = false
+}
+
 if (params.chrsize) { ch_chrsize= file(params.chrsize, checkIfExists: true) } else { exit 1, "Chromosome size file not found: ${params.chrsize}" }
 if (params.bed) { ch_bed= file(params.bed, checkIfExists: true) } else { exit 1, "BED file not found: ${params.bed}" }
 if (params.gtf) { ch_gtf= file(params.gtf, checkIfExists: true) } else { exit 1, "GTF annotation file not found: ${params.gtf}" }
@@ -155,6 +192,7 @@ ch_output_docs = file("$baseDir/docs/output.md", checkIfExists: true)
 
 // Tools dir
 ch_tools_dir = workflow.scriptFile.parent + "/tools"
+ch_tools_dir_sirv = workflow.scriptFile.parent + "/tools"
 
 ch_mdsplot_header = Channel.fromPath("$baseDir/assets/mdsplot_header.txt", checkIfExists: true)
 ch_heatmap_header = Channel.fromPath("$baseDir/assets/heatmap_header.txt", checkIfExists: true)
@@ -216,11 +254,13 @@ if (params.stranded)  {
 }
 summary['Save Reference']   = params.saveReference ? 'Yes' : 'No'
 if (params.hisat2_idx) summary['HISAT2 Index'] = params.hisat2_idx
+if (params.hisat2_sirv_idx) summary['HISAT2 SIRVome Index'] = params.hisat2_sirv_idx
 if (params.bed) summary['BED Annotation'] = params.bed
 if (params.gtf) summary['GTF Annotation'] = params.gtf
 if (params.mt_gtf) summary['Mitocondria GTF Annotation'] = params.mt_gtf
 if (params.rrna_gtf) summary['rRNA GTF Annotation'] = params.rrna_gtf
 if (params.histone_gtf) summary['Histone GTF Annotation'] = params.histone_gtf
+if (params.sirv_gtf) summary['SIRVome GTF Annotation'] = params.sirv_gtf
 if (params.allow_multimap) summary['Multimap Reads'] = params.allow_multimap ? 'Allow' : 'Disallow'
 if (params.allow_overlap) summary['Overlap Reads'] = params.allow_overlap ? 'Allow' : 'Disallow'
 if (params.count_fractionally) summary['Fractional counting'] = params.count_fractionally ? 'Enabled' : 'Disabled'
@@ -384,7 +424,8 @@ process fastqmcf  {
 ch_trimmed_reads
     .into{
         ch_trimmed_reads_tofastqc;
-        ch_trimmed_reads_tohisat2
+        ch_trimmed_reads_tohisat2;
+        ch_trimmed_reads_tosirv
     }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -423,7 +464,7 @@ process fastqc_trimmed {
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
-* STEP 4 - Hisat2
+* STEP 4-1 - Hisat2
 */
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -518,7 +559,7 @@ process hisat2 {
     }
 }
 
-process merge_hiast2_totalSeq {
+process merge_hisat2_totalSeq {
     publishDir "${params.outdir}/hisat2", mode: 'copy'
 
     input:
@@ -594,9 +635,107 @@ ch_hisat2_bamsort
     }
 
 ch_hisat2_bamcount
-    .filter { name, bam, flagstat -> check_mapped(name,flagstat,params.min_mapped_reads) }
+    .filter { name, bam, flagstat -> check_mapped(bam.baseName,flagstat,params.min_mapped_reads) }
     .map { it[1] }
     .set { ch_hisat2_bamcount }
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+* STEP 4-2 - Hisat2 (SIRVome)
+*/
+///////////////////////////////////////////////////////////////////////////////
+
+process hisat2_sirv {
+    tag "$name"
+    label 'process_high'
+    
+    publishDir "${params.outdir}/hisat2_sirv", mode: 'copy', overwrite: true,
+        saveAs: { filename ->
+                    filename.indexOf("_summary_sirv.txt") > 0 ? "logs/$filename" : "$filename"
+                }
+    when:
+    params.sirv && ch_hisat2_sirv_idx
+
+    input:
+    set val(name), file(reads) from ch_trimmed_reads_tosirv
+    file sirv_indices from ch_hisat2_sirv_idx.collect()
+    path tools_dir from ch_tools_dir_sirv
+
+    output:
+    set val(name), file("*.bam"), file("*.bai"), file("*.flagstat") into ch_sirv_bamsort
+
+    script:
+    def strandness = ''
+    if (params.stranded == 'fr-firststrand') {
+        strandness = params.single_end ? "--rna-strandness R" : "--rna-strandness RF"
+    } else if (params.stranded == 'fr-secondstrand'){
+        strandness = params.single_end ? "--rna-strandness F" : "--rna-strandness FR"
+    }
+    softclipping = params.softclipping ? '' : "--no-softclip"
+    threads_num = params.hs_threads_num > 0 ? "-p ${params.hs_threads_num}" : ''
+    index_base = sirv_indices[0].toString() - ~/.\d.ht2l?/
+
+    if (params.single_end) {
+        if (params.stranded && params.stranded != 'unstranded') {
+            """
+            hisat2 $softclipping $threads_num -x $index_base -U $reads $strandness --summary-file ${name}_summary_sirv.txt \\
+            | samtools view -bS - | samtools sort - -o ${name}.sirv.bam
+            samtools index ${name}.sirv.bam
+            samtools flagstat ${name}.sirv.bam > ${name}.sirv.bam.flagstat
+
+            bamtools filter -in ${name}.sirv.bam -out ${name}.sirv.forward.bam -script ${tools_dir}/bamtools_f_SE.json
+            samtools index ${name}.sirv.forward.bam
+            samtools flagstat ${name}.sirv.forward.bam > ${name}.sirv.forward.bam.flagstat
+
+            bamtools filter -in ${name}.sirv.bam -out ${name}.sirv.reverse.bam -script ${tools_dir}/bamtools_r_SE.json
+            samtools index ${name}.sirv.reverse.bam
+            samtools flagstat ${name}.sirv.reverse.bam > ${name}.sirv.reverse.bam.flagstat
+
+            """
+        } else {
+            """
+            hisat2 $softclipping $threads_num -x $index_base -U $reads --summary-file ${name}_summary_sirv.txt \\
+            | samtools view -bS - | samtools sort - -o ${name}.sirv.bam
+            samtools index ${name}.sirv.bam
+            samtools flagstat ${name}.sirv.bam > ${name}.sirv.bam.flagstat
+            """
+        }
+
+    } else {
+        if (params.stranded && params.stranded != 'unstranded') {
+            """
+            hisat2 $softclipping $threads_num -x $index_base -1 ${reads[0]} -2 ${reads[1]} $strandness --summary-file ${name}_summary_sirv.txt \\
+            | samtools view -bS - | samtools sort - -o ${name}.sirv.bam
+            samtools index ${name}.sirv.bam
+            samtools flagstat ${name}.sirv.bam > ${name}.sirv.bam.flagstat
+
+            bamtools filter -in ${name}.sirv.bam -out ${name}.sirv.forward.bam -script ${tools_dir}/bamtools_f_PE.json
+            samtools index ${name}.sirv.forward.bam
+            samtools flagstat ${name}.sirv.forward.bam > ${name}.sirv.forward.bam.flagstat
+
+            bamtools filter -in ${name}.sirv.bam -out ${name}.sirv.reverse.bam -script ${tools_dir}/bamtools_r_PE.json
+            samtools index ${name}.sirv.reverse.bam
+            samtools flagstat ${name}.sirv.reverse.bam > ${name}.sirv.reverse.bam.flagstat
+
+            """
+        } else {
+            """
+            hisat2 $softclipping $threads_num -x $index_base -1 ${reads[0]} -2 ${reads[1]} --summary-file ${name}_summary_sirv.txt \\
+            | samtools view -bS - | samtools sort - -o ${name}.sirv.bam
+            samtools index ${name}.sirv.bam
+            samtools flagstat ${name}.sirv.bam > ${name}.sirv.bam.flagstat
+            """
+        }
+    }
+}
+
+ch_sirv_bamsort
+    .transpose()
+    .filter { name, bam, bai, flagstat -> check_mapped(bam.baseName,flagstat,params.min_mapped_reads) }
+    .map { it[0..2] }
+    .set { 
+        hisat2_output_tofcount_sirv
+    }
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
@@ -990,6 +1129,77 @@ process merge_featureCounts_histone {
     paste $rownames $counts > merged_featureCounts_histone.txt
     """
 }
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+* STEP 8-4 - FeatureCounts (SIRVome GTF) 
+*/
+///////////////////////////////////////////////////////////////////////////////
+
+process featureCounts_sirv  {
+    tag "$name"
+
+    publishDir "${params.outdir}/featureCounts_SIRVome", mode: 'copy',
+        saveAs: {filename ->
+            if (filename.indexOf("_sirv.featureCounts.txt.summary") > 0) "sirv_count_summaries/$filename"
+            else if (filename.indexOf("_sirv.featureCounts.txt") > 0) "sirv_counts/$filename"
+            else "$filename"
+    }
+
+    when:
+    ch_sirv_gtf
+
+    input:
+    set val(name), file(bam), file(bai) from hisat2_output_tofcount_sirv
+    file gtf from ch_sirv_gtf
+
+    output:
+    file "${bam.baseName}.featureCounts.txt" into geneCounts_sirv, geneCounts_sirv_to_merge
+    file "${bam.baseName}.featureCounts.txt.summary" into featureCounts_logs_sirv
+
+    script:
+
+    isPairedEnd = params.single_end ? '' : "-p"
+    if (params.stranded && params.stranded == 'fr-firststrand') {
+        isStrandSpecific = "-s 2"
+    } else if (params.stranded && params.stranded == 'fr-secondstrand'){
+        isStrandSpecific = "-s 1"
+    } else {
+        isStrandSpecific = ''
+    }
+    extraAttributes = params.extra_attributes ? "--extraAttributes ${params.extra_attributes}" : ''
+    allow_multimap = params.allow_multimap ? "-M" : ''
+    allow_overlap = params.allow_overlap ? "-O" : ''
+    count_fractionally = params.count_fractionally ? "--fraction" : ''
+    threads_num = params.fc_threads_num > 0 ? "-T ${params.fc_threads_num}" : ''
+
+    """
+    featureCounts -a $gtf -g transcript_id -t exon -o ${bam.baseName}.featureCounts.txt  \\
+    $isPairedEnd $isStrandSpecific $extraAttributes $count_fractionally $allow_multimap $allow_overlap $threads_num ${bam}
+    
+    """
+}
+
+process merge_featureCounts_sirv {
+    publishDir "${params.outdir}/featureCounts_SIRVome", mode: 'copy'
+
+    input:
+    file input_files from geneCounts_sirv_to_merge.collect()
+
+    output:
+    file 'merged_featureCounts_transcripts_SIRVome.txt' into ch_tpm_sirv_count
+
+    script:
+    // Redirection (the `<()`) for the win!
+    // Geneid in 1st column and gene_name in 7th
+    gene_ids = "<(tail -n +2 ${input_files[0]} | cut -f1,6,7 )"
+    counts = input_files.collect{filename ->
+      // Remove first line and take third column
+      "<(tail -n +2 ${filename} | sed 's:.bam::' | cut -f8)"}.join(" ")
+    """
+    paste $gene_ids $counts > merged_featureCounts_transcripts_SIRVome.txt
+    """
+  }
 
 
 ///////////////////////////////////////////////////////////////////////////////
