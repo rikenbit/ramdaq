@@ -58,7 +58,7 @@ NXF_OPTS='-Xms1g -Xmx4g'
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run rikenbit/ramdaq --reads '*_R{1,2}.fastq.gz' -profile docker  --genome GRCh38 --local_annot_dir <annotation directory path>
+nextflow run rikenbit/ramdaq --reads '*_R{1,2}.fastq.gz' -profile docker  --genome GRCm39_vM26 --local_annot_dir <annotation directory path>
 ```
 
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
@@ -167,12 +167,16 @@ By default, the pipeline expects unstranded data. If you use the library prepara
 
 ### `--genome`
 
-There are human (GRCh38) and mouse (GRCm38) supported in the ramdaq. To run the pipeline, you must specify which to use with the `--genome` flag.
-
-- Human
-  - `--genome GRCh38`
-- Mouse
-  - `--genome GRCm38`
+Specifies reference genome version. The available versions and specified options are as follows.
+  - Human
+    - GRCh38
+      - gencode.v37.primary_assembly.annotation: `--genome GRCh38_v37`
+      - gencode.v35.primary_assembly.annotation: `--genome GRCh38_v35`
+  - Mouse
+    - GRCm39
+      - gencode.vM26.primary_assembly.annotation: `--genome GRCm39_vM26`
+    - GRCm38
+      - gencode.vM25.primary_assembly.annotation: `--genome GRCm38_vM25`
 
 > For the implementation of the workflow, you need to download some mapping index or annotation files. Check the [this document](docs/local_annotation.md) for details.
 

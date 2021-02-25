@@ -171,7 +171,7 @@ if (params.sirv) {
     ch_sirv_gtf = false
 }
 
-if (params.chrsize) { ch_chrsize= file(params.chrsize, checkIfExists: true) } else { exit 1, "Chromosome size file not found: ${params.chrsize}" }
+if (params.chrsize) { ch_chrsize= file(params.chrsize, checkIfExists: true) } else { exit 1, "Chromosome sizes file not found: ${params.chrsize}" }
 if (params.bed) { ch_bed= file(params.bed, checkIfExists: true) } else { exit 1, "BED file not found: ${params.bed}" }
 if (params.gtf) { ch_gtf= file(params.gtf, checkIfExists: true) } else { exit 1, "GTF annotation file not found: ${params.gtf}" }
 if (params.mt_gtf) { ch_mt_gtf= file(params.mt_gtf, checkIfExists: true) } else { exit 1, "Mitocondria GTF annotation file not found: ${params.mt_gtf}" }
@@ -255,6 +255,7 @@ if (params.stranded)  {
 summary['Save Reference']   = params.saveReference ? 'Yes' : 'No'
 if (params.hisat2_idx) summary['HISAT2 Index'] = params.hisat2_idx
 if (params.hisat2_sirv_idx) summary['HISAT2 SIRVome Index'] = params.hisat2_sirv_idx
+if (params.chrsize)  summary['Chromosome sizes'] = params.chrsize
 if (params.bed) summary['BED Annotation'] = params.bed
 if (params.gtf) summary['GTF Annotation'] = params.gtf
 if (params.mt_gtf) summary['Mitocondria GTF Annotation'] = params.mt_gtf
