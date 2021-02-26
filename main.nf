@@ -1376,6 +1376,7 @@ process create_plots_fromTPM {
 ///////////////////////////////////////////////////////////////////////////////
 
 process multiqc {
+    label 'process_low'
     publishDir "${params.outdir}/MultiQC", mode: 'copy'
     container "ewels/multiqc:1.9"
 
