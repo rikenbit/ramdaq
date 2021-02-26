@@ -16,16 +16,27 @@ for i in ramdaq_annotation/human/*.tar.gz; do tar -xvf $i -C ramdaq_annotation/h
 
 ## Run pipeline (mouse)
 
-The below command processes a single-end and stranded FASTQ file using the GRCm38 mouse reference annotation:
+The below command processes a single-end and stranded FASTQ file using the GRCm39_vM26 mouse reference annotation:
 
 ```bash
-nextflow run rikenbit/ramdaq -profile docker --genome GRCm38 --local_annot_dir ramdaq_annotation/mouse --single_end --stranded fr-firststrand --outdir results_test --reads 'https://bioinformatics.riken.jp/ramdaq/ramdaq_test_data/mouse/stranded_SE/SRR7993829_1.100K.fastq.gz'
+nextflow run rikenbit/ramdaq -profile docker --genome GRCm39_vM26 --local_annot_dir ramdaq_annotation/mouse --single_end --stranded fr-firststrand --outdir results_test --reads 'https://bioinformatics.riken.jp/ramdaq/ramdaq_test_data/mouse/stranded_SE/SRR7993829_1.100K.fastq.gz'
 ```
 
 The parameters are:
 
 - `-profile docker`: Indicates the use of Docker.
-- `--genome GRCm38`: Specifies reference genome version.
+- `--genome`: Specifies reference genome version.
+  - In the current ramdaq, human and mouse references (the source is gencode, https://www.gencodegenes.org/) can be used for local annotation. 
+  - The available versions and specified options are as follows.
+    - Human
+      - GRCh38
+        - gencode.v37.primary_assembly.annotation: `--genome GRCh38_v37`
+        - gencode.v35.primary_assembly.annotation: `--genome GRCh38_v35`
+    - Mouse
+      - GRCm39
+        - gencode.vM26.primary_assembly.annotation: `--genome GRCm39_vM26`
+      - GRCm38
+        - gencode.vM25.primary_assembly.annotation: `--genome GRCm38_vM25`
 - `--local_annot_dir`: Specifes the location of local path to a directiory containing annotation files.
 - `--outdir results_test`: Specifies the output directory.
 - `--single_end`: Indicates that the data is single-end.
@@ -38,21 +49,21 @@ The parameters are:
 
 ## Run pipeline (human)
 
-The below command processes a paired-end and unstranded FASTQ file using the GRCh38 human reference annotation:
+The below command processes a paired-end and unstranded FASTQ file using the GRCh38_v37 human reference annotation:
 
 ```bash
 wget https://bioinformatics.riken.jp/ramdaq/ramdaq_test_data/human/unstranded_PE/SRR12594145_1.100K.fastq.gz
 wget https://bioinformatics.riken.jp/ramdaq/ramdaq_test_data/human/unstranded_PE/SRR12594145_2.100K.fastq.gz
 
-nextflow run rikenbit/ramdaq -profile docker --genome GRCh38 --local_annot_dir ramdaq_annotation/human --outdir results_test --reads 'SRR12594145_{1,2}.100K.fastq.gz'
+nextflow run rikenbit/ramdaq -profile docker --genome GRCh38_v37 --local_annot_dir ramdaq_annotation/human --outdir results_test --reads 'SRR12594145_{1,2}.100K.fastq.gz'
 ```
 
 The parameters are:
 
 - `-profile docker`: Indicates the use of Docker.
-- `--genome GRCh38`: Specifies reference genome version.
+- `--genome`: Specifies reference genome version.
 - `--local_annot_dir`: Specifes the location of local path to a directiory containing annotation files.
-- `--outdir results_test`: Specifies the output directory.
+- `--outdir`: Specifies the output directory.
 - `--reads`: Specifies the path of FASTQ files.
   - Single-end data example: `--reads fastq_files/*.R1.fastq.gz`
   - Paired-end data example: `--reads fastq_files/*.{R1,R2}.fastq.gz`
