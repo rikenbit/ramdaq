@@ -407,7 +407,7 @@ process fastqmcf  {
 
     script:
     maxReadLength = params.maxReadLength > 0 ? "-L ${params.maxReadLength}" : ''
-    minReadLength = params.maxReadLength > 0 ? "-l ${params.minReadLength}" : ''
+    minReadLength = params.minReadLength > 0 ? "-l ${params.minReadLength}" : ''
     skew = params.skew > 0 ? "-k ${params.skew}" : ''
     quality = params.quality > 0 ? "-q ${params.quality}" : ''
 
