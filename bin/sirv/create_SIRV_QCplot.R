@@ -8,6 +8,16 @@ library(directlabels)
 library(entropy)
 
 ###########################################################################
+### Definition of each variable
+###########################################################################
+
+metadata_path = "./Sample_data_sheet.txt"
+merged_counts_path = "./merged_SIRVome_data.txt"
+
+#Specify the folder where the plot will be output
+outdir = "./output_dir_name"
+
+###########################################################################
 ### function (Need to run it in advance)
 ###########################################################################
 
@@ -15,6 +25,8 @@ culc_tpm <- function(counts,len) {
   x <- counts/len
   return(t(t(x)*1e6/colSums(x)))
 }
+
+cv <- function(x) 100*( sd(x)/mean(x))
 
 trim_count_SIRV <- function(data, exclude_id){
   
@@ -63,8 +75,8 @@ create_SirvLengthTpm <- function(plotdata, plotpoint=F, outdir, title, output=T)
 ### load metadata & raw counts
 ###########################################################################
 
-SIRV_metadata = read.table("./Sample_data_sheet.txt", sep="\t", comment.char = "", header=T, stringsAsFactors=F)
-SIRV_counts= read.table("./merged_SIRVome_data.txt", sep="\t", comment.char = "", header=T, stringsAsFactors=F)
+SIRV_metadata = read.table(metadata_path, sep="\t", comment.char = "", header=T, stringsAsFactors=F)
+SIRV_counts= read.table(merged_counts_path, sep="\t", comment.char = "", header=T, stringsAsFactors=F)
 
 ###########################################################################
 ### create TPM matrix
@@ -114,7 +126,6 @@ SIRV_TPM_melt = dplyr::left_join(SIRV_TPM_melt, SIRV_metadata_trim, by=c("Sample
 SIRV_TPM_short_melt = dplyr::left_join(SIRV_TPM_short_melt, SIRV_metadata_trim, by=c("Sample"="Sample_Name"))
 SIRV_TPM_long_melt = dplyr::left_join(SIRV_TPM_long_melt, SIRV_metadata_trim, by=c("Sample"="Sample_Name"))
 
-outdir="./output_dir_name"
 create_SirvLengthTpm(SIRV_TPM_melt, F, outdir, "all")
 create_SirvLengthTpm(SIRV_TPM_short_melt, F, outdir, "short")
 create_SirvLengthTpm(SIRV_TPM_long_melt, F, outdir, "long")
@@ -134,7 +145,6 @@ SIRV_TPM_plotdata$TPM_log = log10(SIRV_TPM_plotdata$TPM+1)
 
 SIRV_TPM_plotdata = dplyr::left_join(SIRV_TPM_plotdata, SIRV_metadata_trim, by=c("Sample"="Sample_Name"))
 
-cv <- function(x) 100*( sd(x)/mean(x))
 SIRV_TPM_summarise = SIRV_TPM_plotdata %>% 
   group_by(Sample) %>%
   summarise_each(funs(mean, sd, cv), -c(Geneid, GD_RT))
@@ -149,7 +159,6 @@ data_ends <- SIRV_TPM_plotdata %>%
   group_by(Geneid) %>% 
   top_n(1, TPM) 
 
-outdir="./output_dir_name"
 g = ggplot(SIRV_TPM_summarise, aes(TPM_log_mean, TPM_log_sd, colour = GD_RT)) +
   geom_point() +
   geom_point(data=GD_RT_summarise, aes(fill=GD_RT), size=4, shape=24) +
@@ -166,7 +175,6 @@ data_entropy = apply( SIRV_counts_TPM[,-391], 2, entropy.empirical)
 data_entropy_set = data.frame(Sample= names(data_entropy), Entropy=data_entropy)
 data_entropy_set = dplyr::left_join(data_entropy_set, SIRV_metadata_trim, by=c("Sample"="Sample_Name"))
 
-outdir="./output_dir_name"
 g = ggplot(data_entropy_set, aes(x=GD_RT, y=Entropy, fill=GD_RT)) + 
   geom_violin()+
   geom_jitter(shape=16) +
