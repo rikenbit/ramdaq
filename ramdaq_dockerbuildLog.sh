@@ -71,6 +71,6 @@ fi
 if [ "$GIT_COMMIT" = "TRUE" ];
 then
     # git add and commit
-    git add .
+    git add --all
     git commit -m "build docker img ${YAML_COMMIT} as ${IMAGE_TAG}"
 fi
