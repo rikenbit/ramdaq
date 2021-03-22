@@ -186,14 +186,14 @@ Instead of `RSeQC::geneBody_coverage.py` we use [ReadCoverage.jl](https://github
 
 ## Bowtie2 via RSEM
 
-[Bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml) is an ultrafast and memory-efficient tool for aligning sequencing reads to long reference sequences. It is particularly good at aligning reads of about 50 up to 100s of characters to relatively long (e.g. mammalian) genomes.Bowtie2 is often the first step in pipelines for comparative genomics, including for variation calling, ChIP-seq, RNA-seq, BS-seq, but here we use it for Transcripts mapping for isoform quantification by RSEM.
+[Bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml) is an ultrafast and memory-efficient tool for aligning sequencing reads to long reference sequences. It is particularly good at aligning reads of about 50 up to 100s of characters to relatively long (e.g. mammalian) genomes. Bowtie2 is often the first step in pipelines for comparative genomics, including for variation calling, ChIP-seq, RNA-seq, BS-seq, but here we use it for transcripts mapping for isoform-level expression quantification by RSEM.
 
-[RSEM](https://github.com/deweylab/RSEM) is a software package for estimating gene and isoform expression levels from RNA-seq data. It has been widely touted as one of the most accurate quantification tools for RNA-seq analysis. RSEM wraps other popular tools to map the reads to the genome (i.e. STAR, Bowtie2, HISAT2; Bowtie2 is used in this pipeline) which are then subsequently filtered relative to a transcriptome before quantifying at the gene- and isoform-level.
+[RSEM](https://github.com/deweylab/RSEM) is a software package for estimating gene and isoform expression levels from RNA-seq data. It has been widely looked as one of the most accurate quantification tools for RNA-seq analysis. RSEM wraps other popular tools (i.e. STAR, Bowtie2, HISAT2; Bowtie2 is used in this pipeline) to map reads to the transcriptome before quantifying at the gene- and isoform-level expression.
 
 **Output directory: `results/merged_output_files/`**
 
 * `merged_rsemResults_allgenes_isoforms.txt`
-  * Matrix of transcript-level quantify results across all samples.
+  * Matrix of transcript-level quantification results across all samples.
 
 ## MultiQC
 
