@@ -100,6 +100,10 @@ extra_fn_clean_exts:
     - type: remove
       pattern: '_2.fastq'
     - type: remove
+      pattern: '_1.fq'
+    - type: remove
+      pattern: '_2.fq'
+    - type: remove
       pattern: _biotype
     - type: remove
       pattern: .bam
