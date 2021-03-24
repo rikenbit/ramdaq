@@ -62,6 +62,9 @@ def helpMessage() {
       --fc_threads_num [N]            Number of the threads (Default: 1)
       --group_features_type           Define the type attribute used to group features based on the group attribute (default: 'gene_type')
     
+    For ERCC RNA Spike-In Controls:
+      --ercc_input_amount             Dilution rate given to calculate the copy number of External RNA Controls Consortium (ERCC) (Default: '2e-7')
+    
     MultiQC report:
       --sampleLevel                   Used to turn off the edgeR MDS and heatmap. Set automatically when running on fewer than 3 samples
 
@@ -324,6 +327,8 @@ if (params.allow_overlap) summary['Overlap Reads'] = params.allow_overlap ? 'All
 if (params.count_fractionally) summary['Fractional counting'] = params.count_fractionally ? 'Enabled' : 'Disabled'
 if (params.group_features_type) summary['Biotype GTF field'] = params.group_features_type
 summary['Min Mapped Reads'] = params.min_mapped_reads
+
+if (params.ercc_input_amount) summary['ERCC input amount'] = params.ercc_input_amount
 
 summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
@@ -1531,10 +1536,11 @@ process ercc_correlation {
     file "*.{txt,pdf,csv}" into ercc_correlation_results
 
     script:
+    ercc_input_amount = params.ercc_input_amount
     """
-    drawplot_ERCC_corr.r $ercc_count $ercc_data
-    cat $ercc_heater ercc_countsmol_correlation.csv >> tmp_file
-    mv tmp_file ercc_countsmol_correlation_mqc.csv
+    drawplot_ERCC_corr.r $ercc_count $ercc_data $ercc_input_amount
+    cat $ercc_heater ercc_counts_copynum_correlation.csv >> tmp_file
+    mv tmp_file ercc_counts_copynum_correlation_mqc.csv
     """
 
 }
