@@ -20,11 +20,11 @@ ii. Install either [`Docker`](https://docs.docker.com/engine/installation/) or [
 
 iii. Download the pipeline automatically and test it on a minimal dataset with a single command
 
-1) Example of using Docker
+1) Example of test using Docker
 ```bash
 nextflow run rikenbit/ramdaq -profile test,docker
 ```
-2) Example of using Singularity
+2) Example of test using Singularity
 ```bash
 nextflow run rikenbit/ramdaq -profile test,singularity
 ```
