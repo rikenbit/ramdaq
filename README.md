@@ -24,7 +24,7 @@ iii. Download the pipeline automatically and test it on a minimal dataset with a
 ```bash
 nextflow run rikenbit/ramdaq -profile test,docker
 ```
-2) Example of using Docker
+2) Example of using Singularity
 ```bash
 nextflow run rikenbit/ramdaq -profile test,singularity
 ```
