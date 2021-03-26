@@ -63,7 +63,8 @@ def helpMessage() {
       --group_features_type           Define the type attribute used to group features based on the group attribute (default: 'gene_type')
     
     For ERCC RNA Spike-In Controls:
-      --ercc_input_amount             Dilution rate given to calculate the copy number of External RNA Controls Consortium (ERCC) (Default: '2e-7')
+      --spike_in_ercc                 Use when if the sample contains ERCC Spike-In Control Mixes. If the dilution rate is known, put it after the option (if not set '2e-7')
+      --spike_in_sirv [N]             Use when if the sample contains the Spike-In RNA Variants (SIRV). Dilution rate using to calculate the copy number of ERCC. 
     
     MultiQC report:
       --sampleLevel                   Used to turn off the edgeR MDS and heatmap. Set automatically when running on fewer than 3 samples
@@ -108,6 +109,10 @@ if (params.stranded && params.stranded != 'unstranded' && params.stranded != 'fr
 
 if (params.adapter) { ch_adapter = file(params.adapter, checkIfExists: true) } else { exit 1, "Adapter file not found: ${params.adapter}" }
 
+if (params.spike_in_ercc && params.spike_in_ercc.toString() == 'true') { ch_spike_in_ercc = '2e-7' } else { ch_spike_in_ercc = params.spike_in_ercc }
+if (params.spike_in_sirv && params.spike_in_sirv.toString() == 'true') { exit 1, "--spike_in_sirv option requires a dilution rate value" }
+if (params.spike_in_sirv) { ch_spike_in_ercc = params.spike_in_sirv }
+
 if (params.hisat2_idx) {
     if (params.hisat2_idx.endsWith('.tar.gz')) {
         file(params.hisat2_idx, checkIfExists: true)
@@ -140,7 +145,7 @@ if (params.hisat2_idx) {
     }
 }
 
-if (params.sirv) {
+if (params.spike_in_sirv) {
 
     if (params.hisat2_sirv_idx) {
         if (params.hisat2_sirv_idx.endsWith('.tar.gz')) {
@@ -256,7 +261,7 @@ ch_tools_dir_sirv = workflow.scriptFile.parent + "/tools"
 ch_mdsplot_header = Channel.fromPath("$baseDir/assets/mdsplot_header.txt", checkIfExists: true)
 ch_heatmap_header = Channel.fromPath("$baseDir/assets/heatmap_header.txt", checkIfExists: true)
 ch_biotypes_header = Channel.fromPath("$baseDir/assets/biotypes_header.txt", checkIfExists: true)
-ch_ercc_data = Channel.fromPath("$baseDir/assets/ercc_dataset.txt", checkIfExists: true)
+ch_ercc_data = params.spike_in_sirv ? Channel.fromPath("$baseDir/assets/ercc_in_sirv_dataset.txt", checkIfExists: true) : Channel.fromPath("$baseDir/assets/ercc_dataset.txt", checkIfExists: true)
 ch_ercc_corr_header = Channel.fromPath("$baseDir/assets/ercc_correlation_header.txt", checkIfExists: true)
 ch_assignedgenome_header = Channel.fromPath("$baseDir/assets/barplot_assignedgenome_rate_header.txt", checkIfExists: true)
 ch_num_of_detgene_header = Channel.fromPath("$baseDir/assets/barplot_num_of_detgene_header.txt", checkIfExists: true)
@@ -328,7 +333,8 @@ if (params.count_fractionally) summary['Fractional counting'] = params.count_fra
 if (params.group_features_type) summary['Biotype GTF field'] = params.group_features_type
 summary['Min Mapped Reads'] = params.min_mapped_reads
 
-if (params.ercc_input_amount) summary['ERCC input amount'] = params.ercc_input_amount
+summary['ERCC quantification mode']   = params.spike_in_ercc || params.spike_in_sirv ? 'On' : 'Off'
+summary['SIRV quantification mode']   = params.spike_in_sirv ? 'On' : 'Off'
 
 summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
@@ -719,7 +725,7 @@ process hisat2_sirv {
                     filename.indexOf("_summary_sirv.txt") > 0 ? "logs/$filename" : "$filename"
                 }
     when:
-    params.sirv && ch_hisat2_sirv_idx
+    params.spike_in_sirv && ch_hisat2_sirv_idx
 
     input:
     set val(name), file(reads) from ch_trimmed_reads_tosirv_hisat2
@@ -847,7 +853,7 @@ process rsem_bowtie2_sirv {
                     filename.indexOf(".log") > 0 ? "logs/$filename" : "$filename"
                 }
     when:
-    params.sirv && ch_rsem_sirv_idx
+    params.spike_in_sirv && ch_rsem_sirv_idx
 
     input:
     set val(name), file(reads) from ch_trimmed_reads_tosirv_rsem
@@ -1525,9 +1531,10 @@ process ercc_correlation {
             }
 
     when:
-    ercc_list.val.size()>0
+    ercc_list.val.size()>0 && (params.spike_in_ercc || params.spike_in_sirv)
 
     input:
+    val ercc_input_amount from ch_spike_in_ercc
     file ercc_count from ercccount_merged
     file ercc_data from ch_ercc_data
     file ercc_heater from ch_ercc_corr_header
@@ -1536,7 +1543,6 @@ process ercc_correlation {
     file "*.{txt,pdf,csv}" into ercc_correlation_results
 
     script:
-    ercc_input_amount = params.ercc_input_amount
     """
     drawplot_ERCC_corr.r $ercc_count $ercc_data $ercc_input_amount
     cat $ercc_heater ercc_counts_copynum_correlation.csv >> tmp_file
