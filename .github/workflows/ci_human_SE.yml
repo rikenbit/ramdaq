@@ -15,6 +15,12 @@ jobs:
         nxf_ver: ['19.10.0', '']
     steps:
       - uses: actions/checkout@v2
+      - name: Crean env
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
       - name: Install Nextflow
         run: |
           wget -qO- get.nextflow.io | bash
