@@ -27,5 +27,5 @@ jobs:
           # TODO: You can customise CI pipeline run tests as required
           # (eg. adding multiple test runs with different parameters)
           # nextflow run ${GITHUB_WORKSPACE} -profile test,docker
-          nextflow run ${GITHUB_WORKSPACE} -profile test_SE_UST_M,docker
-          nextflow run ${GITHUB_WORKSPACE} -profile test_SE_ST_M,docker
+          nextflow run ${GITHUB_WORKSPACE} -profile test_PE_UST_H,docker
+          nextflow run ${GITHUB_WORKSPACE} -profile test_PE_ST_H,docker
