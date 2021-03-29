@@ -63,8 +63,8 @@ def helpMessage() {
       --group_features_type           Define the type attribute used to group features based on the group attribute (default: 'gene_type')
     
     For ERCC RNA Spike-In Controls:
-      --spike_in_ercc                 Use when if the sample contains ERCC Spike-In Control Mixes. If the dilution rate is known, put it after the option (if not set '2e-7')
-      --spike_in_sirv [N]             Use when if the sample contains the Spike-In RNA Variants (SIRV). Dilution rate using to calculate the copy number of ERCC. 
+      --spike_in_ercc [str]           Dilution rate of the ERCC Spike-In Control Mix 1. Use when the samples contain the ERCC Spike-In Control Mix 1. The value is used to calculate copy number of ERCC. If the value is not specified, '2e-7' is used as dilution rate. (default: false)
+      --spike_in_sirv [str]           Dilution rate of the SIRV-Set 4. Use when the samples contain the SIRV-Set 4. The value is used to calculate copy number of ERCC in the SIRV-Set 4. (default: false)
     
     MultiQC report:
       --sampleLevel                   Used to turn off the edgeR MDS and heatmap. Set automatically when running on fewer than 3 samples
@@ -109,7 +109,7 @@ if (params.stranded && params.stranded != 'unstranded' && params.stranded != 'fr
 
 if (params.adapter) { ch_adapter = file(params.adapter, checkIfExists: true) } else { exit 1, "Adapter file not found: ${params.adapter}" }
 
-if (params.spike_in_ercc && params.spike_in_ercc.toString() == 'true') { ch_spike_in_ercc = '2e-7' } else { ch_spike_in_ercc = params.spike_in_ercc }
+if (params.spike_in_ercc && params.spike_in_ercc.toString() == 'true') { ch_spike_in_ercc = params.spike_in_ercc_default_amount } else { ch_spike_in_ercc = params.spike_in_ercc }
 if (params.spike_in_sirv && params.spike_in_sirv.toString() == 'true') { exit 1, "--spike_in_sirv option requires a dilution rate value" }
 if (params.spike_in_sirv) { ch_spike_in_ercc = params.spike_in_sirv }
 
