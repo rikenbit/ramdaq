@@ -31,7 +31,6 @@ def helpMessage() {
       --genome [str]                  Name of human or mouse latest reference: ${params.genomes.keySet().join(", ")}
       --saveReference                 Save the generated reference files to the results directory
       --local_annot_dir [str]         Base path for local annotation files
-      --sirv                          If a Spike-In RNA Variant (SIRV) Control is added to the sample, ramdaq run a pipeline to quantify each transcripts.
         
     Other:
       --outdir [str]                  The output directory where the results will be saved
