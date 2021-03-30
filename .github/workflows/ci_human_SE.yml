@@ -1,4 +1,4 @@
-name: CI
+name: CI (human SE data)
 # This workflow is triggered on pushes and PRs to the repository.
 # It runs the pipeline with the minimal test dataset to check that it completes without any syntax errors
 on: [push, pull_request]
