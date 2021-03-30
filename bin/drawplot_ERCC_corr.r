@@ -10,6 +10,7 @@ if (!require("ggplot2")){
 
 erccfile <- args[1]
 erccref <- args[2]
+erccamount <- args[3]
 
 ### function ###
 
@@ -24,11 +25,19 @@ calc_tpm <- function(counts,len) {
 
 ### load Ref
 ercc_ref = read.table(erccref, sep="\t", comment.char = "", header=T, stringsAsFactors=F)
-ercc_ref_trim = ercc_ref[,c("ERCC.ID","Length")]
+#ercc_ref_trim = ercc_ref[,c("ERCC.ID","Length")]
 
+### calc copy number
+ercc_input_amount = eval(parse(text = as.character(erccamount)))
+ercc_ref$copy.number = ercc_ref$concentration.in.Mix.1..attomoles.ul. * 10^(-18) * 6.02214086  * 10^23 * ercc_input_amount
+ercc_ref$copy.number.log = log10(ercc_ref$copy.number+1)
+
+write.table(ercc_ref,"ercc_dataset_user.txt",sep="\t", append=F, quote=F, row.names=T, col.names=T)
+
+### load countdata
 ercc_countdata = read.table(erccfile, sep="\t", comment.char = "", header=T, stringsAsFactors=F)
 ercc_countdata$ERCC.ID = rownames(ercc_countdata)
-ercc_countdata_tpm = dplyr::left_join(ercc_countdata, ercc_ref_trim, by=c("ERCC.ID"))
+ercc_countdata_tpm = dplyr::left_join(ercc_countdata, ercc_ref[,c("ERCC.ID","Length")], by=c("ERCC.ID"))
 rownames(ercc_countdata_tpm) = ercc_countdata_tpm$ERCC.ID
 
 # calc TPM
@@ -36,11 +45,9 @@ ercc_countdata_tpm = calc_tpm(ercc_countdata_tpm[,!colnames(ercc_countdata_tpm) 
 ercc_countdata_tpm = as.data.frame(ercc_countdata_tpm)
 ercc_countdata_tpm_log = log10(ercc_countdata_tpm+1)
 
-if (nrow(ercc_countdata_tpm_log) > 1){
-  write.table(ercc_countdata_tpm_log,"merged_featureCounts_gene_TPM_ERCC_log.txt",sep="\t", append=F, quote=F, row.names=T, col.names=T)
-}
+write.table(ercc_countdata_tpm_log,"merged_featureCounts_gene_TPM_ERCC_log.txt",sep="\t", append=F, quote=F, row.names=T, col.names=T)
 
-plotdata = cor(ercc_countdata_tpm_log, ercc_ref$mollog)
+plotdata = cor(ercc_countdata_tpm_log, ercc_ref$copy.number.log)
 plotdata = data.frame(corr=plotdata[,1],sample_name=as.character(rownames(plotdata)))
 plotdata = plotdata[order(plotdata$sample_name),]
 plotdata = SDset(plotdata$sample_name, plotdata$corr)
@@ -51,14 +58,14 @@ g = ggplot(plotdata, aes(x=x,y=y)) +
     xlab("Sample") + ylab("Corr") + 
     ylim(0,1) + 
     theme(axis.text.x=element_text(size=6, angle=90, hjust=1), legend.text=element_text(size=8)) +
-    ggtitle("ERCC counts and mol-log correlation")
+    ggtitle("ERCC counts and copy number correlation")
 
-ggsave(file = "ERCC_countsmol_correlation.pdf", plot=g, dpi=100, width=12, height=5)
+ggsave(file = "ERCC_counts_copynum_correlation.pdf", plot=g, dpi=100, width=12, height=5)
 
 # Write correlation values to file
 output_data = data.frame(name = plotdata$x, corr=plotdata$y)
 rownames(output_data) = output_data$name
-write.csv(output_data, 'ercc_countsmol_correlation.csv', quote=FALSE, append=TRUE)
+write.csv(output_data, 'ercc_counts_copynum_correlation.csv', quote=FALSE, append=TRUE)
 
 # Printing sessioninfo to standard out
 print("Draw ERCC correlation plot info:")

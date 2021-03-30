@@ -62,6 +62,10 @@ def helpMessage() {
       --fc_threads_num [N]            Number of the threads (Default: 1)
       --group_features_type           Define the type attribute used to group features based on the group attribute (default: 'gene_type')
     
+    For ERCC RNA Spike-In Controls:
+      --spike_in_ercc [str]           Dilution rate of the ERCC Spike-In Control Mix 1. Use when the samples contain the ERCC Spike-In Control Mix 1. The value is used to calculate copy number of ERCC. If the value is not specified, '2e-7' is used as dilution rate. (default: false)
+      --spike_in_sirv [str]           Dilution rate of the SIRV-Set 4. Use when the samples contain the SIRV-Set 4. The value is used to calculate copy number of ERCC in the SIRV-Set 4. (default: false)
+    
     MultiQC report:
       --sampleLevel                   Used to turn off the edgeR MDS and heatmap. Set automatically when running on fewer than 3 samples
 
@@ -95,7 +99,8 @@ params.mt_gtf = params.genome ? params.genomes[ params.genome ].mt_gtf ?: false 
 params.rrna_gtf = params.genome ? params.genomes[ params.genome ].rrna_gtf ?: false : false
 params.histone_gtf = params.genome ? params.genomes[ params.genome ].histone_gtf ?: false : false
 params.hisat2_sirv_idx = params.genome ? params.genomes[ params.genome ].hisat2_sirv_idx ?: false : false
-params.sirv_gtf = params.genome ? params.genomes[ params.genome ].sirv_gtf ?: false : false
+params.rsem_sirv_idx = params.genome ? params.genomes[ params.genome ].rsem_sirv_idx ?: false : false
+params.rsem_allgene_idx = params.genome ? params.genomes[ params.genome ].rsem_allgene_idx ?: false : false
 
 // Validate inputs
 if (params.stranded && params.stranded != 'unstranded' && params.stranded != 'fr-firststrand' && params.stranded != 'fr-secondstrand') {
@@ -103,6 +108,10 @@ if (params.stranded && params.stranded != 'unstranded' && params.stranded != 'fr
 }
 
 if (params.adapter) { ch_adapter = file(params.adapter, checkIfExists: true) } else { exit 1, "Adapter file not found: ${params.adapter}" }
+
+if (params.spike_in_ercc && params.spike_in_ercc.toString() == 'true') { ch_spike_in_ercc = params.spike_in_ercc_default_amount } else { ch_spike_in_ercc = params.spike_in_ercc }
+if (params.spike_in_sirv && params.spike_in_sirv.toString() == 'true') { exit 1, "--spike_in_sirv option requires a dilution rate value" }
+if (params.spike_in_sirv) { ch_spike_in_ercc = params.spike_in_sirv }
 
 if (params.hisat2_idx) {
     if (params.hisat2_idx.endsWith('.tar.gz')) {
@@ -136,7 +145,8 @@ if (params.hisat2_idx) {
     }
 }
 
-if (params.sirv) {
+if (params.spike_in_sirv) {
+
     if (params.hisat2_sirv_idx) {
         if (params.hisat2_sirv_idx.endsWith('.tar.gz')) {
             file(params.hisat2_sirv_idx, checkIfExists: true)
@@ -165,11 +175,65 @@ if (params.sirv) {
             .ifEmpty { exit 1, "HISAT2 SIRVome index files not found: ${params.hisat2_sirv_idx}" }
         }
     } else { exit 1, "HISAT2 SIRVome index files not found: ${params.hisat2_sirv_idx}" } 
-    if (params.sirv_gtf) { ch_sirv_gtf= file(params.sirv_gtf, checkIfExists: true) } else { exit 1, "SIRVome annotation file not found: ${params.sirv_gtf}" } 
+
+    if (params.rsem_sirv_idx) {
+        if (params.rsem_sirv_idx.endsWith('.tar.gz')) {
+            file(params.rsem_sirv_idx, checkIfExists: true)
+
+            process untar_rsem_sirv_idx {
+                label 'process_low'
+                publishDir path: { params.saveReference ? "${params.outdir}/reference_genome/sirv" : params.outdir },
+                   saveAs: { params.saveReference ? it : null }, mode: 'copy'
+
+                input:
+                path gz from params.rsem_sirv_idx
+
+                output:
+                file "$untar/*" into ch_rsem_sirv_idx
+
+                script:
+                untar = gz.toString() - '.tar.gz'
+                """
+                tar -xvf $gz
+                """
+            }
+        } else {
+            ch_rsem_sirv_idx = Channel
+            .from(params.rsem_sirv_idx)
+            .flatMap{file(params.rsem_sirv_idx, checkIfExists: true)}
+            .ifEmpty { exit 1, "RSEM SIRVome index files not found: ${params.rsem_sirv_idx}" }
+        }
+    } else { exit 1, "RSEM SIRVome index files not found: ${params.rsem_sirv_idx}" } 
 } else {
     ch_hisat2_sirv_idx = false
-    ch_sirv_gtf = false
+    ch_rsem_sirv_idx = false
 }
+
+if (params.rsem_allgene_idx) {
+    if (params.rsem_allgene_idx.endsWith('.tar.gz')) {
+        file(params.rsem_allgene_idx, checkIfExists: true)
+        
+        process untar_rsem_allgene_idx {
+            label 'process_low'
+            publishDir path: { params.saveReference ? "${params.outdir}/reference_genome/sirv" : params.outdir },
+               saveAs: { params.saveReference ? it : null }, mode: 'copy'
+            input:
+            path gz from params.rsem_allgene_idx
+            output:
+            file "$untar/*" into ch_rsem_allgene_idx
+            script:
+            untar = gz.toString() - '.tar.gz'
+            """
+            tar -xvf $gz
+            """
+        }
+    } else {
+        ch_rsem_allgene_idx = Channel
+        .from(params.rsem_allgene_idx)
+        .flatMap{file(params.rsem_allgene_idx, checkIfExists: true)}
+        .ifEmpty { exit 1, "RSEM All genes index files not found: ${params.rsem_allgene_idx}" }
+    }
+} else { exit 1, "RSEM All genes index files not found: ${params.rsem_allgene_idx}" } 
 
 if (params.chrsize) { ch_chrsize= file(params.chrsize, checkIfExists: true) } else { exit 1, "Chromosome sizes file not found: ${params.chrsize}" }
 if (params.bed) { ch_bed= file(params.bed, checkIfExists: true) } else { exit 1, "BED file not found: ${params.bed}" }
@@ -197,7 +261,7 @@ ch_tools_dir_sirv = workflow.scriptFile.parent + "/tools"
 ch_mdsplot_header = Channel.fromPath("$baseDir/assets/mdsplot_header.txt", checkIfExists: true)
 ch_heatmap_header = Channel.fromPath("$baseDir/assets/heatmap_header.txt", checkIfExists: true)
 ch_biotypes_header = Channel.fromPath("$baseDir/assets/biotypes_header.txt", checkIfExists: true)
-ch_ercc_data = Channel.fromPath("$baseDir/assets/ercc_dataset.txt", checkIfExists: true)
+ch_ercc_data = params.spike_in_sirv ? Channel.fromPath("$baseDir/assets/ercc_in_sirv_dataset.txt", checkIfExists: true) : Channel.fromPath("$baseDir/assets/ercc_dataset.txt", checkIfExists: true)
 ch_ercc_corr_header = Channel.fromPath("$baseDir/assets/ercc_correlation_header.txt", checkIfExists: true)
 ch_assignedgenome_header = Channel.fromPath("$baseDir/assets/barplot_assignedgenome_rate_header.txt", checkIfExists: true)
 ch_num_of_detgene_header = Channel.fromPath("$baseDir/assets/barplot_num_of_detgene_header.txt", checkIfExists: true)
@@ -255,18 +319,22 @@ if (params.stranded)  {
 summary['Save Reference']   = params.saveReference ? 'Yes' : 'No'
 if (params.hisat2_idx) summary['HISAT2 Index'] = params.hisat2_idx
 if (params.hisat2_sirv_idx) summary['HISAT2 SIRVome Index'] = params.hisat2_sirv_idx
+if (params.rsem_sirv_idx) summary['RSEM-Bowtie2 SIRVome Index'] = params.rsem_sirv_idx
+if (params.rsem_allgene_idx) summary['RSEM-Bowtie2 All genes Index'] = params.rsem_allgene_idx
 if (params.chrsize)  summary['Chromosome sizes'] = params.chrsize
 if (params.bed) summary['BED Annotation'] = params.bed
 if (params.gtf) summary['GTF Annotation'] = params.gtf
 if (params.mt_gtf) summary['Mitocondria GTF Annotation'] = params.mt_gtf
 if (params.rrna_gtf) summary['rRNA GTF Annotation'] = params.rrna_gtf
 if (params.histone_gtf) summary['Histone GTF Annotation'] = params.histone_gtf
-if (params.sirv_gtf) summary['SIRVome GTF Annotation'] = params.sirv_gtf
 if (params.allow_multimap) summary['Multimap Reads'] = params.allow_multimap ? 'Allow' : 'Disallow'
 if (params.allow_overlap) summary['Overlap Reads'] = params.allow_overlap ? 'Allow' : 'Disallow'
 if (params.count_fractionally) summary['Fractional counting'] = params.count_fractionally ? 'Enabled' : 'Disabled'
 if (params.group_features_type) summary['Biotype GTF field'] = params.group_features_type
 summary['Min Mapped Reads'] = params.min_mapped_reads
+
+summary['ERCC quantification mode']   = params.spike_in_ercc || params.spike_in_sirv ? 'On' : 'Off'
+summary['SIRV quantification mode']   = params.spike_in_sirv ? 'On' : 'Off'
 
 summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
@@ -426,7 +494,9 @@ ch_trimmed_reads
     .into{
         ch_trimmed_reads_tofastqc;
         ch_trimmed_reads_tohisat2;
-        ch_trimmed_reads_tosirv
+        ch_trimmed_reads_tosirv_hisat2;
+        ch_trimmed_reads_tosirv_rsem
+        ch_trimmed_reads_toallgene_rsem
     }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -655,10 +725,10 @@ process hisat2_sirv {
                     filename.indexOf("_summary_sirv.txt") > 0 ? "logs/$filename" : "$filename"
                 }
     when:
-    params.sirv && ch_hisat2_sirv_idx
+    params.spike_in_sirv && ch_hisat2_sirv_idx
 
     input:
-    set val(name), file(reads) from ch_trimmed_reads_tosirv
+    set val(name), file(reads) from ch_trimmed_reads_tosirv_hisat2
     file sirv_indices from ch_hisat2_sirv_idx.collect()
     path tools_dir from ch_tools_dir_sirv
 
@@ -684,14 +754,13 @@ process hisat2_sirv {
             samtools index ${name}.sirv.bam
             samtools flagstat ${name}.sirv.bam > ${name}.sirv.bam.flagstat
 
-            bamtools filter -in ${name}.sirv.bam -out ${name}.sirv.forward.bam -script ${tools_dir}/bamtools_f_SE.json
-            samtools index ${name}.sirv.forward.bam
-            samtools flagstat ${name}.sirv.forward.bam > ${name}.sirv.forward.bam.flagstat
-
-            bamtools filter -in ${name}.sirv.bam -out ${name}.sirv.reverse.bam -script ${tools_dir}/bamtools_r_SE.json
-            samtools index ${name}.sirv.reverse.bam
-            samtools flagstat ${name}.sirv.reverse.bam > ${name}.sirv.reverse.bam.flagstat
-
+            bamtools filter -in ${name}.sirv.bam -out ${name}_forward.sirv.bam -script ${tools_dir}/bamtools_f_SE.json
+            samtools index ${name}_forward.sirv.bam
+            samtools flagstat ${name}_forward.sirv.bam > ${name}_forward.sirv.bam.flagstat
+            
+            bamtools filter -in ${name}.sirv.bam -out ${name}_reverse.sirv.bam -script ${tools_dir}/bamtools_r_SE.json
+            samtools index ${name}_reverse.sirv.bam
+            samtools flagstat ${name}_reverse.sirv.bam > ${name}_reverse.sirv.bam.flagstat
             """
         } else {
             """
@@ -710,14 +779,21 @@ process hisat2_sirv {
             samtools index ${name}.sirv.bam
             samtools flagstat ${name}.sirv.bam > ${name}.sirv.bam.flagstat
 
-            bamtools filter -in ${name}.sirv.bam -out ${name}.sirv.forward.bam -script ${tools_dir}/bamtools_f_PE.json
-            samtools index ${name}.sirv.forward.bam
-            samtools flagstat ${name}.sirv.forward.bam > ${name}.sirv.forward.bam.flagstat
+            bamtools filter -in ${name}.sirv.bam -out ${name}_forward.sirv.bam -script ${tools_dir}/bamtools_f_PE.json
+            samtools index ${name}_forward.sirv.bam
+            samtools flagstat ${name}_forward.sirv.bam > ${name}_forward.sirv.bam.flagstat
+            
+            bamtools filter -in ${name}.sirv.bam -out ${name}_reverse.sirv.bam -script ${tools_dir}/bamtools_r_PE.json
+            samtools index ${name}_reverse.sirv.bam
+            samtools flagstat ${name}_reverse.sirv.bam > ${name}_reverse.sirv.bam.flagstat
 
-            bamtools filter -in ${name}.sirv.bam -out ${name}.sirv.reverse.bam -script ${tools_dir}/bamtools_r_PE.json
-            samtools index ${name}.sirv.reverse.bam
-            samtools flagstat ${name}.sirv.reverse.bam > ${name}.sirv.reverse.bam.flagstat
+            samtools view -bS -f 0x40 ${name}.sirv.bam -o ${name}_R1.sirv.bam
+            samtools index ${name}_R1.sirv.bam
+            samtools flagstat ${name}_R1.sirv.bam > ${name}_R1.sirv.bam.flagstat
 
+            samtools view -bS -f 0x80 ${name}.sirv.bam -o ${name}_R2.sirv.bam
+            samtools index ${name}_R2.sirv.bam
+            samtools flagstat ${name}_R2.sirv.bam > ${name}_R2.sirv.bam.flagstat
             """
         } else {
             """
@@ -730,14 +806,233 @@ process hisat2_sirv {
     }
 }
 
+def check_bam_forsirv(name,flagstat_path,min_mapped_reads=10) {
+    
+    //trim R1 or R2 bams
+    if (name.indexOf("_R1") > 0 || name.indexOf("_R2") > 0){
+        return false
+    }
+    
+    def flagstat_file = new File(flagstat_path.toString())
+    //mapped = get_mapped_from_flagstat(flagstat_file)
+    def mapped = 0
+    flagstat_file.eachLine { line ->
+        if (line.contains(' mapped (')) {
+            mapped = line.tokenize().first().toInteger()
+        }
+    }
+    if (mapped < min_mapped_reads.toInteger()) {
+        log.info ">>>> $name FAILED MAPPED READ THRESHOLD: ${mapped} < ${params.min_mapped_reads}. IGNORING FOR FURTHER DOWNSTREAM ANALYSIS! <<<<"
+        return false
+    } else {
+        return true
+    }
+}
+
 ch_sirv_bamsort
     .transpose()
-    .filter { name, bam, bai, flagstat -> check_mapped(bam.baseName,flagstat,params.min_mapped_reads) }
+    .filter { name, bam, bai, flagstat -> check_bam_forsirv(bam.baseName,flagstat,params.min_mapped_reads) }
     .map { it[0..2] }
-    .into { 
-        hisat2_output_toreadcoverage_sirv
-        hisat2_output_tofcount_sirv
+    .set { 
+        output_toreadcoverage_sirv
+        //hisat2_output_tofcount_sirv
     }
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+* STEP 4-3 - RSEM (SIRVome)
+*/
+///////////////////////////////////////////////////////////////////////////////
+
+process rsem_bowtie2_sirv {
+    tag "$name"
+    label 'process_high'
+    
+    publishDir "${params.outdir}/rsem_bowtie2_sirv", mode: 'copy', overwrite: true,
+        saveAs: { filename ->
+                    filename.indexOf(".log") > 0 ? "logs/$filename" : "$filename"
+                }
+    when:
+    params.spike_in_sirv && ch_rsem_sirv_idx
+
+    input:
+    set val(name), file(reads) from ch_trimmed_reads_tosirv_rsem
+    file sirv_indices from ch_rsem_sirv_idx.collect()
+
+    output:
+    file "*.isoforms.results" into rsem_results_sirv_to_merge
+    file "*.results"
+    file "*.log"
+
+    script:
+    def strandness = ''
+    if (params.stranded == 'fr-firststrand') {
+        strandness = "--strandedness reverse"
+    } else if (params.stranded == 'fr-secondstrand'){
+        strandness = "--strandedness forward"
+    }
+    index_base = sirv_indices[0].toString().split('\\.')[0]
+
+    if (params.single_end) {
+        if (params.stranded && params.stranded != 'unstranded') {
+            """
+            rsem-calculate-expression -p 20 $strandness $reads --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ $index_base ${name}.sirv
+            samtools sort ${name}.sirv.transcript.bam -o ${name}.sirv.rsem.bam
+            samtools index ${name}.sirv.rsem.bam
+            samtools flagstat ${name}.sirv.rsem.bam > ${name}.sirv.rsem.bam.flagstat
+            rm ${name}.sirv.transcript.bam
+            """
+        } else {
+            """
+            rsem-calculate-expression -p 20 $reads --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ $index_base ${name}.sirv
+            samtools sort ${name}.sirv.transcript.bam -o ${name}.sirv.rsem.bam
+            samtools index ${name}.sirv.rsem.bam
+            samtools flagstat ${name}.sirv.rsem.bam > ${name}.sirv.rsem.bam.flagstat
+            rm ${name}.sirv.transcript.bam
+            """
+        }
+
+    } else {
+        if (params.stranded && params.stranded != 'unstranded') {
+            """
+            rsem-calculate-expression -p 20 $strandness --paired-end ${reads[0]} ${reads[1]} --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ \\
+            $index_base ${name}.sirv
+            samtools sort ${name}.sirv.transcript.bam -o ${name}.sirv.rsem.bam
+            samtools index ${name}.sirv.rsem.bam
+            samtools flagstat ${name}.sirv.rsem.bam > ${name}.sirv.rsem.bam.flagstat
+            rm ${name}.sirv.transcript.bam
+            """
+        } else {
+            """
+            rsem-calculate-expression -p 20 --paired-end ${reads[0]} ${reads[1]} --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ \\
+            $index_base ${name}.sirv
+            samtools sort ${name}.sirv.transcript.bam -o ${name}.sirv.rsem.bam
+            samtools index ${name}.sirv.rsem.bam
+            samtools flagstat ${name}.sirv.rsem.bam > ${name}.sirv.rsem.bam.flagstat
+            rm ${name}.sirv.transcript.bam
+            """
+        }
+    }
+}
+
+process merge_sirv_isoforms {
+    publishDir "${params.outdir}/merged_output_files", mode: 'copy'
+
+    input:
+    file input_files from rsem_results_sirv_to_merge.collect()
+
+    output:
+    file 'merged_rsemResults_SIRVome_isoforms.txt'
+
+    script:
+    // Redirection (the `<()`) for the win!
+    // Geneid in 1st column and gene_name in 7th
+    gene_ids = "<(tail -n +1 ${input_files[0]} | cut -f1,2 )"
+    counts = input_files.collect{filename ->
+      // Remove first line and take third column
+      "<(tail -n +1 ${filename} | sed 's:TPM:${filename}:' | sed 's:.sirv.rsem.isoforms.results::' | cut -f6)"}.join(" ")
+    """
+    paste $gene_ids $counts > merged_rsemResults_SIRVome_isoforms.txt
+    """
+  }
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+* STEP 4-4 - RSEM (All genes)
+*/
+///////////////////////////////////////////////////////////////////////////////
+
+process rsem_bowtie2_allgenes {
+    tag "$name"
+    label 'process_high'
+    
+    publishDir "${params.outdir}/rsem_bowtie2_allgenes", mode: 'copy', overwrite: true,
+        saveAs: { filename ->
+                    filename.indexOf(".log") > 0 ? "logs/$filename" : "$filename"
+                }
+    when:
+    ch_rsem_allgene_idx
+
+    input:
+    set val(name), file(reads) from ch_trimmed_reads_toallgene_rsem
+    file sirv_indices from ch_rsem_allgene_idx.collect()
+
+    output:
+    file "*.isoforms.results" into rsem_results_allgene_to_merge
+    file "*.results"
+    file "*.log"
+
+    script:
+    def strandness = ''
+    if (params.stranded == 'fr-firststrand') {
+        strandness = "--strandedness reverse"
+    } else if (params.stranded == 'fr-secondstrand'){
+        strandness = "--strandedness forward"
+    }
+    index_base = sirv_indices[0].toString().split('\\.')[0]
+
+    if (params.single_end) {
+        if (params.stranded && params.stranded != 'unstranded') {
+            """
+            rsem-calculate-expression -p 20 $strandness $reads --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ $index_base ${name}
+            samtools sort ${name}.transcript.bam -o ${name}.rsem.bam
+            samtools index ${name}.rsem.bam
+            samtools flagstat ${name}.rsem.bam > ${name}.rsem.bam.flagstat
+            rm ${name}.transcript.bam
+            """
+        } else {
+            """
+            rsem-calculate-expression -p 20 $reads --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ $index_base ${name}
+            samtools sort ${name}.transcript.bam -o ${name}.rsem.bam
+            samtools index ${name}.rsem.bam
+            samtools flagstat ${name}.rsem.bam > ${name}.rsem.bam.flagstat
+            rm ${name}.transcript.bam
+            """
+        }
+
+    } else {
+        if (params.stranded && params.stranded != 'unstranded') {
+            """
+            rsem-calculate-expression -p 20 $strandness --paired-end ${reads[0]} ${reads[1]} --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ \\
+            $index_base ${name}
+            samtools sort ${name}.transcript.bam -o ${name}.rsem.bam
+            samtools index ${name}.rsem.bam
+            samtools flagstat ${name}.rsem.bam > ${name}.rsem.bam.flagstat
+            rm ${name}.transcript.bam
+            """
+        } else {
+            """
+            rsem-calculate-expression -p 20 --paired-end ${reads[0]} ${reads[1]} --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ \\
+            $index_base ${name}
+            samtools sort ${name}.transcript.bam -o ${name}.rsem.bam
+            samtools index ${name}.rsem.bam
+            samtools flagstat ${name}.rsem.bam > ${name}.rsem.bam.flagstat
+            rm ${name}.transcript.bam
+            """
+        }
+    }
+}
+
+process merge_allgenes_isoforms {
+    publishDir "${params.outdir}/merged_output_files", mode: 'copy'
+
+    input:
+    file input_files from rsem_results_allgene_to_merge.collect()
+
+    output:
+    file 'merged_rsemResults_allgenes_isoforms.txt'
+
+    script:
+    // Redirection (the `<()`) for the win!
+    // Geneid in 1st column and gene_name in 7th
+    gene_ids = "<(tail -n +1 ${input_files[0]} | cut -f1,2 )"
+    counts = input_files.collect{filename ->
+      // Remove first line and take third column
+      "<(tail -n +1 ${filename} | sed 's:TPM:${filename}:' | sed 's:.sirv.rsem.isoforms.results::' | cut -f6)"}.join(" ")
+    """
+    paste $gene_ids $counts > merged_rsemResults_allgenes_isoforms.txt
+    """
+  }
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
@@ -883,14 +1178,18 @@ rseqc_results_merge = rseqc_results
 */
 ///////////////////////////////////////////////////////////////////////////////
 
+
 process readcoverage_sirv  {
     tag "$name"
     container "yuifu/readcoverage.jl:0.1.2-workaround"
 
     publishDir "${params.outdir}/readcoverage_SIRVome", mode: 'copy'
 
+    when:
+    !params.suppress_sirv_coverage
+
     input:
-    set val(name), file(bam), file(bai) from hisat2_output_toreadcoverage_sirv
+    set val(name), file(bam), file(bai) from output_toreadcoverage_sirv
 
     output:
     file "*.txt" into readcov_sirv_results
@@ -927,7 +1226,6 @@ process merge_readcoverage_sirv {
     $command
     """
 }
-
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1187,78 +1485,6 @@ process merge_featureCounts_histone {
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
-* STEP 8-4 - FeatureCounts (SIRVome GTF) 
-*/
-///////////////////////////////////////////////////////////////////////////////
-
-process featureCounts_sirv  {
-    tag "$name"
-
-    publishDir "${params.outdir}/featureCounts_SIRVome", mode: 'copy',
-        saveAs: {filename ->
-            if (filename.indexOf("_sirv.featureCounts.txt.summary") > 0) "sirv_count_summaries/$filename"
-            else if (filename.indexOf("_sirv.featureCounts.txt") > 0) "sirv_counts/$filename"
-            else "$filename"
-    }
-
-    when:
-    ch_sirv_gtf
-
-    input:
-    set val(name), file(bam), file(bai) from hisat2_output_tofcount_sirv
-    file gtf from ch_sirv_gtf
-
-    output:
-    file "${bam.baseName}.featureCounts.txt" into geneCounts_sirv, geneCounts_sirv_to_merge
-    file "${bam.baseName}.featureCounts.txt.summary" into featureCounts_logs_sirv
-
-    script:
-
-    isPairedEnd = params.single_end ? '' : "-p"
-    if (params.stranded && params.stranded == 'fr-firststrand') {
-        isStrandSpecific = "-s 2"
-    } else if (params.stranded && params.stranded == 'fr-secondstrand'){
-        isStrandSpecific = "-s 1"
-    } else {
-        isStrandSpecific = ''
-    }
-    extraAttributes = params.extra_attributes ? "--extraAttributes ${params.extra_attributes}" : ''
-    allow_multimap = params.allow_multimap ? "-M" : ''
-    allow_overlap = params.allow_overlap ? "-O" : ''
-    count_fractionally = params.count_fractionally ? "--fraction" : ''
-    threads_num = params.fc_threads_num > 0 ? "-T ${params.fc_threads_num}" : ''
-
-    """
-    featureCounts -a $gtf -g transcript_id -t exon -o ${bam.baseName}.featureCounts.txt  \\
-    $isPairedEnd $isStrandSpecific $extraAttributes $count_fractionally $allow_multimap $allow_overlap $threads_num ${bam}
-    
-    """
-}
-
-process merge_featureCounts_sirv {
-    publishDir "${params.outdir}/merged_output_files", mode: 'copy'
-
-    input:
-    file input_files from geneCounts_sirv_to_merge.collect()
-
-    output:
-    file 'merged_featureCounts_transcripts_SIRVome.txt' into ch_tpm_sirv_count
-
-    script:
-    // Redirection (the `<()`) for the win!
-    // Geneid in 1st column and gene_name in 7th
-    gene_ids = "<(tail -n +2 ${input_files[0]} | cut -f1,6,7 )"
-    counts = input_files.collect{filename ->
-      // Remove first line and take third column
-      "<(tail -n +2 ${filename} | sed 's:.bam::' | cut -f8)"}.join(" ")
-    """
-    paste $gene_ids $counts > merged_featureCounts_transcripts_SIRVome.txt
-    """
-  }
-
-
-///////////////////////////////////////////////////////////////////////////////
-/*
 * STEP 9 - edgeR MDS and heatmap
 */
 ///////////////////////////////////////////////////////////////////////////////
@@ -1305,9 +1531,10 @@ process ercc_correlation {
             }
 
     when:
-    ercc_list.val.size()>0
+    ercc_list.val.size()>0 && (params.spike_in_ercc || params.spike_in_sirv)
 
     input:
+    val ercc_input_amount from ch_spike_in_ercc
     file ercc_count from ercccount_merged
     file ercc_data from ch_ercc_data
     file ercc_heater from ch_ercc_corr_header
@@ -1317,9 +1544,9 @@ process ercc_correlation {
 
     script:
     """
-    drawplot_ERCC_corr.r $ercc_count $ercc_data
-    cat $ercc_heater ercc_countsmol_correlation.csv >> tmp_file
-    mv tmp_file ercc_countsmol_correlation_mqc.csv
+    drawplot_ERCC_corr.r $ercc_count $ercc_data $ercc_input_amount
+    cat $ercc_heater ercc_counts_copynum_correlation.csv >> tmp_file
+    mv tmp_file ercc_counts_copynum_correlation_mqc.csv
     """
 
 }

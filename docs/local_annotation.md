@@ -26,7 +26,7 @@ The parameters are:
 
 - `-profile docker`: Indicates the use of Docker.
 - `--genome`: Specifies reference genome version.
-  - In the current ramdaq, human and mouse references (the source is gencode, https://www.gencodegenes.org/) can be used for local annotation. 
+  - In the current ramdaq, human and mouse references (the source is [gencode](https://www.gencodegenes.org/)) can be used for local annotation.
   - The available versions and specified options are as follows.
     - Human
       - GRCh38

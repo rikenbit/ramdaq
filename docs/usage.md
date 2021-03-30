@@ -168,15 +168,16 @@ By default, the pipeline expects unstranded data. If you use the library prepara
 ### `--genome`
 
 Specifies reference genome version. The available versions and specified options are as follows.
-  - Human
-    - GRCh38
-      - gencode.v37.primary_assembly.annotation: `--genome GRCh38_v37`
-      - gencode.v35.primary_assembly.annotation: `--genome GRCh38_v35`
-  - Mouse
-    - GRCm39
-      - gencode.vM26.primary_assembly.annotation: `--genome GRCm39_vM26`
-    - GRCm38
-      - gencode.vM25.primary_assembly.annotation: `--genome GRCm38_vM25`
+
+- Human
+  - GRCh38
+    - gencode.v37.primary_assembly.annotation: `--genome GRCh38_v37`
+    - gencode.v35.primary_assembly.annotation: `--genome GRCh38_v35`
+- Mouse
+  - GRCm39
+    - gencode.vM26.primary_assembly.annotation: `--genome GRCm39_vM26`
+  - GRCm38
+    - gencode.vM25.primary_assembly.annotation: `--genome GRCm38_vM25`
 
 > For the implementation of the workflow, you need to download some mapping index or annotation files. Check the [this document](docs/local_annotation.md) for details.
 
@@ -207,7 +208,7 @@ Specifes the location of local path to a directiory containing annotation files.
 
 ### `--sirv`
 
-Lexogen's Spike-In RNA Variant (SIRV) Control (https://www.lexogen.com/sirvs/) is a set of artificial transcripts that mimic the complexity of the transcriptome and are added to samples for use. The use of SIRVs provides values such as accuracy and precision for evaluating the RNA sequencing pipeline and the procedural noise of each sample preparation. If the user wants to quantify SIRVs, ramdaq can optionally run a mapping pipeline dedicated to SIRVs with the --sirv option.
+[Lexogen's Spike-In RNA Variant (SIRV) Control](https://www.lexogen.com/sirvs/) is a set of artificial transcripts that mimic the complexity of the transcriptome and are added to samples for use. The use of SIRVs provides values such as accuracy and precision for evaluating the RNA sequencing pipeline and the procedural noise of each sample preparation. If the user wants to quantify SIRVs, ramdaq can optionally run a mapping pipeline dedicated to SIRVs with the --sirv option.
 
 ## Other command line parameters
 

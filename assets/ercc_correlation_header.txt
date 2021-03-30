@@ -1,11 +1,11 @@
 #id: 'ercc_correlation'
-#section_name: 'ERCC: counts and mol-log correlation'
-#description: "show correlation coefficient between samples ERCC counts and ERCC mol(log)."
+#section_name: 'ERCC: counts and copy number correlation'
+#description: "show correlation coefficient between samples ERCC counts and ERCC copy number(log)."
 #plot_type: 'bargraph'
 #anchor: 'ercc_correlation'
 #pconfig:
 #    id: 'ercc_correlation_barplot'
-#    title: 'ERCC counts and mol-log correlation'
+#    title: 'ERCC counts and copy number correlation'
 #    cpswitch: False
 #    tt_decimals: 2
 #    tt_percentages: False

@@ -20,11 +20,17 @@ ii. Install either [`Docker`](https://docs.docker.com/engine/installation/) or [
 
 iii. Download the pipeline automatically and test it on a minimal dataset with a single command
 
+*1.* Example of test using Docker
+
 ```bash
-nextflow run rikenbit/ramdaq -profile test,<docker/singularity>
+nextflow run rikenbit/ramdaq -profile test,docker
 ```
 
-> Please check [nf-core/configs](https://github.com/nf-core/configs#documentation) and enable either `docker` or `singularity` to set the appropriate execution settings for your local computing environment.
+*2.* Example of test using Singularity
+
+```bash
+nextflow run rikenbit/ramdaq -profile test,singularity
+```
 
 iv. Start running your own analysis!
 

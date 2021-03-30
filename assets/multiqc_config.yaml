@@ -95,10 +95,14 @@ extra_fn_clean_exts:
       pattern: _1.raw
     - type: remove
       pattern: _2.raw
-    - type: regex
-      pattern: '_1'
-    - type: regex
-      pattern: '_2'
+    - type: remove
+      pattern: '_1.fastq'
+    - type: remove
+      pattern: '_2.fastq'
+    - type: remove
+      pattern: '_1.fq'
+    - type: remove
+      pattern: '_2.fq'
     - type: remove
       pattern: _biotype
     - type: remove
