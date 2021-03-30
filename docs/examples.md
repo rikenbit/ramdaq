@@ -14,7 +14,7 @@
 
 ```bash
 nextflow run rikenbit/ramdaq -profile docker \
-  --genome GRCm38 --local_annot_dir <path to annotation> \
+  --genome GRCm39_vM26 --local_annot_dir <path to annotation> \
   --reads '*_{R1,R2}_001.fastq.gz' --outdir <path to outdir>
 ```
 
@@ -22,7 +22,7 @@ nextflow run rikenbit/ramdaq -profile docker \
 
 ```bash
 nextflow run rikenbit/ramdaq -profile docker \
-  --genome GRCm38 --local_annot_dir <path to annotation> \
+  --genome GRCm39_vM26 --local_annot_dir <path to annotation> \
   --stranded fr-firststrand \
   --reads '*_{R1,R2}_001.fastq.gz' --outdir <path to outdir>
 ```
@@ -31,7 +31,7 @@ nextflow run rikenbit/ramdaq -profile docker \
 
 ```bash
 nextflow run rikenbit/ramdaq -profile docker \
-  --genome GRCm38 --local_annot_dir <path to annotation> \
+  --genome GRCm39_vM26 --local_annot_dir <path to annotation> \
   --single_end \
   --reads '*_{R1}_001.fastq.gz' --outdir <path to outdir>
 ```
@@ -40,7 +40,7 @@ nextflow run rikenbit/ramdaq -profile docker \
 
 ```bash
 nextflow run rikenbit/ramdaq -profile docker
-  --genome GRCm38  --local_annot_dir <path to annotation> \
+  --genome GRCm39_vM26  --local_annot_dir <path to annotation> \
   --stranded fr-firststrand --single_end \
   --reads '*_{R1}_001.fastq.gz' --outdir <path to outdir>
 ```
@@ -49,7 +49,7 @@ nextflow run rikenbit/ramdaq -profile docker
 
 ```bash
 nextflow run rikenbit/ramdaq -profile docker \
-  --genome GRCh38 --local_annot_dir <path to annotation> ＼
+  --genome GRCh38_v37 --local_annot_dir <path to annotation> ＼
   --reads '*_{R1,R2}_001.fastq.gz' --outdir <path to outdir>
 ```
 
@@ -57,7 +57,7 @@ nextflow run rikenbit/ramdaq -profile docker \
 
 ```bash
 nextflow run rikenbit/ramdaq -profile docker \
-  --genome GRCh38 --local_annot_dir <path to annotation> \
+  --genome GRCh38_v37 --local_annot_dir <path to annotation> \
   --stranded fr-firststrand \
   --reads '*_{R1,R2}_001.fastq.gz' --outdir <path to outdir>
 ```
@@ -66,7 +66,7 @@ nextflow run rikenbit/ramdaq -profile docker \
 
 ```bash
 nextflow run rikenbit/ramdaq -profile docker \
-  --genome GRCh38 --local_annot_dir <path to annotation> \
+  --genome GRCh38_v37 --local_annot_dir <path to annotation> \
   --single_end \
   --reads '*_{R1}_001.fastq.gz' --outdir <path to outdir>
 ```
@@ -75,7 +75,7 @@ nextflow run rikenbit/ramdaq -profile docker \
 
 ```bash
 nextflow run rikenbit/ramdaq -profile docker \
-  --genome GRCh38 --local_annot_dir <path to annotation> \
+  --genome GRCh38_v37 --local_annot_dir <path to annotation> \
   --stranded fr-firststrand --single_end \
   --reads '*_{R1}_001.fastq.gz' --outdir <path to outdir>
 ```

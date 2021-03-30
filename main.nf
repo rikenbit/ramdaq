@@ -28,7 +28,7 @@ def helpMessage() {
       --stranded [str]                unstranded : default
                                       fr-firststrand : First read corresponds to the reverse complemented counterpart of a transcript
                                       fr-secondstrand : First read corresponds to a transcript
-      --genome [str]                  Name of human (GRCh38) or mouse (GRCm38) latest reference
+      --genome [str]                  Name of human or mouse latest reference: ${params.genomes.keySet().join(", ")}
       --saveReference                 Save the generated reference files to the results directory
       --local_annot_dir [str]         Base path for local annotation files
       --sirv                          If a Spike-In RNA Variant (SIRV) Control is added to the sample, ramdaq run a pipeline to quantify each transcripts.
