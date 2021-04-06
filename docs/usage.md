@@ -17,7 +17,8 @@
     - [`--genome`](#--genome)
     - [`--saveReference`](#--savereference)
     - [`--local_annot_dir`](#--local_annot_dir)
-    - [`--sirv`](#--sirv)
+    - [`--spike_in_ercc`](#--spike_in_ercc)
+    - [`--spike_in_sirv`](#--spike_in_sirv)
   - [Other command line parameters](#other-command-line-parameters)
     - [`--outdir`](#--outdir)
     - [`-name`](#-name)
@@ -206,9 +207,17 @@ Save the downloded reference files to the results directory
 
 Specifes the location of local path to a directiory containing annotation files. See [local_annotation](local_annotation.md)
 
-### `--sirv`
+### `--spike_in_ercc`
 
-[Lexogen's Spike-In RNA Variant (SIRV) Control](https://www.lexogen.com/sirvs/) is a set of artificial transcripts that mimic the complexity of the transcriptome and are added to samples for use. The use of SIRVs provides values such as accuracy and precision for evaluating the RNA sequencing pipeline and the procedural noise of each sample preparation. If the user wants to quantify SIRVs, ramdaq can optionally run a mapping pipeline dedicated to SIRVs with the --sirv option.
+Dilution rate of the ERCC Spike-In Control Mix 1 (default: false). Use when the samples contain the [ERCC Spike-In Control Mix 1](https://www.thermofisher.com/order/catalog/product/4456740#/4456740). The value is used to calculate the copy number of ERCC. If the value is not specified, '2e-7' is used as dilution rate. eg. `--spike_in_ercc '2e-7'`
+
+When this option is specified, ramdaq outputs the between-sample correlation of expression levels of ERCC spike-ins in the MultiQC report.
+
+### `--spike_in_sirv`
+
+Dilution rate of the SIRV-Set 4 (default: false). Use when the samples contain the [SIRV-Set 4 (Lexogen's Spike-In RNA Variant Control)](https://www.lexogen.com/sirvs/). The value is used to calculate the copy number of ERCC in the SIRV-Set 4. eg. `--spike_in_sirv '4e-6'`
+
+When this option is specified, ramdaq outputs the between-sample correlation of expression levels of ERCC spike-ins in the MultiQC report. Besides, the read coverages on the SIRV genes are saved in the output directory for downstream use.
 
 ## Other command line parameters
 
