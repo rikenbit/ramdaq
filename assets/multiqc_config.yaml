@@ -12,6 +12,10 @@ export_plots: true
 
 plots_force_interactive: true
 
+read_count_multiplier: 0.001
+read_count_prefix: "K"
+read_count_desc: "thousands"
+
 module_order:
     - featureCounts:
         name: 'featureCounts (all genes)'
