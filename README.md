@@ -50,6 +50,49 @@ nextflow run rikenbit/ramdaq -profile <docker/singularity> --reads '*_R{1,2}.fas
 
 See [usage docs](docs/usage.md) for all of the available options when running the pipeline.
 
+## Managing and handling ramdaq version
+
+### Pulling or updating ramdaq
+
+To download or update ramdaq, run `nextflow pull`:
+
+```bash
+nextflow pull rikenbit/ramdaq
+```
+
+### Checking available versions
+
+To check the available versions, run `nextflow info`:
+
+```bash
+nextflow info rikenbit/ramdaq
+```
+
+The above command will return the message like this (`* master (default)` indicates that the latest version will be used when you execute `nextflow run rikenbit/ramdaq ...`):
+
+```bash
+$ nextflow info rikenbit/ramdaq
+ project name: rikenbit/ramdaq
+ repository  : https://github.com/rikenbit/ramdaq
+ local path  : /Users/haruka/.nextflow/assets/rikenbit/ramdaq
+ main script : main.nf
+ description : This pipeline analyses data from full-length single-cell RNA sequencing (scRNA-seq) methods.
+ author      : Mika Yoshimura and Haruka Ozaki
+ revisions   :
+ * master (default)
+   dev
+   1.0 [t]
+   1.1 [t]
+```
+
+### Using a specific version
+
+To use versions other than the latest version, use `-r` to set the version name as follows:
+
+```bash
+nextflow run rikenbit/ramdaq -r 1.1 ...
+```
+
 ## Documentation
 
 The ramdaq pipeline comes with documentation about the pipeline, found in the `docs/` directory:

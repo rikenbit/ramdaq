@@ -5,7 +5,7 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## v1.1dev - [2021-03-30]
+## v1.1 (`-r 1.1`) [2021-03-30]
 
 ### `Added`
 
