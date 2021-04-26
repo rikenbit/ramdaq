@@ -957,7 +957,8 @@ process rsem_bowtie2_allgenes {
     file sirv_indices from ch_rsem_allgene_idx.collect()
 
     output:
-    file "*.isoforms.results" into rsem_results_allgene_to_merge
+    file "*.isoforms.results" into rsem_results_isoforms_to_merge
+    file "*.genes.results" into rsem_results_genes_to_merge
     file "*.results"
     file "*.log"
 
@@ -1012,14 +1013,35 @@ process rsem_bowtie2_allgenes {
     }
 }
 
-process merge_allgenes_isoforms {
+process merge_rsemresults_genes {
     publishDir "${params.outdir}/merged_output_files", mode: 'copy'
 
     input:
-    file input_files from rsem_results_allgene_to_merge.collect()
+    file input_files from rsem_results_genes_to_merge.collect()
 
     output:
-    file 'merged_rsemResults_allgenes_isoforms.txt'
+    file 'merged_rsemResults_genes_TPM.txt'
+
+    script:
+    // Redirection (the `<()`) for the win!
+    // Geneid in 1st column and gene_name in 7th
+    gene_ids = "<(tail -n +1 ${input_files[0]} | cut -f1,2 )"
+    counts = input_files.collect{filename ->
+      // Remove first line and take third column
+      "<(tail -n +1 ${filename} | sed 's:TPM:${filename}:' | sed 's:.sirv.rsem.genes.results::' | cut -f6)"}.join(" ")
+    """
+    paste $gene_ids $counts > merged_rsemResults_genes_TPM.txt
+    """
+  }
+
+process merge_rsemresults_isoforms {
+    publishDir "${params.outdir}/merged_output_files", mode: 'copy'
+
+    input:
+    file input_files from rsem_results_isoforms_to_merge.collect()
+
+    output:
+    file 'merged_rsemResults_isoforms_TPM.txt'
 
     script:
     // Redirection (the `<()`) for the win!
@@ -1029,7 +1051,7 @@ process merge_allgenes_isoforms {
       // Remove first line and take third column
       "<(tail -n +1 ${filename} | sed 's:TPM:${filename}:' | sed 's:.sirv.rsem.isoforms.results::' | cut -f6)"}.join(" ")
     """
-    paste $gene_ids $counts > merged_rsemResults_allgenes_isoforms.txt
+    paste $gene_ids $counts > merged_rsemResults_isoforms_TPM.txt
     """
   }
 

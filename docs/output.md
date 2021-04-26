@@ -192,8 +192,10 @@ Instead of `RSeQC::geneBody_coverage.py` we use [ReadCoverage.jl](https://github
 
 **Output directory: `results/merged_output_files/`**
 
-* `merged_rsemResults_allgenes_isoforms.txt`
-  * Matrix of transcript-level quantification results across all samples.
+* `merged_rsemResults_genes_TPM.txt`
+  * Matrix of gene-level expression quantification results in TPM for all samples.
+* `merged_rsemResults_isoforms_TPM.txt`
+  * Matrix of transcript-level expression quantification results in TPM for all samples.
 
 ## MultiQC
 
