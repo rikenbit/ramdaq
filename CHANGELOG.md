@@ -5,9 +5,15 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## v1.1.1 (`-r 1.1.1`) [2021-Undecided]
+
+### `v1.1.1 Added`
+
+- Output gene-level quantitative results of RSEM
+
 ## v1.1 (`-r 1.1`) [2021-03-30]
 
-### `Added`
+### `v1.1 Added`
 
 - The new CI-test pattern for github actions
 - A new option to allow the number of ERCC copies to be specified arbitrarily
