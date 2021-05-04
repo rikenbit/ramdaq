@@ -1335,7 +1335,8 @@ process calc_TPMCounts {
 
     output:
     file '*_TPM.txt' into tpmcount_plot, tpmcount_merged
-    file '*_ERCC.txt' optional true into ercccount_chk, ercccount_merged
+    file '*_ERCC.txt' optional true into ercccount_chk
+    file '*_ERCC_log.txt' optional true into ercccount_merged
 
     script:
     """
