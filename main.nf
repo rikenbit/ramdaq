@@ -269,6 +269,9 @@ ch_pcaplot_header = Channel.fromPath("$baseDir/assets/pcaplot_header.txt", check
 ch_tsneplot_header = Channel.fromPath("$baseDir/assets/tsneplot_header.txt", checkIfExists: true)
 ch_umapplot_header = Channel.fromPath("$baseDir/assets/umapplot_header.txt", checkIfExists: true)
 
+ch_num_of_gene_rsem_header = Channel.fromPath("$baseDir/assets/barplot_num_of_gene_rsem_header.txt", checkIfExists: true)
+ch_num_of_ts_rsem_header = Channel.fromPath("$baseDir/assets/barplot_num_of_ts_rsem_header.txt", checkIfExists: true)
+
 ///////////////////////////////////////////////////////////////////////////////
 /*
 * Create a channel for input read files
@@ -847,7 +850,7 @@ ch_sirv_bamsort
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
-* STEP 4-3 - RSEM (SIRVome)
+* STEP 5-1 - RSEM (SIRVome)
 */
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -945,7 +948,7 @@ process merge_sirv_isoforms {
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
-* STEP 4-4 - RSEM (All genes)
+* STEP 5-2 - RSEM (All genes)
 */
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -969,6 +972,7 @@ process rsem_bowtie2_allgenes {
     file "*.genes.results" into rsem_results_genes_to_merge
     file "*.results"
     file "*.log"
+    file "*.stat/*.cnt" into rsem_results_genes_stat
 
     script:
     def strandness = ''
@@ -1028,7 +1032,7 @@ process merge_rsemresults_genes {
     file input_files from rsem_results_genes_to_merge.collect()
 
     output:
-    file 'merged_rsemResults_genes_TPM.txt'
+    file 'merged_rsemResults_genes_TPM.txt' into rsem_tpm_gene
 
     script:
     // Redirection (the `<()`) for the win!
@@ -1049,7 +1053,7 @@ process merge_rsemresults_isoforms {
     file input_files from rsem_results_isoforms_to_merge.collect()
 
     output:
-    file 'merged_rsemResults_isoforms_TPM.txt'
+    file 'merged_rsemResults_isoforms_TPM.txt' into rsem_tpm_ts
 
     script:
     // Redirection (the `<()`) for the win!
@@ -1065,7 +1069,62 @@ process merge_rsemresults_isoforms {
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
-* STEP 5 - Bam to BigWig
+* STEP 5-3 - create plot from RSEM TPM counts (genes)
+*/
+///////////////////////////////////////////////////////////////////////////////
+
+process create_plots_rsem_gene {
+    label 'process_medium'
+    publishDir "${params.outdir}/plots_from_tpmcounts_rsem", mode: 'copy'
+
+    input:
+    file tpm_count from rsem_tpm_gene
+    file detgene_header from ch_num_of_gene_rsem_header
+
+    output:
+    file "*.{txt,pdf,csv}" into plots_from_rsem_gene_results
+
+    script:
+    """
+    drawplot_tpm_counts.r $tpm_count rsem
+    cat $detgene_header barplot_num_of_gene_rsem.csv >> tmp_file
+    mv tmp_file barplot_num_of_gene_rsem_mqc.csv
+    
+    """
+
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+* STEP 5-4 - create plot from RSEM TPM counts (transcripts)
+*/
+///////////////////////////////////////////////////////////////////////////////
+
+process create_plots_rsem_ts {
+    label 'process_medium'
+    publishDir "${params.outdir}/plots_from_tpmcounts_rsem", mode: 'copy'
+
+    input:
+    file tpm_count from rsem_tpm_ts
+    file detts_header from ch_num_of_ts_rsem_header
+
+    output:
+    file "*.{txt,pdf,csv}" into plots_from_rsem_ts_results
+
+    script:
+    """
+    drawplot_tpm_counts_ts.r $tpm_count
+    cat $detts_header barplot_num_of_ts_rsem.csv >> tmp_file
+    mv tmp_file barplot_num_of_ts_rsem_mqc.csv
+    
+    """
+
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+* STEP 6 - Bam to BigWig
 */
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1092,7 +1151,7 @@ process bam2wig {
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
-* STEP 6 - RSeQC
+* STEP 7 - RSeQC
 */
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1171,7 +1230,7 @@ process merge_readDist_totalRead {
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
-* STEP 7-1 - readcoverage.jl
+* STEP 8-1 - readcoverage.jl
 */
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1203,7 +1262,7 @@ rseqc_results_merge = rseqc_results
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
-* STEP 7-2 - readcoverage.jl (SIRV genes)
+* STEP 8-2 - readcoverage.jl (SIRV genes)
 */
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1259,7 +1318,7 @@ process merge_readcoverage_sirv {
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
-* STEP 8-1 - FeatureCounts (All-genes GTF) 
+* STEP 9-1 - FeatureCounts (All-genes GTF) 
 */
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1356,7 +1415,7 @@ ercc_list = ercccount_chk.toList()
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
-* STEP 8-2 - FeatureCounts (Mitocondrial GTF) 
+* STEP 9-2 - FeatureCounts (Mitocondrial GTF) 
 */
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1403,7 +1462,7 @@ process featureCounts_mt  {
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
-* STEP 8-3 - FeatureCounts (rRNA GTF) 
+* STEP 9-3 - FeatureCounts (rRNA GTF) 
 */
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1450,7 +1509,7 @@ process featureCounts_rrna  {
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
-* STEP 8-4 - FeatureCounts (Histone GTF) 
+* STEP 9-4 - FeatureCounts (Histone GTF) 
 */
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1515,7 +1574,7 @@ process merge_featureCounts_histone {
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
-* STEP 9 - edgeR MDS and heatmap
+* STEP 10 - edgeR MDS and heatmap
 */
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1548,7 +1607,7 @@ process sample_correlation {
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
-* STEP 10 - ERCC corr barplot
+* STEP 11 - ERCC corr barplot
 */
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1583,7 +1642,7 @@ process ercc_correlation {
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
-* STEP 11 - assigned to genome rate barplot
+* STEP 12 - assigned to genome rate barplot
 */
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1611,7 +1670,7 @@ process create_plots_assignedgenome {
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
-* STEP 12 - featureCounts mapped rate (Histone) barplot
+* STEP 13 - featureCounts mapped rate (Histone) barplot
 */
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1638,7 +1697,7 @@ process create_plots_fcounts_histone {
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
-* STEP 13 - create plot from TPM counts
+* STEP 14 - create plot from TPM counts
 */
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1658,7 +1717,7 @@ process create_plots_fromTPM {
 
     script:
     """
-    drawplot_tpm_counts.r $tpm_count
+    drawplot_tpm_counts.r $tpm_count fcounts
     cat $detgene_header barplot_num_of_detectedgene.csv >> tmp_file
     mv tmp_file barplot_num_of_detectedgene_mqc.csv
     
@@ -1706,12 +1765,14 @@ process multiqc {
     file ('featureCounts_biotype/*') from featureCounts_biotype.collect()
     file ('featureCounts_mt/*') from featureCounts_logs_mt.collect().ifEmpty([])
     file ('featureCounts_rrna/*') from featureCounts_logs_rrna.collect().ifEmpty([])
-    // file ('featureCounts_histone/*') from featureCounts_logs_histone.collect().ifEmpty([])
+    file ('rsem_bowtie2_allgenes/*') from rsem_results_genes_stat.collect().ifEmpty([])
     file ('sample_correlation_results/*') from sample_correlation_results.collect().ifEmpty([]) // If the Edge-R is not run create an Empty array
     file ('ercc_correlation_results/*') from ercc_correlation_results.collect().ifEmpty([]) 
     file ('plots_bar_assignedgenome/*') from assignedgenome_rate_results.collect().ifEmpty([]) 
     file ('plots_bar_fcounts_histone/*') from fcounts_histone_results.collect().ifEmpty([]) 
-    file ('plots_from_tpmcounts/*') from plots_from_tpmcounts_results.collect().ifEmpty([]) 
+    file ('plots_from_tpmcounts/*') from plots_from_tpmcounts_results.collect().ifEmpty([])
+    file ('plots_from_tpmcounts_rsem/*') from plots_from_rsem_gene_results.collect().ifEmpty([])
+    file ('plots_from_tpmcounts_rsem/*') from plots_from_rsem_ts_results.collect().ifEmpty([])
     file ('software_versions/*') from ch_software_versions_yaml.collect()
     file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
 
