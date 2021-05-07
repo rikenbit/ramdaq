@@ -624,6 +624,14 @@ process hisat2 {
             | samtools view -bS - | samtools sort - -o ${name}.bam
             samtools index ${name}.bam
             samtools flagstat ${name}.bam > ${name}.bam.flagstat
+
+            samtools view -bS -f 0x40 ${name}.bam -o ${name}.R1.bam
+            samtools index ${name}.R1.bam
+            samtools flagstat ${name}.R1.bam > ${name}.R1.bam.flagstat
+
+            samtools view -bS -f 0x80 ${name}.bam -o ${name}.R2.bam
+            samtools index ${name}.R2.bam
+            samtools flagstat ${name}.R2.bam > ${name}.R2.bam.flagstat
             """
         }
     }
@@ -691,13 +699,13 @@ ch_hisat2_bam_filter
     .into{
         hisat2_output_toreadcoverage
         hisat2_output_torseqc
+        hisat2_output_tobam2wig
     }
 
 ch_hisat2_bamsort
     .filter { name, bam, bai, flagstat -> check_mapped(name,flagstat,params.min_mapped_reads) }
     .map { it[0..2] }
     .into { 
-        hisat2_output_tobam2wig
         hisat2_output_tofcount
         hisat2_output_tofcount_mt
         hisat2_output_tofcount_rrna
@@ -1077,7 +1085,7 @@ process bam2wig {
 
     script:
     """
-    bam2wig.py -i ${bam} -s $chrsize -u -o ${name}
+    bam2wig.py -i ${bam} -s $chrsize -u -o ${bam.baseName}
     """
 
 }
