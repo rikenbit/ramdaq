@@ -1926,9 +1926,13 @@ workflow.onComplete {
         checkHostname()
         log.info "-${c_purple}[ramdaq]${c_red} Pipeline completed with errors${c_reset}-"
     }
-
+    
+    // copy .nextflow.log
+    today = new Date().format("yyyy-MM-dd-HH-mm-ss")
+    new File("${params.outdir}/radamq-${today}.log") << new File('.nextflow.log').text
+    
+    println "The log file .nextflow.log was copied to ${params.outdir}/radamq-${today}.log"
 }
-
 
 def nfcoreHeader() {
     // Log colors ANSI codes
