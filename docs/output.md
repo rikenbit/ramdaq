@@ -16,7 +16,7 @@ and processes data using the following steps:
 * [featureCounts](#featurecounts) - Read counting relative to gene and biotype
 * [RSeQC](#rseqc) - Various RNA-seq QC metrics
 * [ReadCoverage.jl](#readcoverage.jl)
-* [Bowtie2 via RSEM](#bowtie2-via-rsem) - Alignment and quantification of expression levels
+* [RSEM via Bowtie2](#rsem-via-bowtie2) - Alignment and quantification of expression levels
 * [MultiQC](#multiqc) - aggregate report, describing results of the whole pipeline
 * [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
 
