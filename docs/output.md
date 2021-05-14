@@ -184,7 +184,7 @@ Instead of `RSeQC::geneBody_coverage.py` we use [ReadCoverage.jl](https://github
 
 ![MultiQC - ReadCoverage.jl plot](images/report_figsamples/mqc_rseqc_gene_body_coverage_plot_Percentages.png)
 
-## Bowtie2 via RSEM
+## RSEM via Bowtie2
 
 [Bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml) is an ultrafast and memory-efficient tool for aligning sequencing reads to long reference sequences. It is particularly good at aligning reads of about 50 up to 100s of characters to relatively long (e.g. mammalian) genomes. Bowtie2 is often the first step in pipelines for comparative genomics, including for variation calling, ChIP-seq, RNA-seq, BS-seq, but here we use it for transcripts mapping for isoform-level expression quantification by RSEM.
 
