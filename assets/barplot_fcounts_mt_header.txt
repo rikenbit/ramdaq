@@ -9,4 +9,6 @@
 #    cpswitch: False
 #    tt_percentages: False
 #    hide_zero_cats: False
+#    ymin: 0
+#    ymax: 100
 
