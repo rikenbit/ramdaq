@@ -264,6 +264,9 @@ ch_ercc_data = params.spike_in_sirv ? Channel.fromPath("$baseDir/assets/ercc_in_
 ch_ercc_corr_header = Channel.fromPath("$baseDir/assets/ercc_correlation_header.txt", checkIfExists: true)
 ch_assignedgenome_header = Channel.fromPath("$baseDir/assets/barplot_assignedgenome_rate_header.txt", checkIfExists: true)
 ch_num_of_detgene_header = Channel.fromPath("$baseDir/assets/barplot_num_of_detgene_header.txt", checkIfExists: true)
+ch_fcounts_allgene_header = Channel.fromPath("$baseDir/assets/barplot_fcounts_allgene_header.txt", checkIfExists: true)
+ch_fcounts_mt_header = Channel.fromPath("$baseDir/assets/barplot_fcounts_mt_header.txt", checkIfExists: true)
+ch_fcounts_rrna_header = Channel.fromPath("$baseDir/assets/barplot_fcounts_rrna_header.txt", checkIfExists: true)
 ch_fcounts_histone_header = Channel.fromPath("$baseDir/assets/barplot_fcounts_histone_header.txt", checkIfExists: true)
 ch_pcaplot_header = Channel.fromPath("$baseDir/assets/pcaplot_header.txt", checkIfExists: true)
 ch_tsneplot_header = Channel.fromPath("$baseDir/assets/tsneplot_header.txt", checkIfExists: true)
@@ -656,6 +659,12 @@ process merge_hisat2_totalSeq {
     $command
     """
 }
+
+ch_totalseq_merged
+    .into{
+        ch_totalseq_assignedgenome
+        ch_totalseq_fcount_allgene
+    }
 
 // Get total number of mapped reads from flagstat file
 def get_mapped_from_flagstat(flagstat_file) {
@@ -1379,7 +1388,7 @@ process merge_featureCounts {
     file input_files from featureCounts_to_merge.collect()
 
     output:
-    file 'merged_featureCounts_gene.txt' into ch_tpm_count, featurecounts_merged
+    file 'merged_featureCounts_gene.txt' into ch_tpm_count, ch_fcounts_allgene_merged
 
     script:
     // Redirection (the `<()`) for the win!
@@ -1434,7 +1443,7 @@ process featureCounts_mt  {
     file gtf from ch_mt_gtf
 
     output:
-    file "${name}_mt.featureCounts.txt" into geneCounts_mt
+    file "${name}_mt.featureCounts.txt" into featureCounts_to_merge_mt
     file "${name}_mt.featureCounts.txt.summary" into featureCounts_logs_mt
 
     script:
@@ -1460,6 +1469,27 @@ process featureCounts_mt  {
     """
 }
 
+process merge_featureCounts_mt {
+    publishDir "${params.outdir}/merged_output_files", mode: 'copy'
+
+    input:
+    file input_files from featureCounts_to_merge_mt.collect()
+
+    output:
+    file 'merged_featureCounts_gene_mt.txt' into ch_fcounts_mt_merged
+
+    script:
+    // Redirection (the `<()`) for the win!
+    // Geneid in 1st column and gene_name in 7th
+    gene_ids = "<(tail -n +2 ${input_files[0]} | cut -f1,6,7 )"
+    counts = input_files.collect{filename ->
+      // Remove first line and take third column
+      "<(tail -n +2 ${filename} | sed 's:.bam::' | cut -f8)"}.join(" ")
+    """
+    paste $gene_ids $counts > merged_featureCounts_gene_mt.txt
+    """
+  }
+
 ///////////////////////////////////////////////////////////////////////////////
 /*
 * STEP 9-3 - FeatureCounts (rRNA GTF) 
@@ -1481,7 +1511,7 @@ process featureCounts_rrna  {
     file gtf from ch_rrna_gtf
 
     output:
-    file "${name}_rrna.featureCounts.txt" into geneCounts_rrna
+    file "${name}_rrna.featureCounts.txt" into featureCounts_to_merge_rrna
     file "${name}_rrna.featureCounts.txt.summary" into featureCounts_logs_rrna
 
     script:
@@ -1507,6 +1537,27 @@ process featureCounts_rrna  {
     """
 }
 
+process merge_featureCounts_rrna {
+    publishDir "${params.outdir}/merged_output_files", mode: 'copy'
+
+    input:
+    file input_files from featureCounts_to_merge_rrna.collect()
+
+    output:
+    file 'merged_featureCounts_gene_rrna.txt' into ch_fcounts_rrna_merged
+
+    script:
+    // Redirection (the `<()`) for the win!
+    // Geneid in 1st column and gene_name in 7th
+    gene_ids = "<(tail -n +2 ${input_files[0]} | cut -f1,6,7 )"
+    counts = input_files.collect{filename ->
+      // Remove first line and take third column
+      "<(tail -n +2 ${filename} | sed 's:.bam::' | cut -f8)"}.join(" ")
+    """
+    paste $gene_ids $counts > merged_featureCounts_gene_rrna.txt
+    """
+  }
+
 ///////////////////////////////////////////////////////////////////////////////
 /*
 * STEP 9-4 - FeatureCounts (Histone GTF) 
@@ -1528,7 +1579,7 @@ process featureCounts_histone  {
     file gtf from ch_histone_gtf
 
     output:
-    file "${name}_histone.featureCounts.txt" into geneCounts_histone
+    file "${name}_histone.featureCounts.txt" into featureCounts_to_merge_histone
     file "${name}_histone.featureCounts.txt.summary" into featureCounts_logs_histone
 
     script:
@@ -1558,19 +1609,22 @@ process merge_featureCounts_histone {
     publishDir "${params.outdir}/merged_output_files", mode: 'copy'
 
     input:
-    file input_files from featureCounts_logs_histone.collect()
+    file input_files from featureCounts_to_merge_histone.collect()
 
     output:
-    file 'merged_featureCounts_histone.txt' into ch_fcounts_histone_merged
+    file 'merged_featureCounts_gene_histone.txt' into ch_fcounts_histone_merged
 
     script:
-    rownames = "<(less ${input_files[0]} | cut -f1 )"
+    // Redirection (the `<()`) for the win!
+    // Geneid in 1st column and gene_name in 7th
+    gene_ids = "<(tail -n +2 ${input_files[0]} | cut -f1,6,7 )"
     counts = input_files.collect{filename ->
-      "<(less ${filename} | sed 's:.bam::' | cut -f2)"}.join(" ")
+      // Remove first line and take third column
+      "<(tail -n +2 ${filename} | sed 's:.bam::' | cut -f8)"}.join(" ")
     """
-    paste $rownames $counts > merged_featureCounts_histone.txt
+    paste $gene_ids $counts > merged_featureCounts_gene_histone.txt
     """
-}
+  }
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
@@ -1626,7 +1680,7 @@ process ercc_correlation {
     val ercc_input_amount from ch_spike_in_ercc
     file ercc_count from ercccount_merged
     file ercc_data from ch_ercc_data
-    file ercc_heater from ch_ercc_corr_header
+    file ercc_header from ch_ercc_corr_header
 
     output:
     file "*.{txt,pdf,csv}" into ercc_correlation_results
@@ -1634,7 +1688,7 @@ process ercc_correlation {
     script:
     """
     drawplot_ERCC_corr.r $ercc_count $ercc_data $ercc_input_amount
-    cat $ercc_heater ercc_counts_copynum_correlation.csv >> tmp_file
+    cat $ercc_header ercc_counts_copynum_correlation.csv >> tmp_file
     mv tmp_file ercc_counts_copynum_correlation_mqc.csv
     """
 
@@ -1651,9 +1705,9 @@ process create_plots_assignedgenome {
     publishDir "${params.outdir}/plots_bar_assignedgenome", mode: 'copy'
 
     input:
-    file totalseq_merged from ch_totalseq_merged
+    file totalseq_merged from ch_totalseq_assignedgenome
     file totalread_merged from ch_totalread_merged
-    file assignedgenome_heater from ch_assignedgenome_header
+    file assignedgenome_header from ch_assignedgenome_header
 
     output:
     file "*.{txt,pdf,csv}" into assignedgenome_rate_results
@@ -1662,7 +1716,7 @@ process create_plots_assignedgenome {
     isPairedEnd = params.single_end ? "False" : "True"
     """
     drawplot_assignedgenomerate_bar.r $totalseq_merged $totalread_merged $isPairedEnd
-    cat $assignedgenome_heater barplot_assignedgenome_rate.csv >> tmp_file
+    cat $assignedgenome_header barplot_assignedgenome_rate.csv >> tmp_file
     mv tmp_file barplot_assignedgenome_rate_mqc.csv
     """
 
@@ -1670,15 +1724,86 @@ process create_plots_assignedgenome {
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
-* STEP 13 - featureCounts mapped rate (Histone) barplot
+* STEP 13 - featureCounts mapped rate barplot
 */
 ///////////////////////////////////////////////////////////////////////////////
+
+process create_plots_fcounts_allgene {
+    label 'process_low'
+    publishDir "${params.outdir}/plots_bar_fcounts_allgene", mode: 'copy'
+
+    input:
+    file totalseq_merged from ch_totalseq_fcount_allgene
+    file allgene_merged from ch_fcounts_allgene_merged
+    file fcounts_allgene_header from ch_fcounts_allgene_header
+
+    output:
+    file "*.{txt,pdf,csv}" into fcounts_allgene_results
+
+    script:
+    isPairedEnd = params.single_end ? "False" : "True"
+    annotation_name = "allgene"
+    """
+    drawplot_fcount_mappedrate_bar.r $totalseq_merged $allgene_merged $isPairedEnd $annotation_name
+    cat $fcounts_allgene_header barplot_assignedrate_allgene.csv >> tmp_file
+    mv tmp_file barplot_assignedrate_allgene_mqc.csv
+    """
+
+}
+
+process create_plots_fcounts_mt {
+    label 'process_low'
+    publishDir "${params.outdir}/plots_bar_fcounts_mt", mode: 'copy'
+
+    input:
+    file totalseq_merged from ch_totalseq_fcount_allgene
+    file mt_merged from ch_fcounts_mt_merged
+    file fcounts_mt_header from ch_fcounts_mt_header
+
+    output:
+    file "*.{txt,pdf,csv}" into fcounts_mt_results
+
+    script:
+    isPairedEnd = params.single_end ? "False" : "True"
+    annotation_name = "mitocondrial"
+    """
+    drawplot_fcount_mappedrate_bar.r $totalseq_merged $mt_merged $isPairedEnd $annotation_name
+    cat $fcounts_mt_header barplot_assignedrate_mitocondrial.csv >> tmp_file
+    mv tmp_file barplot_assignedrate_mitocondrial_mqc.csv
+    """
+
+}
+
+process create_plots_fcounts_rrna {
+    label 'process_low'
+    publishDir "${params.outdir}/plots_bar_fcounts_rrna", mode: 'copy'
+
+    input:
+    file totalseq_merged from ch_totalseq_fcount_allgene
+    file rrna_merged from ch_fcounts_rrna_merged
+    file fcounts_rrna_header from ch_fcounts_rrna_header
+
+    output:
+    file "*.{txt,pdf,csv}" into fcounts_rrna_results
+
+    script:
+    isPairedEnd = params.single_end ? "False" : "True"
+    annotation_name = "rrna"
+    """
+    drawplot_fcount_mappedrate_bar.r $totalseq_merged $rrna_merged $isPairedEnd $annotation_name
+    cat $fcounts_rrna_header barplot_assignedrate_rrna.csv >> tmp_file
+    mv tmp_file barplot_assignedrate_rrna_mqc.csv
+    """
+
+}
+
 
 process create_plots_fcounts_histone {
     label 'process_low'
     publishDir "${params.outdir}/plots_bar_fcounts_histone", mode: 'copy'
 
     input:
+    file totalseq_merged from ch_totalseq_fcount_allgene
     file histone_merged from ch_fcounts_histone_merged
     file fcounts_histone_header from ch_fcounts_histone_header
 
@@ -1686,14 +1811,15 @@ process create_plots_fcounts_histone {
     file "*.{txt,pdf,csv}" into fcounts_histone_results
 
     script:
+    isPairedEnd = params.single_end ? "False" : "True"
+    annotation_name = "histone"
     """
-    drawplot_fcounts_histone_bar.r $histone_merged
-    cat $fcounts_histone_header barplot_fcounts_histone_rate.csv >> tmp_file
-    mv tmp_file barplot_fcounts_histone_rate_mqc.csv
+    drawplot_fcount_mappedrate_bar.r $totalseq_merged $histone_merged $isPairedEnd $annotation_name
+    cat $fcounts_histone_header barplot_assignedrate_histone.csv >> tmp_file
+    mv tmp_file barplot_assignedrate_histone_mqc.csv
     """
 
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
@@ -1761,14 +1887,14 @@ process multiqc {
     file ('fastqc/*') from ch_trimmed_reads_fastqc_results.collect().ifEmpty([])
     file ('alignment/*') from ch_alignment_logs.collect().ifEmpty([])
     file ('rseqc/*') from rseqc_results_merge.collect().ifEmpty([])
-    file ('featureCounts/*') from featureCounts_logs.collect().ifEmpty([])
     file ('featureCounts_biotype/*') from featureCounts_biotype.collect()
-    file ('featureCounts_mt/*') from featureCounts_logs_mt.collect().ifEmpty([])
-    file ('featureCounts_rrna/*') from featureCounts_logs_rrna.collect().ifEmpty([])
     file ('rsem_bowtie2_allgenes/*') from rsem_results_genes_stat.collect().ifEmpty([])
     file ('sample_correlation_results/*') from sample_correlation_results.collect().ifEmpty([]) // If the Edge-R is not run create an Empty array
     file ('ercc_correlation_results/*') from ercc_correlation_results.collect().ifEmpty([]) 
     file ('plots_bar_assignedgenome/*') from assignedgenome_rate_results.collect().ifEmpty([]) 
+    file ('plots_bar_fcounts_allgene/*') from fcounts_allgene_results.collect().ifEmpty([]) 
+    file ('plots_bar_fcounts_mt/*') from fcounts_mt_results.collect().ifEmpty([]) 
+    file ('plots_bar_fcounts_rrna/*') from fcounts_rrna_results.collect().ifEmpty([]) 
     file ('plots_bar_fcounts_histone/*') from fcounts_histone_results.collect().ifEmpty([]) 
     file ('plots_from_tpmcounts/*') from plots_from_tpmcounts_results.collect().ifEmpty([])
     file ('plots_from_tpmcounts_rsem/*') from plots_from_rsem_gene_results.collect().ifEmpty([])

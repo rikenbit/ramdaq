@@ -112,10 +112,12 @@ We output more detailed QC plots using our own custom rRNA, mitochondrial, and h
   * Matrix of gene-level TPM (Transcripts Per Kilobase Million) counts across all samples
 * `merged_featureCounts_gene_ERCC.txt`
   * Matrix of ERCC (RNA Spike-in Controls for Gene Expression) count. Output only if the sample contains ERCC.
+* `merged_featureCounts_gene_ERCC_log.txt`
+  * Matrix of ERCC (RNA Spike-in Controls for Gene Expression) base-10 logarithm count. Output only if the sample contains ERCC.
 
 ![MultiQC - featureCounts biotype plot](images/report_figsamples/mqc_featureCounts_biotype_plot_1.png)
 
-![MultiQC - featureCounts alignment plot](images/report_figsamples/mqc_featureCounts_assignment_plot_1.png)
+![MultiQC - featureCounts assigned rate plot](images/report_figsamples/mqc_rate_of_allgene_barplot_1.png)
 
 ![MultiQC - ERCC correlation plot](images/report_figsamples/mqc_ercc_correlation_barplot_1.png)
 
