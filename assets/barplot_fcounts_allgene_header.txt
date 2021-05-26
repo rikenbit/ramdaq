@@ -1,0 +1,15 @@
+#id: 'rate_of_allgene'
+#section_name: 'Rate of reads assigned to all genes [%]'
+#description: "show rate of reads assigned to all genes from featureCounts"
+#plot_type: 'bargraph'
+#anchor: 'rate_of_allgene'
+#pconfig:
+#    id: 'rate_of_allgene_barplot'
+#    title: 'Rate of reads assigned to all genes [%]'
+#    cpswitch: False
+#    tt_percentages: False
+#    hide_zero_cats: False
+#    ymin: 0
+#    ymax: 100
+
+

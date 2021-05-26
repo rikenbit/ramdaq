@@ -1,0 +1,12 @@
+#id: 'num_of_gene_rsem'
+#section_name: 'Number of detected genes from RSEM'
+#description: "show number of detected genes from RSEM TPM counts (TPM>0)"
+#plot_type: 'bargraph'
+#anchor: 'num_of_gene_rsem'
+#pconfig:
+#    id: 'num_of_gene_rsem_barplot'
+#    title: 'Number of detected genes from RSEM'
+#    cpswitch: False
+#    tt_percentages: False
+#    hide_zero_cats: False
+

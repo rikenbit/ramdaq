@@ -21,43 +21,48 @@ gene_length = data.frame(Geneid=raw_countdata$Geneid, Length=raw_countdata$Lengt
 
 ### function ###
 
-trim_countfc_sample <- function(data, ERCC=F){
+trim_tpmmatrix <- function(data, ERCC=F){
 
   if (ERCC) {
-    data = subset(data, grepl("ERCC", Geneid))
+    data = data[grepl("ERCC", rownames(data)),]
   } else {
-    data = subset(data, !grepl("ERCC", Geneid))
+    data = data[!grepl("ERCC", rownames(data)),]
   }
 
-  rownames(data) = data$Geneid
-  data = data[,-c(1,2,3), drop=FALSE]
-  samplename = str_replace(colnames(data), ".sort", "")
-  colnames(data) = c(samplename)
   return(data)
 }
 
 calc_tpm <- function(counts,len) {
   x <- counts/len
-    return(t(t(x)*1e6/colSums(x)))
+  return(t(t(x)*1e6/colSums(x)))
 }
 
-count_trim = trim_countfc_sample(raw_countdata)
-count_trim$Geneid = rownames(count_trim)
-count_tpm = dplyr::left_join(count_trim, gene_length, by=c("Geneid"))
+count_tpm = raw_countdata
+count_tpm$Geneid = rownames(count_tpm)
+#count_tpm = dplyr::left_join(count_tpm, gene_length, by=c("Geneid"))
 rownames(count_tpm) = count_tpm$Geneid
 
 # calc TPM
-count_tpm = calc_tpm(count_tpm[,!colnames(count_tpm) %in% c("Geneid","Length"), drop=FALSE], as.numeric(count_tpm$Length))
+count_tpm = calc_tpm(count_tpm[,!colnames(count_tpm) %in% c("Geneid","Length","gene_name"), drop=FALSE], as.numeric(count_tpm$Length))
 count_tpm = as.data.frame(count_tpm)
+rownames(count_tpm) = raw_countdata$Geneid
 
-# Print distance matrix to file
-write.table(count_tpm,"merged_featureCounts_gene_TPM.txt",sep="\t", append=F, quote=F, row.names=T, col.names=T)
+# create all-genes counts
+count_tpm_gene = trim_tpmmatrix(count_tpm)
+write.table(count_tpm_gene,"merged_featureCounts_gene_TPM.txt",sep="\t", append=F, quote=F, row.names=T, col.names=T)
 
 # create ERCC counts
-count_ercc = trim_countfc_sample(raw_countdata, ERCC=T)
+count_tpm_ercc = trim_tpmmatrix(count_tpm, ERCC=T)
 
-if (nrow(count_ercc) > 1 && sum(colSums(count_ercc)) > 0){
-  write.table(count_ercc,"merged_featureCounts_gene_ERCC.txt",sep="\t", append=F, quote=F, row.names=T, col.names=T)
+if (nrow(count_tpm_ercc) > 1 && sum(colSums(count_tpm_ercc)) > 0){
+
+  count_tpm_ercc_log = log10(count_tpm_ercc+1)
+  write.table(count_tpm_ercc_log,"merged_featureCounts_gene_TPM_ERCC_log.txt",sep="\t", append=F, quote=F, row.names=T, col.names=T)
+
+  raw_countdata_ercc = subset(raw_countdata, grepl("ERCC", Geneid))
+  rownames(raw_countdata_ercc) = raw_countdata_ercc$Geneid
+  raw_countdata_ercc = raw_countdata_ercc[,!colnames(raw_countdata_ercc) %in% c("Geneid","Length","gene_name"), drop=FALSE]
+  write.table(raw_countdata_ercc,"merged_featureCounts_gene_ERCC.txt",sep="\t", append=F, quote=F, row.names=T, col.names=T)
 }
 
 # Printing sessioninfo to standard out

@@ -42,7 +42,7 @@ g = ggplot(plotdata, aes(x=samplename,y=assignedGenomeRate)) +
     xlab("Sample")+ylab("Assigned genome rate") +
     #scale_x_discrete(labels=plotdata$x) + 
     theme(axis.text.x=element_text(size=6, angle=90, hjust=1), legend.text=element_text(size=8)) +
-    ggtitle("Rate of assigned to genome")
+    ggtitle("Rate of reads assigned to genome")
 
 ggsave(file = "barplot_assignedgenome_rate.pdf", plot=g, dpi=100, width=12, height=5)
 

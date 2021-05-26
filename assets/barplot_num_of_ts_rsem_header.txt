@@ -1,0 +1,12 @@
+#id: 'num_of_ts_rsem'
+#section_name: 'Number of detected transcripts from RSEM'
+#description: "show number of detected transcripts from RSEM TPM counts (TPM>0)"
+#plot_type: 'bargraph'
+#anchor: 'num_of_ts_rsem'
+#pconfig:
+#    id: 'num_of_ts_rsem_barplot'
+#    title: 'Number of detected transcripts from RSEM'
+#    cpswitch: False
+#    tt_percentages: False
+#    hide_zero_cats: False
+

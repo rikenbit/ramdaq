@@ -25,7 +25,6 @@ calc_tpm <- function(counts,len) {
 
 ### load Ref
 ercc_ref = read.table(erccref, sep="\t", comment.char = "", header=T, stringsAsFactors=F)
-#ercc_ref_trim = ercc_ref[,c("ERCC.ID","Length")]
 
 ### calc copy number
 ercc_input_amount = eval(parse(text = as.character(erccamount)))
@@ -35,19 +34,13 @@ ercc_ref$copy.number.log = log10(ercc_ref$copy.number+1)
 write.table(ercc_ref,"ercc_dataset_user.txt",sep="\t", append=F, quote=F, row.names=T, col.names=T)
 
 ### load countdata
-ercc_countdata = read.table(erccfile, sep="\t", comment.char = "", header=T, stringsAsFactors=F)
-ercc_countdata$ERCC.ID = rownames(ercc_countdata)
-ercc_countdata_tpm = dplyr::left_join(ercc_countdata, ercc_ref[,c("ERCC.ID","Length")], by=c("ERCC.ID"))
-rownames(ercc_countdata_tpm) = ercc_countdata_tpm$ERCC.ID
+ercc_countdata_tpm_log = read.table(erccfile, sep="\t", comment.char = "", header=T, stringsAsFactors=F)
+ercc_ref_sort = ercc_countdata_tpm_log
+ercc_ref_sort$ERCC.ID = rownames(ercc_ref_sort)
+ercc_ref_sort = dplyr::left_join(ercc_ref_sort, ercc_ref, by=c("ERCC.ID"))
 
-# calc TPM
-ercc_countdata_tpm = calc_tpm(ercc_countdata_tpm[,!colnames(ercc_countdata_tpm) %in% c("ERCC.ID","Length"), drop=FALSE], as.numeric(ercc_countdata_tpm$Length))
-ercc_countdata_tpm = as.data.frame(ercc_countdata_tpm)
-ercc_countdata_tpm_log = log10(ercc_countdata_tpm+1)
-
-write.table(ercc_countdata_tpm_log,"merged_featureCounts_gene_TPM_ERCC_log.txt",sep="\t", append=F, quote=F, row.names=T, col.names=T)
-
-plotdata = cor(ercc_countdata_tpm_log, ercc_ref$copy.number.log)
+# calc corr
+plotdata = cor(ercc_countdata_tpm_log, ercc_ref_sort$copy.number.log)
 plotdata = data.frame(corr=plotdata[,1],sample_name=as.character(rownames(plotdata)))
 plotdata = plotdata[order(plotdata$sample_name),]
 plotdata = SDset(plotdata$sample_name, plotdata$corr)

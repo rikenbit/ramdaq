@@ -1,0 +1,14 @@
+#id: 'rate_of_rrna'
+#section_name: 'Rate of reads assigned to rRNA genes [%]'
+#description: "show rate of reads assigned to rRNA genes from featureCounts"
+#plot_type: 'bargraph'
+#anchor: 'rate_of_rrna'
+#pconfig:
+#    id: 'rate_of_rrna_barplot'
+#    title: 'Rate of reads assigned to rRNA genes [%]'
+#    cpswitch: False
+#    tt_percentages: False
+#    hide_zero_cats: False
+#    ymin: 0
+#    ymax: 100
+

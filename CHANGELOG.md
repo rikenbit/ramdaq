@@ -5,11 +5,23 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## v1.1.1 (`-r 1.1.1`) [2021-Undecided]
+## v1.2 (`-r 1.2`) [2021-05-26]
 
-### `v1.1.1 Added`
+### `v1.2 Added`
 
-- Output gene-level quantitative results of RSEM
+- Support for outputting gene-level quantification results of RSEM
+- Added RSEM results of the number of detected genes and transcripts in MultiQC report
+- Changed the unit of the number of reads from M Seqs to K Seqs in MultiQC report
+- New bigWig file output from R1, R2, forward, and reverse BAM files
+- Save a copy of `.nextflow.log` in the output directory
+
+### `v1.2 Fixed`
+
+- Fixed the caluclation of read assgined rate of all genes, mitochondrial, rRNA, and histone by featureCounts
+- Fixed rRNA annotation for GRCm39
+- Fixed TPM calculation for ERCC
+- Corrected URL of remote annotation files in `conf/remote_annotation.config`
+- Improved human rRNA annotation GTF
 
 ## v1.1 (`-r 1.1`) [2021-03-30]
 

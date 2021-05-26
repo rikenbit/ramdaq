@@ -42,7 +42,7 @@ g = ggplot(plotdata, aes(x=samplename,y=assignedHistoneRate)) +
     xlab("Sample")+ylab("Assigned Histone genes rate") +
     #scale_x_discrete(labels=plotdata$x) + 
     theme(axis.text.x=element_text(size=6, angle=90, hjust=1), legend.text=element_text(size=8)) +
-    ggtitle("Rate of assigned to Histone genes")
+    ggtitle("Rate of reads assigned to Histone genes")
 
 ggsave(file = "barplot_assigned_histone_rate.pdf", plot=g, dpi=100, width=12, height=5)
 
