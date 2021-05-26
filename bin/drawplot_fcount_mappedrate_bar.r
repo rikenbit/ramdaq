@@ -45,7 +45,7 @@ g = ggplot(plotdata, aes(x=samplename,y=assignedRate)) +
     xlab("sample")+ylab("assigned rate") +
     #scale_x_discrete(labels=plotdata$x) + 
     theme(axis.text.x=element_text(size=6, angle=90, hjust=1), legend.text=element_text(size=8)) +
-    ggtitle(paste0("Rate of assigned to ", annotation_name, " annotation"))
+    ggtitle(paste0("Rate of reads assigned to ", annotation_name, " annotation"))
 
 ggsave(file = paste0("barplot_assigned_",annotation_name,"_rate.pdf"), plot=g, dpi=100, width=12, height=5)
 

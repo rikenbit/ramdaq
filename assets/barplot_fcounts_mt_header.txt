@@ -1,11 +1,11 @@
 #id: 'rate_of_mt'
-#section_name: 'Rate of assigned to mitocondrial genes [%]'
-#description: "show rate of assigned to mitocondrial genes from featureCounts"
+#section_name: 'Rate of reads assigned to mitochondrial genes [%]'
+#description: "show rate of reads assigned to mitochondrial genes from featureCounts"
 #plot_type: 'bargraph'
 #anchor: 'rate_of_mt'
 #pconfig:
 #    id: 'rate_of_mt_barplot'
-#    title: 'Rate of assigned to mitocondrial genes [%]'
+#    title: 'Rate of reads assigned to mitochondrial genes [%]'
 #    cpswitch: False
 #    tt_percentages: False
 #    hide_zero_cats: False

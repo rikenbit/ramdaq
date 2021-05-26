@@ -1424,7 +1424,7 @@ ercc_list = ercccount_chk.toList()
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
-* STEP 9-2 - FeatureCounts (Mitocondrial GTF) 
+* STEP 9-2 - FeatureCounts (Mitochondrial GTF) 
 */
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1765,11 +1765,11 @@ process create_plots_fcounts_mt {
 
     script:
     isPairedEnd = params.single_end ? "False" : "True"
-    annotation_name = "mitocondrial"
+    annotation_name = "mitochondrial"
     """
     drawplot_fcount_mappedrate_bar.r $totalseq_merged $mt_merged $isPairedEnd $annotation_name
-    cat $fcounts_mt_header barplot_assignedrate_mitocondrial.csv >> tmp_file
-    mv tmp_file barplot_assignedrate_mitocondrial_mqc.csv
+    cat $fcounts_mt_header barplot_assignedrate_mitochondrial.csv >> tmp_file
+    mv tmp_file barplot_assignedrate_mitochondrial_mqc.csv
     """
 
 }
