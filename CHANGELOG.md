@@ -5,6 +5,17 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## v1.2.1 (`-r 1.2.1`) [2021-06-14]
+
+### `v1.2.1 Added`
+
+- Added `--entire_max_cpus` and `--entire_max_memory` options to set upper limit of CPU and memory usage of the entire workflow.
+
+### `v1.2.1 Fixed`
+
+- Fixed the problem of high load average for some alignment steps
+- Fixed a typo in the name of the log file that is copied to the output directory
+
 ## v1.2 (`-r 1.2`) [2021-05-26]
 
 ### `v1.2 Added`

@@ -219,6 +219,37 @@ Dilution rate of the SIRV-Set 4 (default: false). Use when the samples contain t
 
 When this option is specified, ramdaq outputs the between-sample correlation of expression levels of ERCC spike-ins in the MultiQC report. Besides, the read coverages on the SIRV genes are saved in the output directory for downstream use.
 
+## Computational performance
+
+### Resource allocation for the entire workflow
+
+#### `--entire_max_cpus`
+
+Maximum number of CPUs to use for each step of the pipeline.
+Should be a string in the format integer-unit. eg. `--entire_max_cpus 16`.
+
+#### `--entire_max_memory`
+
+Memory limit for each step of the pipeline.
+Should be a string in the format integer-unit. eg. `--entire_max_memory '16.GB'`.
+
+### Resource allocation for each process
+
+#### `--max_cpus`
+
+Use to set a top limit for the default CPU requirement for each process.
+Should be a string in the format integer-unit. eg. `--max_cpus 1`
+
+#### `--max_memory`
+
+Use to set a top limit for the default memory requirement for each process.
+Should be a string in the format integer-unit. eg. `--max_memory '8.GB'`
+
+#### `--max_time`
+
+Use to set a top limit for the default time requirement for each process.
+Should be a string in the format integer-unit. eg. `--max_time '2.h'`
+
 ## Other command line parameters
 
 <!-- TODO: Describe any other command line flags here -->
@@ -242,21 +273,6 @@ Specify this when restarting a pipeline. Nextflow will used cached results from 
 You can also supply a run name to resume a specific run: `-resume [run-name]`. Use the `nextflow log` command to show previous run names.
 
 **NB:** Single hyphen (core Nextflow option)
-
-### `--max_memory`
-
-Use to set a top-limit for the default memory requirement for each process.
-Should be a string in the format integer-unit. eg. `--max_memory '8.GB'`
-
-### `--max_time`
-
-Use to set a top-limit for the default time requirement for each process.
-Should be a string in the format integer-unit. eg. `--max_time '2.h'`
-
-### `--max_cpus`
-
-Use to set a top-limit for the default CPU requirement for each process.
-Should be a string in the format integer-unit. eg. `--max_cpus 1`
 
 ### `--monochrome_logs`
 
