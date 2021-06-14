@@ -31,6 +31,8 @@ def helpMessage() {
       --genome [str]                  Name of human or mouse latest reference: ${params.genomes.keySet().join(", ")}
       --saveReference                 Save the generated reference files to the results directory
       --local_annot_dir [str]         Base path for local annotation files
+      --entire_max_cpus [N]            Maximum number of CPUs to use for each step of the pipeline. Should be in form e.g. --entire_max_cpus 16. Default: '${params.entire_max_cpus}'
+      --entire_max_memory [str]        Memory limit for each step of pipeline. Should be in form e.g. --entire_max_memory '16.GB'. Default: '${params.entire_max_memory}'  
         
     Other:
       --outdir [str]                  The output directory where the results will be saved
@@ -38,7 +40,7 @@ def helpMessage() {
       -resume                         Specify this when restarting a pipeline
       --max_memory [str]              Memory limit for each step of pipeline. Should be in form e.g. --max_memory '8.GB'. Default: '${params.max_memory}'
       --max_time [str]                Time limit for each step of the pipeline. Should be in form e.g. --max_time '2.h'. Default: '${params.max_time}'
-      --max_cpus [str]                Maximum number of CPUs to use for each step of the pipeline. Should be in form e.g. Default: '${params.max_cpus}'
+      --max_cpus [str]                Maximum number of CPUs to use for each step of the pipeline. Should be in form e.g. --max_cpus 1. Default: '${params.max_cpus}'
       --monochrome_logs               Set to disable colourful command line output and live life in monochrome
 
     Fastqmcf:
@@ -50,7 +52,10 @@ def helpMessage() {
     Hisat2:
       --softclipping                  HISAT2 allow soft-clip reads near their 5' and 3' ends (Default: disallow)
       --hs_threads_num [N]            HISAT2 to launch a specified number of parallel search threads (Default: 1)
-
+    
+    RSEM:
+      --rsem_threads_num [N]          Number of threads to use (Default: 1)
+    
     FeatureCounts:
       --extra_attributes              Define which extra parameters should also be included in featureCounts (Default: 'gene_name')
       --group_features                Define the attribute type used to group features (Default: 'gene_id')
@@ -341,6 +346,7 @@ summary['Min Mapped Reads'] = params.min_mapped_reads
 summary['ERCC quantification mode']   = params.spike_in_ercc || params.spike_in_sirv ? 'On' : 'Off'
 summary['SIRV quantification mode']   = params.spike_in_sirv ? 'On' : 'Off'
 
+summary['Resource allocation for the entire workflow']  = "$params.entire_max_cpus cpus, $params.entire_max_memory memory"
 summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
 summary['Output dir']       = params.outdir
@@ -891,11 +897,12 @@ process rsem_bowtie2_sirv {
         strandness = "--strandedness forward"
     }
     index_base = sirv_indices[0].toString().split('\\.')[0]
+    threads_num = params.rsem_threads_num > 0 ? "-p ${params.rsem_threads_num}" : ''
 
     if (params.single_end) {
         if (params.stranded && params.stranded != 'unstranded') {
             """
-            rsem-calculate-expression -p 20 $strandness $reads --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ $index_base ${name}.sirv
+            rsem-calculate-expression $threads_num $strandness $reads --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ $index_base ${name}.sirv
             samtools sort ${name}.sirv.transcript.bam -o ${name}.sirv.rsem.bam
             samtools index ${name}.sirv.rsem.bam
             samtools flagstat ${name}.sirv.rsem.bam > ${name}.sirv.rsem.bam.flagstat
@@ -903,7 +910,7 @@ process rsem_bowtie2_sirv {
             """
         } else {
             """
-            rsem-calculate-expression -p 20 $reads --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ $index_base ${name}.sirv
+            rsem-calculate-expression $threads_num $reads --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ $index_base ${name}.sirv
             samtools sort ${name}.sirv.transcript.bam -o ${name}.sirv.rsem.bam
             samtools index ${name}.sirv.rsem.bam
             samtools flagstat ${name}.sirv.rsem.bam > ${name}.sirv.rsem.bam.flagstat
@@ -914,7 +921,7 @@ process rsem_bowtie2_sirv {
     } else {
         if (params.stranded && params.stranded != 'unstranded') {
             """
-            rsem-calculate-expression -p 20 $strandness --paired-end ${reads[0]} ${reads[1]} --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ \\
+            rsem-calculate-expression $threads_num $strandness --paired-end ${reads[0]} ${reads[1]} --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ \\
             $index_base ${name}.sirv
             samtools sort ${name}.sirv.transcript.bam -o ${name}.sirv.rsem.bam
             samtools index ${name}.sirv.rsem.bam
@@ -923,7 +930,7 @@ process rsem_bowtie2_sirv {
             """
         } else {
             """
-            rsem-calculate-expression -p 20 --paired-end ${reads[0]} ${reads[1]} --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ \\
+            rsem-calculate-expression $threads_num --paired-end ${reads[0]} ${reads[1]} --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ \\
             $index_base ${name}.sirv
             samtools sort ${name}.sirv.transcript.bam -o ${name}.sirv.rsem.bam
             samtools index ${name}.sirv.rsem.bam
@@ -991,11 +998,12 @@ process rsem_bowtie2_allgenes {
         strandness = "--strandedness forward"
     }
     index_base = sirv_indices[0].toString().split('\\.')[0]
+    threads_num = params.rsem_threads_num > 0 ? "-p ${params.rsem_threads_num}" : ''
 
     if (params.single_end) {
         if (params.stranded && params.stranded != 'unstranded') {
             """
-            rsem-calculate-expression -p 20 $strandness $reads --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ $index_base ${name}
+            rsem-calculate-expression $threads_num $strandness $reads --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ $index_base ${name}
             samtools sort ${name}.transcript.bam -o ${name}.rsem.bam
             samtools index ${name}.rsem.bam
             samtools flagstat ${name}.rsem.bam > ${name}.rsem.bam.flagstat
@@ -1003,7 +1011,7 @@ process rsem_bowtie2_allgenes {
             """
         } else {
             """
-            rsem-calculate-expression -p 20 $reads --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ $index_base ${name}
+            rsem-calculate-expression $threads_num $reads --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ $index_base ${name}
             samtools sort ${name}.transcript.bam -o ${name}.rsem.bam
             samtools index ${name}.rsem.bam
             samtools flagstat ${name}.rsem.bam > ${name}.rsem.bam.flagstat
@@ -1014,7 +1022,7 @@ process rsem_bowtie2_allgenes {
     } else {
         if (params.stranded && params.stranded != 'unstranded') {
             """
-            rsem-calculate-expression -p 20 $strandness --paired-end ${reads[0]} ${reads[1]} --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ \\
+            rsem-calculate-expression $threads_num $strandness --paired-end ${reads[0]} ${reads[1]} --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ \\
             $index_base ${name}
             samtools sort ${name}.transcript.bam -o ${name}.rsem.bam
             samtools index ${name}.rsem.bam
@@ -1023,7 +1031,7 @@ process rsem_bowtie2_allgenes {
             """
         } else {
             """
-            rsem-calculate-expression -p 20 --paired-end ${reads[0]} ${reads[1]} --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ \\
+            rsem-calculate-expression $threads_num --paired-end ${reads[0]} ${reads[1]} --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ \\
             $index_base ${name}
             samtools sort ${name}.transcript.bam -o ${name}.rsem.bam
             samtools index ${name}.rsem.bam
@@ -1182,7 +1190,7 @@ process adjust_bed_noncoding {
 
 process rseqc  {
     tag "$name"
-    label 'process_medium'
+    label 'process_high'
 
     publishDir "${params.outdir}/rseqc", mode: 'copy',
         saveAs: {filename ->
@@ -1245,6 +1253,7 @@ process merge_readDist_totalRead {
 
 process readcoverage  {
     tag "$name"
+    label 'process_high'
     container "yuifu/readcoverage.jl:0.1.2-workaround"
 
     publishDir "${params.outdir}/rseqc", mode: 'copy',
@@ -2055,9 +2064,9 @@ workflow.onComplete {
     
     // copy .nextflow.log
     today = new Date().format("yyyy-MM-dd-HH-mm-ss")
-    new File("${params.outdir}/radamq-${today}.log") << new File('.nextflow.log').text
+    new File("${params.outdir}/ramdaq-${today}.log") << new File('.nextflow.log').text
     
-    println "The log file .nextflow.log was copied to ${params.outdir}/radamq-${today}.log"
+    println "The log file .nextflow.log was copied to ${params.outdir}/ramdaq-${today}.log"
 }
 
 def nfcoreHeader() {
