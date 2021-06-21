@@ -24,7 +24,7 @@ calc_tpm <- function(counts,len) {
 }
 
 ### load Ref
-ercc_ref = read.table(erccref, sep="\t", comment.char = "", header=T, stringsAsFactors=F)
+ercc_ref = read.table(erccref, sep="\t", comment.char = "", header=T, check.names=FALSE, stringsAsFactors=F)
 
 ### calc copy number
 ercc_input_amount = eval(parse(text = as.character(erccamount)))
@@ -34,7 +34,7 @@ ercc_ref$copy.number.log = log10(ercc_ref$copy.number+1)
 write.table(ercc_ref,"ercc_dataset_user.txt",sep="\t", append=F, quote=F, row.names=T, col.names=T)
 
 ### load countdata
-ercc_countdata_tpm_log = read.table(erccfile, sep="\t", comment.char = "", header=T, stringsAsFactors=F)
+ercc_countdata_tpm_log = read.table(erccfile, sep="\t", comment.char = "", header=T, check.names=FALSE, stringsAsFactors=F)
 ercc_ref_sort = ercc_countdata_tpm_log
 ercc_ref_sort$ERCC.ID = rownames(ercc_ref_sort)
 ercc_ref_sort = dplyr::left_join(ercc_ref_sort, ercc_ref, by=c("ERCC.ID"))

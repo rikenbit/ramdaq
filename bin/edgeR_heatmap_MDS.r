@@ -28,18 +28,16 @@ if (!require("gplots")) {
 }
 
 # Load count column from all files into a list of data frames
-# Use data.tables fread as much much faster than read.table
 # Row names are GeneIDs
-temp <- lapply(lapply(args, fread, skip="Geneid", header=TRUE), function(x){return(as.data.frame(x)[,c(1, ncol(x))])})
+temp <- lapply(lapply(args, read.table, comment.char = "#", header=TRUE, check.names=FALSE), function(x){return(as.data.frame(x)[,c(1, ncol(x))])})
 
-# Merge into a single data frame
-merge.all <- function(x, y) {
-    merge(x, y, all=TRUE, by="Geneid")
+data = temp[[1]]
+for(i in 2:length(temp)){
+    data = merge(data, temp[[i]], all=TRUE, by="Geneid")
 }
-data <- data.frame(Reduce(merge.all, temp))
 
 # Clean sample name headers
-colnames(data) <- gsub("Aligned.sortedByCoord.out.bam", "", colnames(data))
+colnames(data) <- gsub(".bam", "", colnames(data))
 
 # Set GeneID as row name
 rownames(data) <- data[,1]

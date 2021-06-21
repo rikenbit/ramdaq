@@ -19,7 +19,7 @@ if (!require("ggplot2")){
 input_histone <- args[1]
 
 ### function ###
-histone_summary= read.table(input_histone, sep="", comment.char = "", header=T, stringsAsFactors=F)
+histone_summary= read.table(input_histone, sep="", comment.char = "", header=T, check.names=FALSE, stringsAsFactors=F)
 rownames(histone_summary) = histone_summary[,1]
 if (ncol(histone_summary) > 2) {
     histone_summary = as.data.frame(t(histone_summary[,-1]))
