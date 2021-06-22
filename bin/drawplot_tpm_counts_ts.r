@@ -31,7 +31,7 @@ ggplot_2D <- function(dset, x, y, title, celltype, outname, label=F) {
   
 }
 
-countdata = read.table(inputfile, sep="\t", comment.char = "", header=T, stringsAsFactors=F)
+countdata = read.table(inputfile, sep="\t", comment.char = "", header=T, check.names=FALSE, stringsAsFactors=F)
 rownames(countdata) = countdata[,1]
 countdata = countdata[,-c(1,2)]
 colnames(countdata) = str_replace_all(colnames(countdata), ".isoforms.results", "")

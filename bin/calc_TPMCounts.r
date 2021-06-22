@@ -14,7 +14,7 @@ if (!require("dplyr")){
 }
 
 inputfile <- args[1]
-raw_countdata = read.table(inputfile, sep="\t", comment.char = "", header=T, stringsAsFactors=F)
+raw_countdata = read.table(inputfile, sep="\t", comment.char = "", header=T, check.names=FALSE, stringsAsFactors=F)
 
 # create gene length data
 gene_length = data.frame(Geneid=raw_countdata$Geneid, Length=raw_countdata$Length, stringsAsFactors=F)

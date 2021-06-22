@@ -21,8 +21,8 @@ input_totalread <- args[2]
 isPairedEnd <- args[3]
 
 ### function ###
-totalseqdata = read.table(input_totalseq, sep="", comment.char = "", header=F, stringsAsFactors=F)
-totalreaddata = read.table(input_totalread, sep="", comment.char = "", header=F, stringsAsFactors=F)
+totalseqdata = read.table(input_totalseq, sep="", comment.char = "", header=F, check.names=FALSE, stringsAsFactors=F)
+totalreaddata = read.table(input_totalread, sep="", comment.char = "", header=F, check.names=FALSE, stringsAsFactors=F)
 
 plotdata = dplyr::left_join(totalseqdata, totalreaddata, by=c("V1"))
 colnames(plotdata) = c("samplename", "totalseq", "totalread")

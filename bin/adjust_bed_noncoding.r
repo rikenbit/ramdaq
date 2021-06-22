@@ -42,7 +42,7 @@ calc_Tcenter <- function(bed.row){
 }
 
 inputfile <- args[1]
-bed.raw = read.table(inputfile, sep="\t", header=F, stringsAsFactors=F)
+bed.raw = read.table(inputfile, sep="\t", header=F, check.names=FALSE, stringsAsFactors=F)
 
 bed.adjusted = bed.raw
 for(i in 1:nrow(bed.raw)){
