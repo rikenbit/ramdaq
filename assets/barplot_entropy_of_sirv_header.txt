@@ -1,0 +1,13 @@
+#id: 'entropy_of_sirv'
+#section_name: 'SIRV entropy'
+#description: "Entropy of amount (transcript-level TPM calculated by RSRM) of SIRV isoforms. Higher value indicates more unbiased detection across SIRV isoforms. The maximum of SIRV entropy is 6.392317 since 84 isoforms in SIRV Set4 have equal probability (equal amount) in the ideal case. Negative value indicates that no reads were mapped on SIRVs."
+#plot_type: 'bargraph'
+#anchor: 'entropy_of_sirv'
+#pconfig:
+#    id: 'entropy_of_sirv_barplot'
+#    title: 'Entropy of sirv isoforms'
+#    cpswitch: False
+#    tt_percentages: False
+#    hide_zero_cats: False
+#    ymin: 0
+#    ymax: 6.392317

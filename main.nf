@@ -280,6 +280,9 @@ ch_umapplot_header = Channel.fromPath("$baseDir/assets/umapplot_header.txt", che
 ch_num_of_gene_rsem_header = Channel.fromPath("$baseDir/assets/barplot_num_of_gene_rsem_header.txt", checkIfExists: true)
 ch_num_of_ts_rsem_header = Channel.fromPath("$baseDir/assets/barplot_num_of_ts_rsem_header.txt", checkIfExists: true)
 
+ch_entropy_of_sirv_header = Channel.fromPath("$baseDir/assets/barplot_entropy_of_sirv_header.txt", checkIfExists: true)
+
+
 ///////////////////////////////////////////////////////////////////////////////
 /*
 * Create a channel for input read files
@@ -948,7 +951,7 @@ process merge_sirv_isoforms {
     file input_files from rsem_results_sirv_to_merge.collect()
 
     output:
-    file 'merged_rsemResults_SIRVome_isoforms.txt'
+    file 'merged_rsemResults_SIRVome_isoforms.txt' into rsem_tpm_sirv
 
     script:
     // Redirection (the `<()`) for the win!
@@ -1138,6 +1141,32 @@ process create_plots_rsem_ts {
 
 }
 
+///////////////////////////////////////////////////////////////////////////////
+/*
+* STEP 5-5 - create plot from RSEM TPM counts (sirv isoforms)
+*/
+///////////////////////////////////////////////////////////////////////////////
+
+process create_plots_entropy_sirv {
+    label 'process_medium'
+    publishDir "${params.outdir}/plots_from_rsem_sirv", mode: 'copy'
+
+    input:
+    file tpm_count from rsem_tpm_sirv
+    file entropy_header from ch_entropy_of_sirv_header
+
+    output:
+    file "*.{txt,pdf,csv}" into plots_from_rsem_sirv_results
+
+    script:
+    """
+    drawplot_sirv_entropy.r $tpm_count
+    cat $entropy_header barplot_entropy_of_sirv.csv >> tmp_file
+    mv tmp_file barplot_entropy_of_sirv_mqc.csv
+    
+    """
+
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
@@ -1908,6 +1937,7 @@ process multiqc {
     file ('plots_from_tpmcounts/*') from plots_from_tpmcounts_results.collect().ifEmpty([])
     file ('plots_from_tpmcounts_rsem/*') from plots_from_rsem_gene_results.collect().ifEmpty([])
     file ('plots_from_tpmcounts_rsem/*') from plots_from_rsem_ts_results.collect().ifEmpty([])
+    file ('plots_from_rsem_sirv/*') from plots_from_rsem_sirv_results.collect().ifEmpty([])
     file ('software_versions/*') from ch_software_versions_yaml.collect()
     file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
 
