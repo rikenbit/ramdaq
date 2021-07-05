@@ -1,0 +1,14 @@
+#id: 'rate_of_allgene_gstat'
+#plot_type: 'generalstats'
+#anchor: 'rate_of_allgene_gstat'
+#pconfig:
+#    assignedRate:
+#        title: 'assignedRateAllGene'
+#        namespace: 'assignedRateAllGene'
+#        description: 'Rate of reads assigned to all genes'
+#        max: 100
+#        min: 0
+#        scale: 'RdYlGn-rev'
+#        format: '{:.1f}%'
+
+

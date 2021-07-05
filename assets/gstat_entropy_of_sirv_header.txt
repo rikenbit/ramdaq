@@ -1,0 +1,11 @@
+#id: 'entropy_of_sirv_gstat'
+#plot_type: 'generalstats'
+#anchor: 'entropy_of_sirv_gstat'
+#pconfig:
+#    entropy:
+#        title: 'EntropyOfSirv'
+#        namespace: 'EntropyOfSirv'
+#        description: 'Entropy of sirv isoforms'
+#        max: 6.392317
+#        min: 0
+#        format: '{:.2f}'

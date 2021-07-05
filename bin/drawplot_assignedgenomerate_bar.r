@@ -26,6 +26,7 @@ totalreaddata = read.table(input_totalread, sep="", comment.char = "", header=F,
 
 plotdata = dplyr::left_join(totalseqdata, totalreaddata, by=c("V1"))
 colnames(plotdata) = c("samplename", "totalseq", "totalread")
+plotdata[is.na(plotdata)] <- 0
 
 if (isPairedEnd=="True"){
     plotdata$assignedGenomeRate = (plotdata$totalread / (plotdata$totalseq*2)) *100

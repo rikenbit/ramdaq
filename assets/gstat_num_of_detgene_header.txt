@@ -1,0 +1,9 @@
+#id: 'num_of_detectedgene_gstat'
+#plot_type: 'generalstats'
+#anchor: 'num_of_detectedgene_gstat'
+#pconfig:
+#    NumOfGenes:
+#        title: 'NumOfDetGenes'
+#        namespace: 'NumOfDetGenes'
+#        description: 'Number of detected genes'
+#        format: '{:.0f}'

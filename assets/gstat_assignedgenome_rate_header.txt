@@ -1,0 +1,12 @@
+#id: 'rate_of_assignedgenome_gstat'
+#plot_type: 'generalstats'
+#anchor: 'rate_of_assignedgenome_gstat'
+#pconfig:
+#    assignedGenomeRate:
+#        title: 'assignedRateGenome'
+#        namespace: 'assignedRateGenome'
+#        description: 'Rate of reads assigned to genome'
+#        max: 100
+#        min: 0
+#        scale: 'RdYlGn-rev'
+#        format: '{:.1f}%'

@@ -1,0 +1,13 @@
+#id: 'rate_of_mt_gstat'
+#plot_type: 'generalstats'
+#anchor: 'rate_of_mt_gstat'
+#pconfig:
+#    assignedRate:
+#        title: 'assignedRateMt'
+#        namespace: 'assignedRateMt'
+#        description: 'Rate of reads assigned to Mt'
+#        max: 100
+#        min: 0
+#        scale: 'RdYlGn-rev'
+#        format: '{:.1f}%'
+
