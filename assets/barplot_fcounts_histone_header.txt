@@ -1,6 +1,6 @@
 #id: 'rate_of_histone'
 #section_name: 'Rate of reads assigned to Histone genes [%]'
-#description: "show rate of reads assigned to histone genes from featureCounts"
+#description: "show rate of reads assigned to histone genes from featureCounts. If --count_fractionally, --allow_overlap, and --allow_multimap options for featureCounts are set (by default), the rate is calculated based on fractional counts."
 #plot_type: 'bargraph'
 #anchor: 'rate_of_histone'
 #pconfig:

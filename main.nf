@@ -1982,6 +1982,10 @@ process multiqc {
     file ('sample_correlation_results/*') from sample_correlation_results.collect().ifEmpty([]) // If the Edge-R is not run create an Empty array
     file ('ercc_correlation_results/*') from ercc_correlation_barplot.collect().ifEmpty([]) 
     file ('ercc_correlation_results/*') from ercc_correlation_gstat.collect().ifEmpty([]) 
+    file ('featureCounts/*') from featureCounts_logs.collect().ifEmpty([])
+    file ('featureCounts_Mitocondria/*') from featureCounts_logs_mt.collect().ifEmpty([])
+    file ('featureCounts_rRNA/*') from featureCounts_logs_rrna.collect().ifEmpty([])
+    file ('featureCounts_Histone/*') from featureCounts_logs_histone.collect().ifEmpty([])
     file ('plots_bar_assignedgenome/*') from assignedgenome_rate_barplot.collect().ifEmpty([]) 
     file ('plots_bar_assignedgenome/*') from assignedgenome_rate_gstat.collect().ifEmpty([])
     file ('plots_bar_fcounts_allgene/*') from fcounts_allgene_barplot.collect().ifEmpty([]) 

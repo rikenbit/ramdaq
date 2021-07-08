@@ -21,6 +21,30 @@ module_order:
     - rseqc
     - rsem
     - bowtie2
+    - featureCounts:
+        name: 'featureCounts (summary of all genes)'
+        anchor: 'featureCounts_summary_all'
+        info: 'This section of the report shows FeatureCounts summary of assignments all-genes.'
+        path_filters:
+            - './featureCounts/*'
+    - featureCounts:
+        name: 'featureCounts (summary of Mitochondrial genes)'
+        anchor: 'featureCounts_summary_mt'
+        info: 'This section of the report shows FeatureCounts summary of assignments mitocondorial-genes.'
+        path_filters:
+            - './featureCounts_Mitocondria/*'
+    - featureCounts:
+        name: 'featureCounts (summary of rRNA)'
+        anchor: 'featureCounts_summary_rrna'
+        info: 'This section of the report shows FeatureCounts summary of assignments rrna.'
+        path_filters:
+            - './featureCounts_rRNA/*'
+    - featureCounts:
+        name: 'featureCounts (summary of Histone genes)'
+        anchor: 'featureCounts_summary_histone'
+        info: 'This section of the report shows FeatureCounts summary of assignments histone.'
+        path_filters:
+            - './featureCounts_Histone/*'
     - fastqc:
         name: 'FastQC (raw, read1)'
         anchor: 'fastqc_raw_1'
