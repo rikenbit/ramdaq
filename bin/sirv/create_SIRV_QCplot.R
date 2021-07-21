@@ -75,8 +75,8 @@ create_SirvLengthTpm <- function(plotdata, plotpoint=F, outdir, title, output=T)
 ### load metadata & raw counts
 ###########################################################################
 
-SIRV_metadata = read.table(metadata_path, sep="\t", comment.char = "", header=T, stringsAsFactors=F)
-SIRV_counts= read.table(merged_counts_path, sep="\t", comment.char = "", header=T, stringsAsFactors=F)
+SIRV_metadata = read.table(metadata_path, sep="\t", comment.char = "", header=T, check.names=FALSE, stringsAsFactors=F)
+SIRV_counts= read.table(merged_counts_path, sep="\t", comment.char = "", header=T, check.names=FALSE, stringsAsFactors=F)
 
 ###########################################################################
 ### create TPM matrix

@@ -29,6 +29,7 @@ total_mapped_reads = data.frame(V1 = colnames(fcount_merged_data), mappedreads =
 
 plotdata = dplyr::left_join(totalseq_data, total_mapped_reads, by=c("V1"))
 colnames(plotdata) = c("samplename", "totalseq", "mappedreads")
+plotdata[is.na(plotdata)] <- 0
 
 if (isPairedEnd=="True"){
     plotdata$assignedRate = (plotdata$mappedreads / (plotdata$totalseq*2)) *100

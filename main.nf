@@ -276,9 +276,20 @@ ch_fcounts_histone_header = Channel.fromPath("$baseDir/assets/barplot_fcounts_hi
 ch_pcaplot_header = Channel.fromPath("$baseDir/assets/pcaplot_header.txt", checkIfExists: true)
 ch_tsneplot_header = Channel.fromPath("$baseDir/assets/tsneplot_header.txt", checkIfExists: true)
 ch_umapplot_header = Channel.fromPath("$baseDir/assets/umapplot_header.txt", checkIfExists: true)
-
 ch_num_of_gene_rsem_header = Channel.fromPath("$baseDir/assets/barplot_num_of_gene_rsem_header.txt", checkIfExists: true)
 ch_num_of_ts_rsem_header = Channel.fromPath("$baseDir/assets/barplot_num_of_ts_rsem_header.txt", checkIfExists: true)
+ch_entropy_of_sirv_header = Channel.fromPath("$baseDir/assets/barplot_entropy_of_sirv_header.txt", checkIfExists: true)
+
+ch_fcounts_allgene_header_gstat = Channel.fromPath("$baseDir/assets/gstat_fcounts_allgene_header.txt", checkIfExists: true)
+ch_fcounts_histone_header_gstat = Channel.fromPath("$baseDir/assets/gstat_fcounts_histone_header.txt", checkIfExists: true)
+ch_fcounts_mt_header_gstat = Channel.fromPath("$baseDir/assets/gstat_fcounts_mt_header.txt", checkIfExists: true)
+ch_fcounts_rrna_header_gstat = Channel.fromPath("$baseDir/assets/gstat_fcounts_rrna_header.txt", checkIfExists: true)
+ch_assignedgenome_header_gstat = Channel.fromPath("$baseDir/assets/gstat_assignedgenome_rate_header.txt", checkIfExists: true)
+ch_num_of_detgene_header_gstat = Channel.fromPath("$baseDir/assets/gstat_num_of_detgene_header.txt", checkIfExists: true)
+ch_num_of_ts_rsem_header_gstat = Channel.fromPath("$baseDir/assets/gstat_num_of_ts_rsem_header.txt", checkIfExists: true)
+ch_num_of_gene_rsem_header_gstat = Channel.fromPath("$baseDir/assets/gstat_num_of_gene_rsem_header.txt", checkIfExists: true)
+ch_ercc_corr_header_gstat = Channel.fromPath("$baseDir/assets/gstat_ercc_correlation_header.txt", checkIfExists: true)
+ch_entropy_of_sirv_header_gstat = Channel.fromPath("$baseDir/assets/gstat_entropy_of_sirv_header.txt", checkIfExists: true)
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
@@ -948,7 +959,7 @@ process merge_sirv_isoforms {
     file input_files from rsem_results_sirv_to_merge.collect()
 
     output:
-    file 'merged_rsemResults_SIRVome_isoforms.txt'
+    file 'merged_rsemResults_SIRVome_isoforms.txt' into rsem_tpm_sirv
 
     script:
     // Redirection (the `<()`) for the win!
@@ -1083,60 +1094,6 @@ process merge_rsemresults_isoforms {
     paste $gene_ids $counts > merged_rsemResults_isoforms_TPM.txt
     """
   }
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-* STEP 5-3 - create plot from RSEM TPM counts (genes)
-*/
-///////////////////////////////////////////////////////////////////////////////
-
-process create_plots_rsem_gene {
-    label 'process_medium'
-    publishDir "${params.outdir}/plots_from_tpmcounts_rsem", mode: 'copy'
-
-    input:
-    file tpm_count from rsem_tpm_gene
-    file detgene_header from ch_num_of_gene_rsem_header
-
-    output:
-    file "*.{txt,pdf,csv}" into plots_from_rsem_gene_results
-
-    script:
-    """
-    drawplot_tpm_counts.r $tpm_count rsem
-    cat $detgene_header barplot_num_of_gene_rsem.csv >> tmp_file
-    mv tmp_file barplot_num_of_gene_rsem_mqc.csv
-    
-    """
-
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-* STEP 5-4 - create plot from RSEM TPM counts (transcripts)
-*/
-///////////////////////////////////////////////////////////////////////////////
-
-process create_plots_rsem_ts {
-    label 'process_medium'
-    publishDir "${params.outdir}/plots_from_tpmcounts_rsem", mode: 'copy'
-
-    input:
-    file tpm_count from rsem_tpm_ts
-    file detts_header from ch_num_of_ts_rsem_header
-
-    output:
-    file "*.{txt,pdf,csv}" into plots_from_rsem_ts_results
-
-    script:
-    """
-    drawplot_tpm_counts_ts.r $tpm_count
-    cat $detts_header barplot_num_of_ts_rsem.csv >> tmp_file
-    mv tmp_file barplot_num_of_ts_rsem_mqc.csv
-    
-    """
-
-}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1676,11 +1633,10 @@ process sample_correlation {
 
 process ercc_correlation {
     label 'process_low'
-    
     publishDir "${params.outdir}/", mode: 'copy',
         saveAs: {filename ->
             filename.indexOf(".txt") > 0 ? "merged_output_files/$filename" : "ercc_correlation/$filename"
-            }
+        }
 
     when:
     ercc_list.val.size()>0 && (params.spike_in_ercc || params.spike_in_sirv)
@@ -1690,15 +1646,21 @@ process ercc_correlation {
     file ercc_count from ercccount_merged
     file ercc_data from ch_ercc_data
     file ercc_header from ch_ercc_corr_header
+    file ercc_header_gstat from ch_ercc_corr_header_gstat
 
     output:
-    file "*.{txt,pdf,csv}" into ercc_correlation_results
+    file "*.{txt,pdf}" into ercc_correlation_results
+    file "barplot_*.csv" into ercc_correlation_barplot
+    file "gstat_*.csv" into ercc_correlation_gstat
 
     script:
     """
     drawplot_ERCC_corr.r $ercc_count $ercc_data $ercc_input_amount
-    cat $ercc_header ercc_counts_copynum_correlation.csv >> tmp_file
-    mv tmp_file ercc_counts_copynum_correlation_mqc.csv
+    cp barplot_ercc_counts_copynum_correlation.csv gstat_ercc_counts_copynum_correlation.csv
+    cat $ercc_header barplot_ercc_counts_copynum_correlation.csv >> tmp_file
+    mv tmp_file barplot_ercc_counts_copynum_correlation_mqc.csv
+    cat $ercc_header_gstat gstat_ercc_counts_copynum_correlation.csv >> tmp_file
+    mv tmp_file gstat_ercc_counts_copynum_correlation_mqc.csv
     """
 
 }
@@ -1717,16 +1679,22 @@ process create_plots_assignedgenome {
     file totalseq_merged from ch_totalseq_assignedgenome
     file totalread_merged from ch_totalread_merged
     file assignedgenome_header from ch_assignedgenome_header
+    file assignedgenome_header_gstat from ch_assignedgenome_header_gstat
 
     output:
-    file "*.{txt,pdf,csv}" into assignedgenome_rate_results
+    file "*.{txt,pdf}" into assignedgenome_rate_results
+    file "barplot_*.csv" into assignedgenome_rate_barplot
+    file "gstat_*.csv" into assignedgenome_rate_gstat
 
     script:
     isPairedEnd = params.single_end ? "False" : "True"
     """
     drawplot_assignedgenomerate_bar.r $totalseq_merged $totalread_merged $isPairedEnd
+    cp barplot_assignedgenome_rate.csv gstat_assignedgenome_rate.csv
     cat $assignedgenome_header barplot_assignedgenome_rate.csv >> tmp_file
     mv tmp_file barplot_assignedgenome_rate_mqc.csv
+    cat $assignedgenome_header_gstat gstat_assignedgenome_rate.csv >> tmp_file
+    mv tmp_file gstat_assignedgenome_rate_mqc.csv
     """
 
 }
@@ -1745,17 +1713,23 @@ process create_plots_fcounts_allgene {
     file totalseq_merged from ch_totalseq_fcount_allgene
     file allgene_merged from ch_fcounts_allgene_merged
     file fcounts_allgene_header from ch_fcounts_allgene_header
+    file fcounts_allgene_header_gstat from ch_fcounts_allgene_header_gstat
 
     output:
-    file "*.{txt,pdf,csv}" into fcounts_allgene_results
+    file "*.{txt,pdf}" into fcounts_allgene_results
+    file "barplot_*.csv" into fcounts_allgene_barplot
+    file "gstat_*.csv" into fcounts_allgene_gstat
 
     script:
     isPairedEnd = params.single_end ? "False" : "True"
     annotation_name = "allgene"
     """
     drawplot_fcount_mappedrate_bar.r $totalseq_merged $allgene_merged $isPairedEnd $annotation_name
+    cp barplot_assignedrate_allgene.csv gstat_assignedrate_allgene.csv
     cat $fcounts_allgene_header barplot_assignedrate_allgene.csv >> tmp_file
     mv tmp_file barplot_assignedrate_allgene_mqc.csv
+    cat $fcounts_allgene_header_gstat gstat_assignedrate_allgene.csv >> tmp_file
+    mv tmp_file gstat_assignedrate_allgene_mqc.csv
     """
 
 }
@@ -1768,17 +1742,23 @@ process create_plots_fcounts_mt {
     file totalseq_merged from ch_totalseq_fcount_allgene
     file mt_merged from ch_fcounts_mt_merged
     file fcounts_mt_header from ch_fcounts_mt_header
+    file fcounts_mt_header_gstat from ch_fcounts_mt_header_gstat
 
     output:
-    file "*.{txt,pdf,csv}" into fcounts_mt_results
+    file "*.{txt,pdf}" into fcounts_mt_results
+    file "barplot_*.csv" into fcounts_mt_barplot
+    file "gstat_*.csv" into fcounts_mt_gstat
 
     script:
     isPairedEnd = params.single_end ? "False" : "True"
     annotation_name = "mitochondrial"
     """
     drawplot_fcount_mappedrate_bar.r $totalseq_merged $mt_merged $isPairedEnd $annotation_name
+    cp barplot_assignedrate_mitochondrial.csv gstat_assignedrate_mitochondrial.csv
     cat $fcounts_mt_header barplot_assignedrate_mitochondrial.csv >> tmp_file
     mv tmp_file barplot_assignedrate_mitochondrial_mqc.csv
+    cat $fcounts_mt_header_gstat gstat_assignedrate_mitochondrial.csv >> tmp_file
+    mv tmp_file gstat_assignedrate_mitochondrial_mqc.csv
     """
 
 }
@@ -1791,17 +1771,23 @@ process create_plots_fcounts_rrna {
     file totalseq_merged from ch_totalseq_fcount_allgene
     file rrna_merged from ch_fcounts_rrna_merged
     file fcounts_rrna_header from ch_fcounts_rrna_header
+    file fcounts_rrna_header_gstat from ch_fcounts_rrna_header_gstat
 
     output:
-    file "*.{txt,pdf,csv}" into fcounts_rrna_results
+    file "*.{txt,pdf}" into fcounts_rrna_results
+    file "barplot_*.csv" into fcounts_rrna_barplot
+    file "gstat_*.csv" into fcounts_rrna_gstat
 
     script:
     isPairedEnd = params.single_end ? "False" : "True"
     annotation_name = "rrna"
     """
     drawplot_fcount_mappedrate_bar.r $totalseq_merged $rrna_merged $isPairedEnd $annotation_name
+    cp barplot_assignedrate_rrna.csv gstat_assignedrate_rrna.csv
     cat $fcounts_rrna_header barplot_assignedrate_rrna.csv >> tmp_file
     mv tmp_file barplot_assignedrate_rrna_mqc.csv
+    cat $fcounts_rrna_header_gstat gstat_assignedrate_rrna.csv >> tmp_file
+    mv tmp_file gstat_assignedrate_rrna_mqc.csv
     """
 
 }
@@ -1815,17 +1801,23 @@ process create_plots_fcounts_histone {
     file totalseq_merged from ch_totalseq_fcount_allgene
     file histone_merged from ch_fcounts_histone_merged
     file fcounts_histone_header from ch_fcounts_histone_header
+    file fcounts_histone_header_gstat from ch_fcounts_histone_header_gstat
 
     output:
-    file "*.{txt,pdf,csv}" into fcounts_histone_results
+    file "*.{txt,pdf}" into fcounts_histone_results
+    file "barplot_*.csv" into fcounts_histone_barplot
+    file "gstat_*.csv" into fcounts_histone_gstat
 
     script:
     isPairedEnd = params.single_end ? "False" : "True"
     annotation_name = "histone"
     """
     drawplot_fcount_mappedrate_bar.r $totalseq_merged $histone_merged $isPairedEnd $annotation_name
+    cp barplot_assignedrate_histone.csv gstat_assignedrate_histone.csv
     cat $fcounts_histone_header barplot_assignedrate_histone.csv >> tmp_file
     mv tmp_file barplot_assignedrate_histone_mqc.csv
+    cat $fcounts_histone_header_gstat gstat_assignedrate_histone.csv >> tmp_file
+    mv tmp_file gstat_assignedrate_histone_mqc.csv
     """
 
 }
@@ -1843,18 +1835,24 @@ process create_plots_fromTPM {
     input:
     file tpm_count from tpmcount_plot
     file detgene_header from ch_num_of_detgene_header
+    file detgene_header_gstat from ch_num_of_detgene_header_gstat
     file pcaplot_header from ch_pcaplot_header
     file tsneplot_header from ch_tsneplot_header
     file umapplot_header from ch_umapplot_header
 
     output:
-    file "*.{txt,pdf,csv}" into plots_from_tpmcounts_results
+    file "*.{txt,pdf}" into plots_from_tpmcounts_results
+    file "barplot_*.csv" into tpmcounts_barplot
+    file "gstat_*.csv" into tpmcounts_gstat
 
     script:
     """
     drawplot_tpm_counts.r $tpm_count fcounts
+    cp barplot_num_of_detectedgene.csv gstat_num_of_detectedgene.csv
     cat $detgene_header barplot_num_of_detectedgene.csv >> tmp_file
     mv tmp_file barplot_num_of_detectedgene_mqc.csv
+    cat $detgene_header_gstat gstat_num_of_detectedgene.csv >> tmp_file
+    mv tmp_file gstat_num_of_detectedgene_mqc.csv
     
     if [[ -f pcaplot_tpm_allsample.csv ]]; then
         cat $pcaplot_header pcaplot_tpm_allsample.csv >> tmp_file
@@ -1875,6 +1873,89 @@ process create_plots_fromTPM {
 
 }
 
+///////////////////////////////////////////////////////////////////////////////
+/*
+* STEP 15 - create plot from RSEM TPM counts
+*/
+///////////////////////////////////////////////////////////////////////////////
+
+process create_plots_rsem_gene {
+    label 'process_medium'
+    publishDir "${params.outdir}/plots_from_tpmcounts_rsem", mode: 'copy'
+
+    input:
+    file tpm_count from rsem_tpm_gene
+    file detgene_header from ch_num_of_gene_rsem_header
+    file detgene_header_gstat from ch_num_of_gene_rsem_header_gstat
+
+    output:
+    file "*.{txt,pdf}" into plots_from_rsem_gene_results
+    file "barplot_*.csv" into rsem_gene_barplot
+    file "gstat_*.csv" into rsem_gene_gstat
+
+    script:
+    """
+    drawplot_tpm_counts.r $tpm_count rsem
+    cp barplot_num_of_gene_rsem.csv gstat_num_of_gene_rsem.csv
+    cat $detgene_header barplot_num_of_gene_rsem.csv >> tmp_file
+    mv tmp_file barplot_num_of_gene_rsem_mqc.csv
+    cat $detgene_header_gstat gstat_num_of_gene_rsem.csv >> tmp_file
+    mv tmp_file gstat_num_of_gene_rsem_mqc.csv
+    """
+
+}
+
+process create_plots_rsem_ts {
+    label 'process_medium'
+    publishDir "${params.outdir}/plots_from_tpmcounts_rsem", mode: 'copy'
+
+    input:
+    file tpm_count from rsem_tpm_ts
+    file detts_header from ch_num_of_ts_rsem_header
+    file detts_header_gstat from ch_num_of_ts_rsem_header_gstat
+
+    output:
+    file "*.{txt,pdf}" into plots_from_rsem_ts_results
+    file "barplot_*.csv" into rsem_ts_barplot
+    file "gstat_*.csv" into rsem_ts_gstat
+
+    script:
+    """
+    drawplot_tpm_counts_ts.r $tpm_count
+    cp barplot_num_of_ts_rsem.csv gstat_num_of_ts_rsem.csv
+    cat $detts_header barplot_num_of_ts_rsem.csv >> tmp_file
+    mv tmp_file barplot_num_of_ts_rsem_mqc.csv
+    cat $detts_header_gstat gstat_num_of_ts_rsem.csv >> tmp_file
+    mv tmp_file gstat_num_of_ts_rsem_mqc.csv
+    """
+
+}
+
+process create_plots_entropy_sirv {
+    label 'process_medium'
+    publishDir "${params.outdir}/plots_from_rsem_sirv", mode: 'copy'
+
+    input:
+    file tpm_count from rsem_tpm_sirv
+    file entropy_header from ch_entropy_of_sirv_header
+    file entropy_header_gstat from ch_entropy_of_sirv_header_gstat
+
+    output:
+    file "*.{txt,pdf}" into plots_from_rsem_sirv_results
+    file "barplot_*.csv" into rsem_sirv_barplot
+    file "gstat_*.csv" into rsem_sirv_gstat
+
+    script:
+    """
+    drawplot_sirv_entropy.r $tpm_count
+    cp barplot_entropy_of_sirv.csv gstat_entropy_of_sirv.csv
+    cat $entropy_header barplot_entropy_of_sirv.csv >> tmp_file
+    mv tmp_file barplot_entropy_of_sirv_mqc.csv
+    cat $entropy_header_gstat gstat_entropy_of_sirv.csv >> tmp_file
+    mv tmp_file gstat_entropy_of_sirv_mqc.csv 
+    """
+
+}
 
 
 
@@ -1899,15 +1980,31 @@ process multiqc {
     file ('featureCounts_biotype/*') from featureCounts_biotype.collect()
     file ('rsem_bowtie2_allgenes/*') from rsem_results_genes_stat.collect().ifEmpty([])
     file ('sample_correlation_results/*') from sample_correlation_results.collect().ifEmpty([]) // If the Edge-R is not run create an Empty array
-    file ('ercc_correlation_results/*') from ercc_correlation_results.collect().ifEmpty([]) 
-    file ('plots_bar_assignedgenome/*') from assignedgenome_rate_results.collect().ifEmpty([]) 
-    file ('plots_bar_fcounts_allgene/*') from fcounts_allgene_results.collect().ifEmpty([]) 
-    file ('plots_bar_fcounts_mt/*') from fcounts_mt_results.collect().ifEmpty([]) 
-    file ('plots_bar_fcounts_rrna/*') from fcounts_rrna_results.collect().ifEmpty([]) 
-    file ('plots_bar_fcounts_histone/*') from fcounts_histone_results.collect().ifEmpty([]) 
+    file ('ercc_correlation_results/*') from ercc_correlation_barplot.collect().ifEmpty([]) 
+    file ('ercc_correlation_results/*') from ercc_correlation_gstat.collect().ifEmpty([]) 
+    file ('featureCounts/*') from featureCounts_logs.collect().ifEmpty([])
+    file ('featureCounts_Mitocondria/*') from featureCounts_logs_mt.collect().ifEmpty([])
+    file ('featureCounts_rRNA/*') from featureCounts_logs_rrna.collect().ifEmpty([])
+    file ('featureCounts_Histone/*') from featureCounts_logs_histone.collect().ifEmpty([])
+    file ('plots_bar_assignedgenome/*') from assignedgenome_rate_barplot.collect().ifEmpty([]) 
+    file ('plots_bar_assignedgenome/*') from assignedgenome_rate_gstat.collect().ifEmpty([])
+    file ('plots_bar_fcounts_allgene/*') from fcounts_allgene_barplot.collect().ifEmpty([]) 
+    file ('plots_bar_fcounts_allgene/*') from fcounts_allgene_gstat.collect().ifEmpty([]) 
+    file ('plots_bar_fcounts_mt/*') from fcounts_mt_barplot.collect().ifEmpty([]) 
+    file ('plots_bar_fcounts_mt/*') from fcounts_mt_gstat.collect().ifEmpty([]) 
+    file ('plots_bar_fcounts_rrna/*') from fcounts_rrna_barplot.collect().ifEmpty([]) 
+    file ('plots_bar_fcounts_rrna/*') from fcounts_rrna_gstat.collect().ifEmpty([]) 
+    file ('plots_bar_fcounts_histone/*') from fcounts_histone_barplot.collect().ifEmpty([]) 
+    file ('plots_bar_fcounts_histone/*') from fcounts_histone_gstat.collect().ifEmpty([]) 
     file ('plots_from_tpmcounts/*') from plots_from_tpmcounts_results.collect().ifEmpty([])
-    file ('plots_from_tpmcounts_rsem/*') from plots_from_rsem_gene_results.collect().ifEmpty([])
-    file ('plots_from_tpmcounts_rsem/*') from plots_from_rsem_ts_results.collect().ifEmpty([])
+    file ('plots_from_tpmcounts/*') from tpmcounts_barplot.collect().ifEmpty([])
+    file ('plots_from_tpmcounts/*') from tpmcounts_gstat.collect().ifEmpty([])
+    file ('plots_from_tpmcounts_rsem/*') from rsem_gene_barplot.collect().ifEmpty([])
+    file ('plots_from_tpmcounts_rsem/*') from rsem_gene_gstat.collect().ifEmpty([])
+    file ('plots_from_tpmcounts_rsem/*') from rsem_ts_barplot.collect().ifEmpty([])
+    file ('plots_from_tpmcounts_rsem/*') from rsem_ts_gstat.collect().ifEmpty([])
+    file ('plots_from_rsem_sirv/*') from rsem_sirv_barplot.collect().ifEmpty([])
+    file ('plots_from_rsem_sirv/*') from rsem_sirv_gstat.collect().ifEmpty([])
     file ('software_versions/*') from ch_software_versions_yaml.collect()
     file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
 

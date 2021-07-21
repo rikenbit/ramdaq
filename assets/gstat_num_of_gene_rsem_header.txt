@@ -1,0 +1,9 @@
+#id: 'num_of_gene_rsem_gstat'
+#plot_type: 'generalstats'
+#anchor: 'num_of_gene_rsem_gstat'
+#pconfig:
+#    NumOfGenes:
+#        title: 'NumOfGeneRsem'
+#        namespace: 'NumOfGeneRsem'
+#        description: 'Number of detected genes from RSEM'
+#        format: '{:.0f}'

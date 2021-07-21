@@ -53,12 +53,12 @@ g = ggplot(plotdata, aes(x=x,y=y)) +
     theme(axis.text.x=element_text(size=6, angle=90, hjust=1), legend.text=element_text(size=8)) +
     ggtitle("ERCC counts and copy number correlation")
 
-ggsave(file = "ERCC_counts_copynum_correlation.pdf", plot=g, dpi=100, width=12, height=5)
+ggsave(file = "barplot_ercc_counts_copynum_correlation.pdf", plot=g, dpi=100, width=12, height=5)
 
 # Write correlation values to file
 output_data = data.frame(name = plotdata$x, corr=plotdata$y)
 rownames(output_data) = output_data$name
-write.csv(output_data, 'ercc_counts_copynum_correlation.csv', quote=FALSE, append=TRUE)
+write.csv(output_data, 'barplot_ercc_counts_copynum_correlation.csv', quote=FALSE, append=TRUE)
 
 # Printing sessioninfo to standard out
 print("Draw ERCC correlation plot info:")

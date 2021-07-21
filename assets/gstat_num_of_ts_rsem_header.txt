@@ -1,0 +1,10 @@
+#id: 'num_of_ts_rsem_gstat'
+#plot_type: 'generalstats'
+#anchor: 'num_of_ts_rsem_gstat'
+#pconfig:
+#    NumOfTs:
+#        title: 'NumOfTsRsem'
+#        namespace: 'NumOfTsRsem'
+#        description: 'Number of detected transcripts from RSEM'
+#        format: '{:.0f}'
+

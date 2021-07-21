@@ -1,0 +1,11 @@
+#id: 'ercc_correlation_gstat'
+#plot_type: 'generalstats'
+#anchor: 'ercc_correlation_gstat'
+#pconfig:
+#    corr:
+#        title: 'CorrOfErcc'
+#        namespace: 'CorrOfErcc'
+#        description: 'ERCC counts and copy number correlation'
+#        max: 1
+#        min: 0
+#        format: '{:.2f}'

@@ -115,10 +115,17 @@ We output more detailed QC plots using our own custom rRNA, mitochondrial, and h
 * `merged_featureCounts_gene_ERCC_log.txt`
   * Matrix of ERCC (RNA Spike-in Controls for Gene Expression) base-10 logarithm count. Output only if the sample contains ERCC.
 
+* featureCounts biotype plot
 ![MultiQC - featureCounts biotype plot](images/report_figsamples/mqc_featureCounts_biotype_plot_1.png)
 
+* featureCounts alignment summary plot
+![MultiQC - featureCounts alignment plot](images/report_figsamples/mqc_featureCounts_assignment_plot_1.png)
+
+* featureCounts assigned rate plot
+  * This plot calculates the assigned rate in a different mothod than the featureCounts alignment summary plot. If `--count_fractionally`, `--allow_overlap`, and `--allow_multimap` options for featureCounts are set (by default), the rate is calculated based on fractional counts: When a read has `x` alignments (multi-mapping) and overlaps with `y` meta-features/features, each overlapping meta-features/features will receive a fractional count of `1/(x*y)`.
 ![MultiQC - featureCounts assigned rate plot](images/report_figsamples/mqc_rate_of_allgene_barplot_1.png)
 
+* ercc_correlation_barplot
 ![MultiQC - ERCC correlation plot](images/report_figsamples/mqc_ercc_correlation_barplot_1.png)
 
 ## RSeQC
