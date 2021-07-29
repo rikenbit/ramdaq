@@ -5,6 +5,14 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## v1.3 (`-r 1.3`) [2021-07-29]
+
+### `v1.3 Added`
+
+- Added SIRV entropy bar plot as new SIRV QC plot
+- Added columns to the General Statistics table for all bar plots
+- Added the summary plot of featurecounts in MultiQC
+
 ## v1.2.2 (`-r 1.2.2`) [2021-06-22]
 
 ### `v1.2.2 Fixed`
