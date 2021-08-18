@@ -20,7 +20,18 @@ read_count_desc: "thousands"
 module_order:
     - rseqc
     - rsem
-    - bowtie2
+    - bowtie2:
+        name: 'hisat2 summary of whole genomes'
+        anchor: 'hisat2_whole'
+        info: 'This section of the report shows hisat2 summary of alignments whole genomes.'
+        path_filters:
+            - './hisat2/*'
+    - bowtie2:
+        name: 'hisat2 summary of rRNA genomes'
+        anchor: 'hisat2_rrna'
+        info: 'This section of the report shows hisat2 summary of alignments rRNA genomes.'
+        path_filters:
+            - './hisat2_rrna/*'
     - featureCounts:
         name: 'featureCounts (summary of all genes)'
         anchor: 'featureCounts_summary_all'

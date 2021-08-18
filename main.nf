@@ -96,6 +96,7 @@ if (params.genomes && params.genome && !params.genomes.containsKey(params.genome
 // Configurable variables
 params.adapter = params.genome ? params.genomes[ params.genome ].adapter ?: false : false
 params.hisat2_idx = params.genome ? params.genomes[ params.genome ].hisat2_idx ?: false : false
+params.hisat2_rrna_idx = params.genome ? params.genomes[ params.genome ].hisat2_rrna_idx ?: false : false
 params.chrsize = params.genome ? params.genomes[ params.genome ].chrsize ?: false : false
 params.bed = params.genome ? params.genomes[ params.genome ].bed ?: false : false
 params.gtf = params.genome ? params.genomes[ params.genome ].gtf ?: false : false
@@ -145,7 +146,37 @@ if (params.hisat2_idx) {
         .flatMap{file(params.hisat2_idx, checkIfExists: true)}
         .ifEmpty { exit 1, "HISAT2 index files not found: ${params.hisat2_idx}" }
         
-        //ch_hisat2_idx = file(params.hisat2_idx, checkIfExists: true)
+    }
+}
+
+if (params.hisat2_rrna_idx) {
+    if (params.hisat2_rrna_idx.endsWith('.tar.gz')) {
+        file(params.hisat2_rrna_idx, checkIfExists: true)
+
+        process untar_hisat2_rrna_idx {
+            label 'process_low'
+            publishDir path: { params.saveReference ? "${params.outdir}/reference_genome/hisat2_rrna" : params.outdir },
+               saveAs: { params.saveReference ? it : null }, mode: 'copy'
+
+            input:
+            path gz from params.hisat2_rrna_idx
+
+            output:
+            file "$untar/*.ht2" into ch_hisat2_rrna_idx
+
+            script:
+            untar = gz.toString() - '.tar.gz'
+            """
+            tar -xvf $gz
+            """
+        }
+        
+    } else {
+        ch_hisat2_rrna_idx = Channel
+        .from(params.hisat2_rrna_idx)
+        .flatMap{file(params.hisat2_rrna_idx, checkIfExists: true)}
+        .ifEmpty { exit 1, "HISAT2 rrna index files not found: ${params.hisat2_rrna_idx}" }
+    
     }
 }
 
@@ -271,7 +302,6 @@ ch_assignedgenome_header = Channel.fromPath("$baseDir/assets/barplot_assignedgen
 ch_num_of_detgene_header = Channel.fromPath("$baseDir/assets/barplot_num_of_detgene_header.txt", checkIfExists: true)
 ch_fcounts_allgene_header = Channel.fromPath("$baseDir/assets/barplot_fcounts_allgene_header.txt", checkIfExists: true)
 ch_fcounts_mt_header = Channel.fromPath("$baseDir/assets/barplot_fcounts_mt_header.txt", checkIfExists: true)
-ch_fcounts_rrna_header = Channel.fromPath("$baseDir/assets/barplot_fcounts_rrna_header.txt", checkIfExists: true)
 ch_fcounts_histone_header = Channel.fromPath("$baseDir/assets/barplot_fcounts_histone_header.txt", checkIfExists: true)
 ch_pcaplot_header = Channel.fromPath("$baseDir/assets/pcaplot_header.txt", checkIfExists: true)
 ch_tsneplot_header = Channel.fromPath("$baseDir/assets/tsneplot_header.txt", checkIfExists: true)
@@ -283,7 +313,6 @@ ch_entropy_of_sirv_header = Channel.fromPath("$baseDir/assets/barplot_entropy_of
 ch_fcounts_allgene_header_gstat = Channel.fromPath("$baseDir/assets/gstat_fcounts_allgene_header.txt", checkIfExists: true)
 ch_fcounts_histone_header_gstat = Channel.fromPath("$baseDir/assets/gstat_fcounts_histone_header.txt", checkIfExists: true)
 ch_fcounts_mt_header_gstat = Channel.fromPath("$baseDir/assets/gstat_fcounts_mt_header.txt", checkIfExists: true)
-ch_fcounts_rrna_header_gstat = Channel.fromPath("$baseDir/assets/gstat_fcounts_rrna_header.txt", checkIfExists: true)
 ch_assignedgenome_header_gstat = Channel.fromPath("$baseDir/assets/gstat_assignedgenome_rate_header.txt", checkIfExists: true)
 ch_num_of_detgene_header_gstat = Channel.fromPath("$baseDir/assets/gstat_num_of_detgene_header.txt", checkIfExists: true)
 ch_num_of_ts_rsem_header_gstat = Channel.fromPath("$baseDir/assets/gstat_num_of_ts_rsem_header.txt", checkIfExists: true)
@@ -339,6 +368,7 @@ if (params.stranded)  {
 }
 summary['Save Reference']   = params.saveReference ? 'Yes' : 'No'
 if (params.hisat2_idx) summary['HISAT2 Index'] = params.hisat2_idx
+if (params.hisat2_rrna_idx) summary['HISAT2 rRNA Index'] = params.hisat2_rrna_idx
 if (params.hisat2_sirv_idx) summary['HISAT2 SIRVome Index'] = params.hisat2_sirv_idx
 if (params.rsem_sirv_idx) summary['RSEM-Bowtie2 SIRVome Index'] = params.rsem_sirv_idx
 if (params.rsem_allgene_idx) summary['RSEM-Bowtie2 All genes Index'] = params.rsem_allgene_idx
@@ -516,6 +546,7 @@ ch_trimmed_reads
     .into{
         ch_trimmed_reads_tofastqc;
         ch_trimmed_reads_tohisat2;
+        ch_trimmed_reads_tohisat2_rrna;
         ch_trimmed_reads_tosirv_hisat2;
         ch_trimmed_reads_tosirv_rsem
         ch_trimmed_reads_toallgene_rsem
@@ -748,7 +779,78 @@ ch_hisat2_bamcount
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
-* STEP 4-2 - Hisat2 (SIRVome)
+* STEP 4-2 - Hisat2 (rRNA)
+*/
+///////////////////////////////////////////////////////////////////////////////
+
+process hisat2_rrna {
+    tag "$name"
+    label 'process_high'
+    
+    publishDir "${params.outdir}/hisat2_rrna", mode: 'copy', overwrite: true,
+        saveAs: { filename ->
+                    filename.indexOf("_summary.txt") > 0 ? "logs/$filename" : "$filename"
+                }
+
+    input:
+    set val(name), file(reads) from ch_trimmed_reads_tohisat2_rrna
+    file hs2_indices from ch_hisat2_rrna_idx.collect()
+
+    output:
+    set val(name), file("*.bam"), file("*.bai"), file("*.flagstat") into ch_hisat2_rrna_bam
+    file "*_summary.txt" into ch_alignment_rrna_logs
+
+    script:
+    def strandness = ''
+    if (params.stranded == 'fr-firststrand') {
+        strandness = params.single_end ? "--rna-strandness R" : "--rna-strandness RF"
+    } else if (params.stranded == 'fr-secondstrand'){
+        strandness = params.single_end ? "--rna-strandness F" : "--rna-strandness FR"
+    }
+    softclipping = params.softclipping ? '' : "--no-softclip"
+    threads_num = params.hs_threads_num > 0 ? "-p ${params.hs_threads_num}" : ''
+    index_base = hs2_indices[0].toString() - ~/.\d.ht2l?/
+    rrna_options = "-k 5 -X 800 --sp 1000,1000"
+
+    if (params.single_end) {
+        if (params.stranded && params.stranded != 'unstranded') {
+            """
+            hisat2 $softclipping $threads_num -x $index_base -U $reads $strandness $rrna_options --summary-file ${name}_summary.txt \\
+            | samtools view -bS - | samtools sort - -o ${name}.rrna.bam
+            samtools index ${name}.rrna.bam
+            samtools flagstat ${name}.rrna.bam > ${name}.rrna.bam.flagstat
+            """
+        } else {
+            """
+            hisat2 $softclipping $threads_num -x $index_base -U $reads $rrna_options --summary-file ${name}_summary.txt \\
+            | samtools view -bS - | samtools sort - -o ${name}.rrna.bam
+            samtools index ${name}.rrna.bam
+            samtools flagstat ${name}.rrna.bam > ${name}.rrna.bam.flagstat
+            """
+        }
+
+    } else {
+        if (params.stranded && params.stranded != 'unstranded') {
+            """
+            hisat2 $softclipping $threads_num -x $index_base -1 ${reads[0]} -2 ${reads[1]} $strandness $rrna_options --summary-file ${name}_summary.txt \\
+            | samtools view -bS - | samtools sort - -o ${name}.rrna.bam
+            samtools index ${name}.rrna.bam
+            samtools flagstat ${name}.rrna.bam > ${name}.rrna.bam.flagstat
+            """
+        } else {
+            """
+            hisat2 $softclipping $threads_num -x $index_base -1 ${reads[0]} -2 ${reads[1]} $rrna_options --summary-file ${name}_summary.txt \\
+            | samtools view -bS - | samtools sort - -o ${name}.rrna.bam
+            samtools index ${name}.rrna.bam
+            samtools flagstat ${name}.rrna.bam > ${name}.rrna.bam.flagstat
+            """
+        }
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+* STEP 4-3 - Hisat2 (SIRVome)
 */
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1456,6 +1558,7 @@ process merge_featureCounts_mt {
     """
   }
 
+
 ///////////////////////////////////////////////////////////////////////////////
 /*
 * STEP 9-3 - FeatureCounts (rRNA GTF) 
@@ -1503,26 +1606,29 @@ process featureCounts_rrna  {
     """
 }
 
-process merge_featureCounts_rrna {
+
+process merge_featureCountsSummary_rrna {
     publishDir "${params.outdir}/merged_output_files", mode: 'copy'
 
     input:
-    file input_files from featureCounts_to_merge_rrna.collect()
+    file input_files from featureCounts_logs_rrna.collect()
 
     output:
-    file 'merged_featureCounts_gene_rrna.txt' into ch_fcounts_rrna_merged
+    file 'merged_featureCounts_summary_rrna.txt' into ch_fcounts_rrna_merged
 
     script:
     // Redirection (the `<()`) for the win!
     // Geneid in 1st column and gene_name in 7th
-    gene_ids = "<(tail -n +2 ${input_files[0]} | cut -f1,6,7 )"
+    column_name = "<(tail -n +1 ${input_files[0]} | cut -f1 | sed 's:Status:Sample:')"
     counts = input_files.collect{filename ->
       // Remove first line and take third column
-      "<(tail -n +2 ${filename} | sed 's:.bam::' | cut -f8)"}.join(" ")
+      "<(tail -n +1 ${filename} | sed 's:.bam::' | cut -f2)"}.join(" ")
     """
-    paste $gene_ids $counts > merged_featureCounts_gene_rrna.txt
+    paste $column_name $counts > merged_summary_rrna.txt
+    calc_summary_featureCounts.r merged_summary_rrna.txt
     """
   }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 /*
@@ -1763,36 +1869,6 @@ process create_plots_fcounts_mt {
 
 }
 
-process create_plots_fcounts_rrna {
-    label 'process_low'
-    publishDir "${params.outdir}/plots_bar_fcounts_rrna", mode: 'copy'
-
-    input:
-    file totalseq_merged from ch_totalseq_fcount_allgene
-    file rrna_merged from ch_fcounts_rrna_merged
-    file fcounts_rrna_header from ch_fcounts_rrna_header
-    file fcounts_rrna_header_gstat from ch_fcounts_rrna_header_gstat
-
-    output:
-    file "*.{txt,pdf}" into fcounts_rrna_results
-    file "barplot_*.csv" into fcounts_rrna_barplot
-    file "gstat_*.csv" into fcounts_rrna_gstat
-
-    script:
-    isPairedEnd = params.single_end ? "False" : "True"
-    annotation_name = "rrna"
-    """
-    drawplot_fcount_mappedrate_bar.r $totalseq_merged $rrna_merged $isPairedEnd $annotation_name
-    cp barplot_assignedrate_rrna.csv gstat_assignedrate_rrna.csv
-    cat $fcounts_rrna_header barplot_assignedrate_rrna.csv >> tmp_file
-    mv tmp_file barplot_assignedrate_rrna_mqc.csv
-    cat $fcounts_rrna_header_gstat gstat_assignedrate_rrna.csv >> tmp_file
-    mv tmp_file gstat_assignedrate_rrna_mqc.csv
-    """
-
-}
-
-
 process create_plots_fcounts_histone {
     label 'process_low'
     publishDir "${params.outdir}/plots_bar_fcounts_histone", mode: 'copy'
@@ -1975,7 +2051,8 @@ process multiqc {
     file (mqc_custom_config) from ch_multiqc_custom_config.collect().ifEmpty([])
     file ('fastqc/*') from ch_fastqc_results.collect().ifEmpty([])
     file ('fastqc/*') from ch_trimmed_reads_fastqc_results.collect().ifEmpty([])
-    file ('alignment/*') from ch_alignment_logs.collect().ifEmpty([])
+    file ('hisat2/*') from ch_alignment_logs.collect().ifEmpty([])
+    file ('hisat2_rrna/*') from ch_alignment_rrna_logs.collect().ifEmpty([])
     file ('rseqc/*') from rseqc_results_merge.collect().ifEmpty([])
     file ('featureCounts_biotype/*') from featureCounts_biotype.collect()
     file ('rsem_bowtie2_allgenes/*') from rsem_results_genes_stat.collect().ifEmpty([])
@@ -1984,7 +2061,6 @@ process multiqc {
     file ('ercc_correlation_results/*') from ercc_correlation_gstat.collect().ifEmpty([]) 
     file ('featureCounts/*') from featureCounts_logs.collect().ifEmpty([])
     file ('featureCounts_Mitocondria/*') from featureCounts_logs_mt.collect().ifEmpty([])
-    file ('featureCounts_rRNA/*') from featureCounts_logs_rrna.collect().ifEmpty([])
     file ('featureCounts_Histone/*') from featureCounts_logs_histone.collect().ifEmpty([])
     file ('plots_bar_assignedgenome/*') from assignedgenome_rate_barplot.collect().ifEmpty([]) 
     file ('plots_bar_assignedgenome/*') from assignedgenome_rate_gstat.collect().ifEmpty([])
@@ -1992,8 +2068,6 @@ process multiqc {
     file ('plots_bar_fcounts_allgene/*') from fcounts_allgene_gstat.collect().ifEmpty([]) 
     file ('plots_bar_fcounts_mt/*') from fcounts_mt_barplot.collect().ifEmpty([]) 
     file ('plots_bar_fcounts_mt/*') from fcounts_mt_gstat.collect().ifEmpty([]) 
-    file ('plots_bar_fcounts_rrna/*') from fcounts_rrna_barplot.collect().ifEmpty([]) 
-    file ('plots_bar_fcounts_rrna/*') from fcounts_rrna_gstat.collect().ifEmpty([]) 
     file ('plots_bar_fcounts_histone/*') from fcounts_histone_barplot.collect().ifEmpty([]) 
     file ('plots_bar_fcounts_histone/*') from fcounts_histone_gstat.collect().ifEmpty([]) 
     file ('plots_from_tpmcounts/*') from plots_from_tpmcounts_results.collect().ifEmpty([])
