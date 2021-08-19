@@ -12,13 +12,14 @@ and processes data using the following steps:
 * [FastQC](#fastqc) - read quality control
 * [fastq-mcf](#fastq-mcf) - fastq trimming
 * [HISAT2](#hisat2) - memory efficient splice aware alignment to a reference
-* [SAMtools](#samtools) - Sort and index alignments
-* [featureCounts](#featurecounts) - Read counting relative to gene and biotype
-* [RSeQC](#rseqc) - Various RNA-seq QC metrics
+* [HISAT2 with rRNA reference](#hisat2-with-rrna-reference) - mapped to the reference rRNA sequences
+* [SAMtools](#samtools) - sort and index alignments
+* [featureCounts](#featurecounts) - read counting relative to gene and biotype
+* [RSeQC](#rseqc) - various RNA-seq QC metrics
 * [ReadCoverage.jl](#readcoverage.jl)
-* [RSEM via Bowtie2](#rsem-via-bowtie2) - Alignment and quantification of expression levels
+* [RSEM via Bowtie2](#rsem-via-bowtie2) - alignment and quantification of expression levels
 * [MultiQC](#multiqc) - aggregate report, describing results of the whole pipeline
-* [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
+* [Pipeline information](#pipeline-information) - report metrics generated during the workflow execution
 
 All output files are saved at `results` directory. If you want to name it arbitrarily, you can change the directory name with the `--outdir [dirname]` option.
 
