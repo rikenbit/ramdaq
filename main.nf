@@ -1379,7 +1379,7 @@ process merge_readcoverage_sirv {
     file input_files from readcov_sirv_results.collect()
 
     output:
-    file '*.tsv' into ch_readcoverage_sirv_merged
+    file '*.gz' into ch_readcoverage_sirv_merged
 
     script:
     command = input_files.collect{filename ->
@@ -1387,8 +1387,8 @@ process merge_readcoverage_sirv {
 
     """
     echo -e "SIRV\tposition\tcoverage\tbam" > merged_readcoverage_SIRVome.tsv
-    
     $command
+    gzip merged_readcoverage_SIRVome.tsv
     """
 }
 
