@@ -5,6 +5,13 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## v1.4 (`-r 1.4`) [2021-08-23]
+
+### `v2.0 Added`
+
+- Added new rRNA quantification process and multiQC plot. More accurate % rRNA is acheived by mapping reads on rRNA sequences using HISAT2.
+- Gzip-compressed output of `merge_readcoverage_sirv`
+
 ## v1.3 (`-r 1.3`) [2021-07-29]
 
 ### `v1.3 Added`
