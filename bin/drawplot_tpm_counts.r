@@ -113,34 +113,34 @@ if (tool_name=="fcounts"){
     countdata_pca_data = create_pca_tsne_umap_mode(countdata_log, mode="pca", perplexity=10, local_connectivity=1.0, n_neighbors=15)
 
     if (!is.null(countdata_pca_data)){
-      g1 = ggplot_2D(countdata_pca_data[["data_df"]], "PC1", "PC2", "pcaplot_tpm_allsample", "")
-      ggsave(file = "pcaplot_tpm_allsample.pdf", plot=g1, dpi=100, width=8, height=7)
+      g1 = ggplot_2D(countdata_pca_data[["data_df"]], "PC1", "PC2", "DRplot_pca_allsample", "")
+      ggsave(file = "DRplot_pca_allsample.pdf", plot=g1, dpi=100, width=8, height=7)
       outputdata = countdata_pca_data[["data_df"]][,1:2]
       rownames(outputdata) = colnames(countdata_log)
-      write.csv(outputdata, 'pcaplot_tpm_allsample.csv', quote=FALSE, append=TRUE)
+      write.csv(outputdata, 'DRplot_pca_allsample.csv', quote=FALSE, append=TRUE)
     } 
 
     ### draw tsneplot
     countdata_tsne_data = create_pca_tsne_umap_mode(countdata_log, mode="tsne", perplexity=10, local_connectivity=1.0, n_neighbors=15)  
 
     if (!is.null(countdata_tsne_data)){
-      g2 = ggplot_2D(countdata_tsne_data[["data_df"]], "V1", "V2", "tsneplot_tpm_allsample", "")
-      ggsave(file = "tsneplot_tpm_allsample.pdf", plot=g2, dpi=100, width=8, height=7)  
+      g2 = ggplot_2D(countdata_tsne_data[["data_df"]], "V1", "V2", "DRplot_tsne_allsample", "")
+      ggsave(file = "DRplot_tsne_allsample.pdf", plot=g2, dpi=100, width=8, height=7)  
 
       outputdata = countdata_tsne_data[["data_df"]][,1:2]
       rownames(outputdata) = colnames(countdata_log)
-      write.csv(outputdata, 'tsneplot_tpm_allsample.csv', quote=FALSE, append=TRUE)
+      write.csv(outputdata, 'DRplot_tsne_allsample.csv', quote=FALSE, append=TRUE)
     } 
 
     ### draw umapplot
     countdata_umap_data = create_pca_tsne_umap_mode(countdata_log, mode="umap", perplexity=10, local_connectivity=1.0, n_neighbors=15)  
 
     if (!is.null(countdata_umap_data)){
-      g3 = ggplot_2D(countdata_umap_data[["data_df"]], "V1", "V2", "umapplot_tpm_allsample", "")
-      ggsave(file = "umapplot_tpm_allsample.pdf", plot=g3, dpi=100, width=8, height=7)
+      g3 = ggplot_2D(countdata_umap_data[["data_df"]], "V1", "V2", "DRplot_umap_allsample", "")
+      ggsave(file = "DRplot_umap_allsample.pdf", plot=g3, dpi=100, width=8, height=7)
       outputdata = countdata_umap_data[["data_df"]][,1:2]
       rownames(outputdata) = colnames(countdata_log)
-      write.csv(outputdata, 'umapplot_tpm_allsample.csv', quote=FALSE, append=TRUE)
+      write.csv(outputdata, 'DRplot_umap_allsample.csv', quote=FALSE, append=TRUE)
     } 
   }
 }
