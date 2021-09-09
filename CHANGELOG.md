@@ -5,6 +5,12 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## v1.4.1 (`-r 1.4.1`) [2021-09-09]
+
+### `v1.4.1 Fixed`
+
+- Fixed the problem that dimensional reduction plots are not displayed in the MulitiQC report
+
 ## v1.4 (`-r 1.4`) [2021-08-23]
 
 ### `v1.4 Added`
