@@ -1918,6 +1918,7 @@ process create_plots_fromTPM {
 
     output:
     file "*.{txt,pdf}" into plots_from_tpmcounts_results
+    file "DRplot_*.csv" into tpmcounts_DRplot
     file "barplot_*.csv" into tpmcounts_barplot
     file "gstat_*.csv" into tpmcounts_gstat
 
@@ -1930,19 +1931,19 @@ process create_plots_fromTPM {
     cat $detgene_header_gstat gstat_num_of_detectedgene.csv >> tmp_file
     mv tmp_file gstat_num_of_detectedgene_mqc.csv
     
-    if [[ -f pcaplot_tpm_allsample.csv ]]; then
-        cat $pcaplot_header pcaplot_tpm_allsample.csv >> tmp_file
-        mv tmp_file pcaplot_tpm_allsample_mqc.csv
+    if [[ -f DRplot_pca_allsample.csv ]]; then
+        cat $pcaplot_header DRplot_pca_allsample.csv >> tmp_file
+        mv tmp_file DRplot_pca_allsample_mqc.csv
     fi
     
-    if [[ -f tsneplot_tpm_allsample.csv ]]; then
-        cat $tsneplot_header tsneplot_tpm_allsample.csv >> tmp_file
-        mv tmp_file tsneplot_tpm_allsample_mqc.csv
+    if [[ -f DRplot_tsne_allsample.csv ]]; then
+        cat $tsneplot_header DRplot_tsne_allsample.csv >> tmp_file
+        mv tmp_file DRplot_tsne_allsample_mqc.csv
     fi
 
-    if [[ -f umapplot_tpm_allsample.csv ]]; then
-        cat $umapplot_header umapplot_tpm_allsample.csv >> tmp_file
-        mv tmp_file umapplot_tpm_allsample_mqc.csv
+    if [[ -f DRplot_umap_allsample.csv ]]; then
+        cat $umapplot_header DRplot_umap_allsample.csv >> tmp_file
+        mv tmp_file DRplot_umap_allsample_mqc.csv
     fi
     
     """
@@ -2071,6 +2072,7 @@ process multiqc {
     file ('plots_bar_fcounts_histone/*') from fcounts_histone_barplot.collect().ifEmpty([]) 
     file ('plots_bar_fcounts_histone/*') from fcounts_histone_gstat.collect().ifEmpty([]) 
     file ('plots_from_tpmcounts/*') from plots_from_tpmcounts_results.collect().ifEmpty([])
+    file ('plots_from_tpmcounts/*') from tpmcounts_DRplot.collect().ifEmpty([])
     file ('plots_from_tpmcounts/*') from tpmcounts_barplot.collect().ifEmpty([])
     file ('plots_from_tpmcounts/*') from tpmcounts_gstat.collect().ifEmpty([])
     file ('plots_from_tpmcounts_rsem/*') from rsem_gene_barplot.collect().ifEmpty([])
