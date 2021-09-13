@@ -1,4 +1,4 @@
-name: CI (mouse SE data)
+name: CI (mouse SE UST data)
 # This workflow is triggered on pushes and PRs to the repository.
 # It runs the pipeline with the minimal test dataset to check that it completes without any syntax errors
 on: [push, pull_request]
@@ -41,5 +41,5 @@ jobs:
           project: './results/MultiQC'
           login: ${{ secrets.SURGE_LOGIN }}
           token: ${{ secrets.SURGE_TOKEN }}
-          
+
 
