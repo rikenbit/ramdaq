@@ -1,4 +1,4 @@
-name: CI (mouse PE data)
+name: CI (mouse SE UST data)
 # This workflow is triggered on pushes and PRs to the repository.
 # It runs the pipeline with the minimal test dataset to check that it completes without any syntax errors
 on: [push, pull_request]
@@ -33,5 +33,13 @@ jobs:
           # TODO: You can customise CI pipeline run tests as required
           # (eg. adding multiple test runs with different parameters)
           # nextflow run ${GITHUB_WORKSPACE} -profile test,docker
-          nextflow run ${GITHUB_WORKSPACE} -profile test_PE_UST_M,docker
-          nextflow run ${GITHUB_WORKSPACE} -profile test_PE_ST_M,docker
+          nextflow run ${GITHUB_WORKSPACE} -profile test_SE_UST_M,docker
+      - name: Deploy to ramdaq-mouse-se-ust.surge.sh
+        uses: dswistowski/surge-sh-action@v1
+        with:
+          domain: 'ramdaq-mouse-se-ust.surge.sh'
+          project: './results/MultiQC'
+          login: ${{ secrets.SURGE_LOGIN }}
+          token: ${{ secrets.SURGE_TOKEN }}
+
+
