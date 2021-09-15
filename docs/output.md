@@ -254,6 +254,20 @@ The pipeline has special steps which allow the software versions used to be repo
 
 For more information about how to use MultiQC reports, see [http://multiqc.info](http://multiqc.info)
 
+The following are the sample MultiQC reports output using the [test data](test_data.md).
+
+* Mouse
+  * [single-end, unstranded](https://ramdaq-mouse-se-ust.surge.sh/multiqc_report.html)
+  * [single-end, stranded](https://ramdaq-mouse-se-st.surge.sh/multiqc_report.html)
+  * [paired-end, unstranded](https://ramdaq-mouse-pe-ust.surge.sh/multiqc_report.html)
+  * [paired-end, stranded](https://ramdaq-mouse-pe-st.surge.sh/multiqc_report.html)
+
+* Human
+  * [single-end, unstranded](https://ramdaq-human-se-ust.surge.sh/multiqc_report.html)
+  * [single-end, stranded](https://ramdaq-human-se-st.surge.sh/multiqc_report.html)
+  * [paired-end, unstranded](https://ramdaq-human-pe-ust.surge.sh/multiqc_report.html)
+  * [paired-end, stranded](https://ramdaq-human-pe-st.surge.sh/multiqc_report.html)
+
 ## Pipeline information
 
 **Output directory: `results/pipeline_info`**
