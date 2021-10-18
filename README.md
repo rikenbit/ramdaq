@@ -12,6 +12,24 @@
 
 The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It comes with docker containers making installation trivial and results highly reproducible.
 
+## Pipeline summary
+
+![overall view](docs/images/ramdaq_pipeline_summary_v141.png)
+
+1. Read QC (FastQC)
+2. Adapter and quality trimming (FastqMcf)
+3. Trimmed read QC (FastQC)
+4. Sort and index alignments (Hisat2 and SAMtools)
+5. Quantification of gene-level and transcript-level expression (RSEM)
+6. Generation of BigWig (coverage) files (bam2wig)
+7. Mapping/alginment QC:
+    - RSeQC
+    - readcoverage.jl
+8. Quantification of gene-level expression (featureCounts)
+9. Quantification of rRNA reads (HISAT2 and SAMtools)
+10. Alignment and quantification of SIRV reads (HISAT2, SAMtools, and RSEM) (optional)
+11. HTML QC report for raw read, alignment, gene biotype, sample similarity, and strand-specificity checks (MultiQC, R)
+
 ## Quick Start
 
 i. Install [`nextflow`](https://nf-co.re/usage/installation)
