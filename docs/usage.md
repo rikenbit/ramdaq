@@ -307,7 +307,7 @@ Specify a path to a custom MultiQC configuration file.
 
 > [Fastqmcf](https://expressionanalysis.github.io/ea-utils/) : Scans a sequence file for adapters, and, based on a log-scaled threshold, determines a set of clipping parameters and performs clipping. Also does skewing detection and quality filtering.
 
-- fastq-mcf attempt to detect and remove adapter and primer sequences. 
+- fastq-mcf attempt to detect and remove adapter and primer sequences.
   - ramdaq currently uses tge [fasta file](https://bioinformatics.riken.jp/ramdaq/ramdaq_annotation/mouse/all_sequencing_WTA_adopters.fa) that describe multiple adapter sequences.
 
 - `--maxReadLength [N]`
