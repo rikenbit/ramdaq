@@ -27,7 +27,7 @@ jobs:
           sudo mv nextflow /usr/local/bin/
       - name: Pull docker image
         run: |
-          docker pull myoshimura080822/ramdaq:v1.1
+          docker pull myoshimura080822/ramdaq:v1.2
       - name: Run pipeline with test data
         run: |
           # TODO: You can customise CI pipeline run tests as required
