@@ -5,7 +5,6 @@ on: [push, pull_request]
 
 jobs:
   test:
-    name: Run workflow tests
     env:
       NXF_VER: ${{ matrix.nxf_ver }}
       NXF_ANSI_LOG: false
@@ -38,7 +37,6 @@ jobs:
           nextflow run ${GITHUB_WORKSPACE} -profile ${{ matrix.profiles }},docker
   
   deploy:
-    name: Deploy reports
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to ramdaq-mouse-se-ust.surge.sh
