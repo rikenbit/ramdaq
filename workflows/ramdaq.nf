@@ -129,6 +129,8 @@ include { HISAT2 as HISAT2_RRNA } from '../modules/local/hisat2' addParams( opti
 include { MERGE_SUMMARYFILE as MERGE_SUMMARYFILE_HISAT2 } from '../modules/local/merge_summaryfile' addParams( options: modules['merge_summaryfile_hisat2'] )
 include { BAM2WIG as BAM2WIG_ALLGENES } from '../modules/local/bam2wig' addParams( options: modules['bam2wig'] )
 include { ADJUST_BED_NONCODING } from '../modules/local/adjust_bed_noncoding' addParams( options: modules['adjust_bed_noncoding'] )
+include { RSEQC } from '../modules/local/rseqc' addParams( options: modules['rseqc'] )
+include { READCOVERAGE } from '../modules/local/readcoverage' addParams( options: modules['readcoverage'] )
 
 /*
 ========================================================================================
@@ -206,9 +208,6 @@ workflow RAMDAQ {
     .map { it[0..2] }
     .set{
         ch_hisat2_bam_qc_filtered
-        //ch_hisat2_bam_readcoverage
-        //ch_hisat2_bam_rseqc
-        //ch_hisat2_bam_bam2wig
     }
 
     //
@@ -264,6 +263,24 @@ workflow RAMDAQ {
     )
     .bed_adjusted
     .set { ch_bed_adjusted }
+
+    //
+    // MODULE: RseQC (Bam QC)
+    //
+    RSEQC (
+        ch_hisat2_bam_qc_filtered,
+        ch_bed_adjusted
+    )
+    .readdist_totalread
+    .set { ch_readdist_totalread }
+
+    //
+    // MODULE: readcoverage.jl
+    //
+    READCOVERAGE (
+        ch_hisat2_bam_qc_filtered,
+        ch_bed
+    )
 
 
 }
