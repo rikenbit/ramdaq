@@ -5,8 +5,8 @@ Progress | Process Name
 &#9745; | FastQC |  
 &#9745; | Fastqmcf |  
 &#9745; | FastQC(trimmed) |  
-&#9744; | Hisat2 (All genes) |  
-&#9744; | Hisat2 (rRNA) |  
+&#9745; | Hisat2 (All genes) |  
+&#9745; | Hisat2 (rRNA) |  
 &#9744; | Hisat2 (SIRVome) |  
 &#9744; | RSEM (All genes) |  
 &#9744; | RSEM (SIRVome) |  
