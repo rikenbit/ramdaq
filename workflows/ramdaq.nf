@@ -19,6 +19,7 @@ def modules = params.modules.clone()
 params.adapter = params.genome ? params.genomes[ params.genome ].adapter ?: false : false
 params.hisat2_idx = params.genome ? params.genomes[ params.genome ].hisat2_idx ?: false : false
 params.hisat2_rrna_idx = params.genome ? params.genomes[ params.genome ].hisat2_rrna_idx ?: false : false
+params.chrsize = params.genome ? params.genomes[ params.genome ].chrsize ?: false : false
 
 /*
 ========================================================================================
@@ -74,6 +75,8 @@ if (params.hisat2_rrna_idx) {
     }
 }
 
+if (params.chrsize) { ch_chrsize= file(params.chrsize, checkIfExists: true) } else { exit 1, "Chromosome sizes file not found: ${params.chrsize}" }
+
 /*
 ========================================================================================
     SET UP DIR/FILE PATH VARIABLES
@@ -83,6 +86,30 @@ if (params.hisat2_rrna_idx) {
 // Tools dir
 ch_tools_dir = workflow.scriptFile.parent + "/tools"
 
+
+/*
+========================================================================================
+    FUNCTIONS
+========================================================================================
+*/
+
+// Function that checks the number of mapped reads from flagstat output
+// and returns true if > params.min_mapped_reads and otherwise false
+def check_mappedread(name,flagstat_path,min_mapped_reads=10) {
+    def flagstat_file = new File(flagstat_path.toString())
+    def mapped = 0
+    flagstat_file.eachLine { line ->
+        if (line.contains(' mapped (')) {
+            mapped = line.tokenize().first().toInteger()
+        }
+    }
+    if (mapped < min_mapped_reads.toInteger()) {
+        log.info ">>>> $name FAILED MAPPED READ THRESHOLD: ${mapped} < ${params.min_mapped_reads}. IGNORING FOR FURTHER DOWNSTREAM ANALYSIS! <<<<"
+        return false
+    } else {
+        return true
+    }
+}
 
 /*
 ========================================================================================
@@ -97,6 +124,8 @@ include { FASTQC as FASTQC_TRIM } from '../modules/local/fastqc' addParams( opti
 include { FASTQMCF } from '../modules/local/fastqmcf' addParams( options: modules['fastqmcf'] )
 include { HISAT2 as HISAT2_ALLGENES } from '../modules/local/hisat2' addParams( options: modules['hisat2_allgenes'] )
 include { HISAT2 as HISAT2_RRNA } from '../modules/local/hisat2' addParams( options: modules['hisat2_rrna'] )
+include { MERGE_SUMMARYFILE as MERGE_SUMMARYFILE_HISAT2 } from '../modules/local/merge_summaryfile' addParams( options: modules['merge_summaryfile_hisat2'] )
+include { BAM2WIG as BAM2WIG_ALLGENES } from '../modules/local/bam2wig' addParams( options: modules['bam2wig'] )
 
 /*
 ========================================================================================
@@ -160,7 +189,51 @@ workflow RAMDAQ {
         ch_hisat2_idx.collect(),
         ch_tools_dir
     )
-    ch_hisat2_bam = HISAT2_ALLGENES.out.hisat2_bam_qc
+    ch_hisat2_bam_qc = HISAT2_ALLGENES.out.hisat2_bam_qc
+    ch_hisat2_bam_count = HISAT2_ALLGENES.out.hisat2_bam_count
+    //ch_hisat2_bam_samplenum = HISAT2_ALLGENES.out.hisat2_bam_samplenum
+    ch_hisat2_summary = HISAT2_ALLGENES.out.hisat2_summary
+
+    //
+    // FUNCTION: Filtering low mapped reads bams [for bamQC]
+    //
+    ch_hisat2_bam_qc
+    .filter { name, bam, bai, flagstat -> check_mappedread(name,flagstat,params.min_mapped_reads) }
+    .map { it[0..2] }
+    .set{
+        ch_hisat2_bam_qc_filtered
+        //ch_hisat2_bam_readcoverage
+        //ch_hisat2_bam_rseqc
+        //ch_hisat2_bam_bam2wig
+    }
+
+    //
+    // FUNCTION: Filtering low mapped reads bams [for featureCounts]
+    //
+    ch_hisat2_bam_count
+    .filter { name, bam, bai, flagstat -> check_mappedread(name,flagstat,params.min_mapped_reads) }
+    .map { it[0..2] }
+    .set { 
+        ch_hisat2_bam_featurecount
+        //ch_hisat2_bam_featurecount_mt
+        //ch_hisat2_bam_featurecount_rrna
+        //ch_hisat2_bam_featurecount_histone
+    }
+
+    //
+    // FUNCTION: Count the number of valid samples [for correlation plot]
+    //
+    ch_hisat2_bam_count
+    .filter { name, bam, bai, flagstat -> check_mappedread(bam.baseName,flagstat,params.min_mapped_reads) }
+    .map { it[1] }
+    .set { ch_bam_samplenum }
+
+    //
+    // MODULE: Merge summaryfiles [Hisat2 totalseq]
+    //
+    MERGE_SUMMARYFILE_HISAT2 (
+        ch_hisat2_summary.collect()
+    )
 
     //
     // MODULE: Alignment with Hisat2 [rrna]
@@ -170,6 +243,15 @@ workflow RAMDAQ {
         ch_hisat2_rrna_idx.collect(),
         ch_tools_dir
     )
+
+    //
+    // MODULE: Bam to BigWig
+    //
+    BAM2WIG_ALLGENES (
+        ch_hisat2_bam_qc_filtered,
+        ch_chrsize
+    )
+
 
 }
 
