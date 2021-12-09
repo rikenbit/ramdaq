@@ -7,8 +7,6 @@ options        = initOptions(params.options)
 process MERGE_SUMMARYFILE {
 
     label 'process_low'
-    tag "$name"
-
     publishDir "${params.outdir}/${options.publish_dir}", mode: 'copy', overwrite: true
     
     input:

@@ -20,6 +20,7 @@ params.adapter = params.genome ? params.genomes[ params.genome ].adapter ?: fals
 params.hisat2_idx = params.genome ? params.genomes[ params.genome ].hisat2_idx ?: false : false
 params.hisat2_rrna_idx = params.genome ? params.genomes[ params.genome ].hisat2_rrna_idx ?: false : false
 params.chrsize = params.genome ? params.genomes[ params.genome ].chrsize ?: false : false
+params.bed = params.genome ? params.genomes[ params.genome ].bed ?: false : false
 
 /*
 ========================================================================================
@@ -76,6 +77,7 @@ if (params.hisat2_rrna_idx) {
 }
 
 if (params.chrsize) { ch_chrsize= file(params.chrsize, checkIfExists: true) } else { exit 1, "Chromosome sizes file not found: ${params.chrsize}" }
+if (params.bed) { ch_bed= file(params.bed, checkIfExists: true) } else { exit 1, "BED file not found: ${params.bed}" }
 
 /*
 ========================================================================================
@@ -126,6 +128,7 @@ include { HISAT2 as HISAT2_ALLGENES } from '../modules/local/hisat2' addParams( 
 include { HISAT2 as HISAT2_RRNA } from '../modules/local/hisat2' addParams( options: modules['hisat2_rrna'] )
 include { MERGE_SUMMARYFILE as MERGE_SUMMARYFILE_HISAT2 } from '../modules/local/merge_summaryfile' addParams( options: modules['merge_summaryfile_hisat2'] )
 include { BAM2WIG as BAM2WIG_ALLGENES } from '../modules/local/bam2wig' addParams( options: modules['bam2wig'] )
+include { ADJUST_BED_NONCODING } from '../modules/local/adjust_bed_noncoding' addParams( options: modules['adjust_bed_noncoding'] )
 
 /*
 ========================================================================================
@@ -198,6 +201,7 @@ workflow RAMDAQ {
     // FUNCTION: Filtering low mapped reads bams [for bamQC]
     //
     ch_hisat2_bam_qc
+    .transpose()
     .filter { name, bam, bai, flagstat -> check_mappedread(name,flagstat,params.min_mapped_reads) }
     .map { it[0..2] }
     .set{
@@ -251,6 +255,15 @@ workflow RAMDAQ {
         ch_hisat2_bam_qc_filtered,
         ch_chrsize
     )
+
+    //
+    // MODULE: Preparation of RseQC
+    //
+    ADJUST_BED_NONCODING (
+        ch_bed
+    )
+    .bed_adjusted
+    .set { ch_bed_adjusted }
 
 
 }

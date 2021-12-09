@@ -24,7 +24,7 @@ then
 fi
 
 IMAGE_NAME=myoshimura080822/ramdaq
-IMAGE_TAG=v1.1
+IMAGE_TAG=v1.2
 
 DATE=$(date '+%Y%m%d-%H%M%S')
 REPO_COMMIT=`git log -n 1 --pretty=format:%H | cut -c1-7`
