@@ -21,6 +21,9 @@ params.hisat2_idx = params.genome ? params.genomes[ params.genome ].hisat2_idx ?
 params.hisat2_rrna_idx = params.genome ? params.genomes[ params.genome ].hisat2_rrna_idx ?: false : false
 params.chrsize = params.genome ? params.genomes[ params.genome ].chrsize ?: false : false
 params.bed = params.genome ? params.genomes[ params.genome ].bed ?: false : false
+params.gtf = params.genome ? params.genomes[ params.genome ].gtf ?: false : false
+params.mt_gtf = params.genome ? params.genomes[ params.genome ].mt_gtf ?: false : false
+params.histone_gtf = params.genome ? params.genomes[ params.genome ].histone_gtf ?: false : false
 
 /*
 ========================================================================================
@@ -78,6 +81,18 @@ if (params.hisat2_rrna_idx) {
 
 if (params.chrsize) { ch_chrsize= file(params.chrsize, checkIfExists: true) } else { exit 1, "Chromosome sizes file not found: ${params.chrsize}" }
 if (params.bed) { ch_bed= file(params.bed, checkIfExists: true) } else { exit 1, "BED file not found: ${params.bed}" }
+if (params.gtf) { ch_gtf= file(params.gtf, checkIfExists: true) } else { exit 1, "GTF annotation file not found: ${params.gtf}" }
+if (params.mt_gtf) { ch_mt_gtf= file(params.mt_gtf, checkIfExists: true) } else { exit 1, "Mitocondria GTF annotation file not found: ${params.mt_gtf}" }
+if (params.histone_gtf) { ch_histone_gtf= file(params.histone_gtf, checkIfExists: true) } else { exit 1, "Histone GTF annotation file not found: ${params.histone_gtf}" }
+
+
+/*
+========================================================================================
+    SET UP REPORT HEADERS
+========================================================================================
+*/
+
+ch_biotypes_header = file("$projectDir/assets/biotypes_header.txt", checkIfExists: true)
 
 /*
 ========================================================================================
@@ -87,7 +102,6 @@ if (params.bed) { ch_bed= file(params.bed, checkIfExists: true) } else { exit 1,
 
 // Tools dir
 ch_tools_dir = workflow.scriptFile.parent + "/tools"
-
 
 /*
 ========================================================================================
@@ -124,13 +138,19 @@ include { UNTAR_INDEX as UNTAR_HISAT2_RRNA_IDX } from '../modules/local/untar_in
 include { FASTQC as FASTQC_RAW } from '../modules/local/fastqc' addParams( options: modules['fastqc'] )
 include { FASTQC as FASTQC_TRIM } from '../modules/local/fastqc' addParams( options: modules['fastqc_trim'] )
 include { FASTQMCF } from '../modules/local/fastqmcf' addParams( options: modules['fastqmcf'] )
-include { HISAT2 as HISAT2_ALLGENES } from '../modules/local/hisat2' addParams( options: modules['hisat2_allgenes'] )
+include { HISAT2 as HISAT2_GENOME } from '../modules/local/hisat2' addParams( options: modules['hisat2_genome'] )
 include { HISAT2 as HISAT2_RRNA } from '../modules/local/hisat2' addParams( options: modules['hisat2_rrna'] )
 include { MERGE_SUMMARYFILE as MERGE_SUMMARYFILE_HISAT2 } from '../modules/local/merge_summaryfile' addParams( options: modules['merge_summaryfile_hisat2'] )
 include { BAM2WIG as BAM2WIG_ALLGENES } from '../modules/local/bam2wig' addParams( options: modules['bam2wig'] )
 include { ADJUST_BED_NONCODING } from '../modules/local/adjust_bed_noncoding' addParams( options: modules['adjust_bed_noncoding'] )
 include { RSEQC } from '../modules/local/rseqc' addParams( options: modules['rseqc'] )
 include { READCOVERAGE } from '../modules/local/readcoverage' addParams( options: modules['readcoverage'] )
+include { FEATURECOUNTS as FEATURECOUNTS_ALL_GTF} from '../modules/local/featurecounts' addParams( options: modules['featurecounts_all_gtf'] )
+include { FEATURECOUNTS as FEATURECOUNTS_MT_GTF} from '../modules/local/featurecounts' addParams( options: modules['featurecounts_mt_gtf'] )
+include { FEATURECOUNTS as FEATURECOUNTS_HISTONE_GTF} from '../modules/local/featurecounts' addParams( options: modules['featurecounts_histone_gtf'] )
+include { MERGE_FEATURECOUNTS as MERGE_FEATURECOUNTS_ALLGENE} from '../modules/local/merge_featurecounts' addParams( options: modules['merge_featurecounts_allgene'] )
+include { MERGE_FEATURECOUNTS as MERGE_FEATURECOUNTS_MT} from '../modules/local/merge_featurecounts' addParams( options: modules['merge_featurecounts_mt'] )
+include { MERGE_FEATURECOUNTS as MERGE_FEATURECOUNTS_HISTONE} from '../modules/local/merge_featurecounts' addParams( options: modules['merge_featurecounts_histone'] )
 
 /*
 ========================================================================================
@@ -189,15 +209,15 @@ workflow RAMDAQ {
     //
     // MODULE: Alignment with Hisat2 [all genes]
     //
-    HISAT2_ALLGENES (
+    HISAT2_GENOME (
         ch_trimmed_reads,
         ch_hisat2_idx.collect(),
         ch_tools_dir
     )
-    ch_hisat2_bam_qc = HISAT2_ALLGENES.out.hisat2_bam_qc
-    ch_hisat2_bam_count = HISAT2_ALLGENES.out.hisat2_bam_count
-    //ch_hisat2_bam_samplenum = HISAT2_ALLGENES.out.hisat2_bam_samplenum
-    ch_hisat2_summary = HISAT2_ALLGENES.out.hisat2_summary
+    ch_hisat2_bam_qc = HISAT2_GENOME.out.hisat2_bam_qc
+    ch_hisat2_bam_count = HISAT2_GENOME.out.hisat2_bam_count
+    //ch_hisat2_bam_samplenum = HISAT2_GENOME.out.hisat2_bam_samplenum
+    ch_hisat2_summary = HISAT2_GENOME.out.hisat2_summary
 
     //
     // FUNCTION: Filtering low mapped reads bams [for bamQC]
@@ -218,10 +238,11 @@ workflow RAMDAQ {
     .map { it[0..2] }
     .set { 
         ch_hisat2_bam_featurecount
-        //ch_hisat2_bam_featurecount_mt
-        //ch_hisat2_bam_featurecount_rrna
-        //ch_hisat2_bam_featurecount_histone
     }
+
+    //debug
+    //ch_hisat2_bam_qc_filtered.subscribe {  println "hisat2_bam1: $it"  }
+    //ch_hisat2_bam_featurecount.subscribe {  println "hisat2_bam2: $it"  }
 
     //
     // FUNCTION: Count the number of valid samples [for correlation plot]
@@ -282,6 +303,60 @@ workflow RAMDAQ {
         ch_bed
     )
 
+    //
+    // MODULE: featureCounts (All-genes GTF)
+    //
+    FEATURECOUNTS_ALL_GTF (
+        ch_hisat2_bam_featurecount,
+        ch_gtf,
+        ch_biotypes_header
+    )
+    ch_counts_to_merge_all = FEATURECOUNTS_ALL_GTF.out.counts_to_merge
+    ch_counts_summary_all = FEATURECOUNTS_ALL_GTF.out.counts_summary
+    ch_counts_to_plot_corr = FEATURECOUNTS_ALL_GTF.out.counts_to_plot_corr
+
+    //
+    // MODULE: Merge featureCounts output (All-genes)
+    //
+    MERGE_FEATURECOUNTS_ALLGENE (
+        ch_counts_to_merge_all.collect()
+    )
+
+    //
+    // MODULE: featureCounts (Mitocondria GTF)
+    //
+    FEATURECOUNTS_MT_GTF (
+        ch_hisat2_bam_featurecount,
+        ch_mt_gtf,
+        ch_biotypes_header
+    )
+    ch_counts_to_merge_mt = FEATURECOUNTS_MT_GTF.out.counts_to_merge
+    ch_counts_summary_mt = FEATURECOUNTS_MT_GTF.out.counts_summary
+
+    //
+    // MODULE: Merge featureCounts output (Mitocondria-genes)
+    //
+    MERGE_FEATURECOUNTS_MT (
+        ch_counts_to_merge_mt.collect()
+    )
+
+    //
+    // MODULE: featureCounts (Histone GTF)
+    //
+    FEATURECOUNTS_HISTONE_GTF (
+        ch_hisat2_bam_featurecount,
+        ch_histone_gtf,
+        ch_biotypes_header
+    )
+    ch_counts_to_merge_histone = FEATURECOUNTS_HISTONE_GTF.out.counts_to_merge
+    ch_counts_summary_histone = FEATURECOUNTS_HISTONE_GTF.out.counts_summary
+
+    //
+    // MODULE: Merge featureCounts output (Histone-genes)
+    //
+    MERGE_FEATURECOUNTS_HISTONE (
+        ch_counts_to_merge_histone.collect()
+    )
 
 }
 
