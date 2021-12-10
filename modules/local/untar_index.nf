@@ -14,7 +14,7 @@ process UNTAR_INDEX {
     path gz
     
     output:
-    path "$untar/*.ht2", emit: index_files
+    path "$untar/${options.suffix}", emit: index_files
     
     script:
     untar = gz.toString() - '.tar.gz'

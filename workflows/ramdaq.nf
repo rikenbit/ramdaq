@@ -15,6 +15,11 @@ def modules = params.modules.clone()
 ========================================================================================
 */
 
+// Check if genome exists in the config file
+if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
+    exit 1, "The provided genome '${params.genome}' is not available. Currently the available genomes are ${params.genomes.keySet().join(", ")}"
+}
+
 // Configurable variables
 params.adapter = params.genome ? params.genomes[ params.genome ].adapter ?: false : false
 params.hisat2_idx = params.genome ? params.genomes[ params.genome ].hisat2_idx ?: false : false
@@ -24,6 +29,7 @@ params.bed = params.genome ? params.genomes[ params.genome ].bed ?: false : fals
 params.gtf = params.genome ? params.genomes[ params.genome ].gtf ?: false : false
 params.mt_gtf = params.genome ? params.genomes[ params.genome ].mt_gtf ?: false : false
 params.histone_gtf = params.genome ? params.genomes[ params.genome ].histone_gtf ?: false : false
+params.rsem_allgene_idx = params.genome ? params.genomes[ params.genome ].rsem_allgene_idx ?: false : false
 
 /*
 ========================================================================================
@@ -31,8 +37,11 @@ params.histone_gtf = params.genome ? params.genomes[ params.genome ].histone_gtf
 ========================================================================================
 */
 
-if (params.adapter) { ch_adapter = file(params.adapter, checkIfExists: true) } else { exit 1, "Adapter file not found: ${params.adapter}" }
+if (params.stranded && params.stranded != 'unstranded' && params.stranded != 'fr-firststrand' && params.stranded != 'fr-secondstrand') {
+    exit 1, "Invalid stranded option: ${params.stranded}. Valid options: 'unstranded' or 'fr-firststrand' or 'fr-secondstrand'!"
+}
 
+if (params.adapter) { ch_adapter = file(params.adapter, checkIfExists: true) } else { exit 1, "Adapter file not found: ${params.adapter}" }
 
 //Create a channel for input read files
 if (params.readPaths) {
@@ -85,6 +94,20 @@ if (params.gtf) { ch_gtf= file(params.gtf, checkIfExists: true) } else { exit 1,
 if (params.mt_gtf) { ch_mt_gtf= file(params.mt_gtf, checkIfExists: true) } else { exit 1, "Mitocondria GTF annotation file not found: ${params.mt_gtf}" }
 if (params.histone_gtf) { ch_histone_gtf= file(params.histone_gtf, checkIfExists: true) } else { exit 1, "Histone GTF annotation file not found: ${params.histone_gtf}" }
 
+if (params.rsem_allgene_idx) {
+    if (params.rsem_allgene_idx.endsWith('.tar.gz')) {
+
+        file(params.rsem_allgene_idx, checkIfExists: true)
+        ch_rsem_allgene_idx = false      
+
+    } else {
+        ch_rsem_allgene_idx = Channel
+        .from(params.rsem_allgene_idx)
+        .flatMap{file(params.rsem_allgene_idx, checkIfExists: true)}
+        .ifEmpty { exit 1, "RSEM All genes files not found: ${params.rsem_allgene_idx}" }   
+    }
+}
+
 
 /*
 ========================================================================================
@@ -133,24 +156,33 @@ def check_mappedread(name,flagstat_path,min_mapped_reads=10) {
 ========================================================================================
 */
 
-include { UNTAR_INDEX as UNTAR_HISAT2_IDX } from '../modules/local/untar_index' addParams( options: modules['untar_index'] )
-include { UNTAR_INDEX as UNTAR_HISAT2_RRNA_IDX } from '../modules/local/untar_index' addParams( options: modules['untar_index'] )
+include { UNTAR_INDEX as UNTAR_HISAT2_IDX } from '../modules/local/untar_index' addParams( options: modules['untar_index_hisat2'] )
+include { UNTAR_INDEX as UNTAR_HISAT2_RRNA_IDX } from '../modules/local/untar_index' addParams( options: modules['untar_index_hisat2'] )
+include { UNTAR_INDEX as UNTAR_RSEM_ALLGENE_IDX } from '../modules/local/untar_index' addParams( options: modules['untar_index_rsem'] )
+
 include { FASTQC as FASTQC_RAW } from '../modules/local/fastqc' addParams( options: modules['fastqc'] )
 include { FASTQC as FASTQC_TRIM } from '../modules/local/fastqc' addParams( options: modules['fastqc_trim'] )
 include { FASTQMCF } from '../modules/local/fastqmcf' addParams( options: modules['fastqmcf'] )
+
 include { HISAT2 as HISAT2_GENOME } from '../modules/local/hisat2' addParams( options: modules['hisat2_genome'] )
 include { HISAT2 as HISAT2_RRNA } from '../modules/local/hisat2' addParams( options: modules['hisat2_rrna'] )
 include { MERGE_SUMMARYFILE as MERGE_SUMMARYFILE_HISAT2 } from '../modules/local/merge_summaryfile' addParams( options: modules['merge_summaryfile_hisat2'] )
+
 include { BAM2WIG as BAM2WIG_ALLGENES } from '../modules/local/bam2wig' addParams( options: modules['bam2wig'] )
 include { ADJUST_BED_NONCODING } from '../modules/local/adjust_bed_noncoding' addParams( options: modules['adjust_bed_noncoding'] )
 include { RSEQC } from '../modules/local/rseqc' addParams( options: modules['rseqc'] )
 include { READCOVERAGE } from '../modules/local/readcoverage' addParams( options: modules['readcoverage'] )
+
 include { FEATURECOUNTS as FEATURECOUNTS_ALL_GTF} from '../modules/local/featurecounts' addParams( options: modules['featurecounts_all_gtf'] )
 include { FEATURECOUNTS as FEATURECOUNTS_MT_GTF} from '../modules/local/featurecounts' addParams( options: modules['featurecounts_mt_gtf'] )
 include { FEATURECOUNTS as FEATURECOUNTS_HISTONE_GTF} from '../modules/local/featurecounts' addParams( options: modules['featurecounts_histone_gtf'] )
 include { MERGE_FEATURECOUNTS as MERGE_FEATURECOUNTS_ALLGENE} from '../modules/local/merge_featurecounts' addParams( options: modules['merge_featurecounts_allgene'] )
 include { MERGE_FEATURECOUNTS as MERGE_FEATURECOUNTS_MT} from '../modules/local/merge_featurecounts' addParams( options: modules['merge_featurecounts_mt'] )
 include { MERGE_FEATURECOUNTS as MERGE_FEATURECOUNTS_HISTONE} from '../modules/local/merge_featurecounts' addParams( options: modules['merge_featurecounts_histone'] )
+
+include { RSEM_BOWTIE2 as RSEM_BOWTIE2_ALLGENES } from '../modules/local/rsem_bowtie2' addParams( options: modules['rsem_bowtie2_allgenes'] )
+include { MERGE_RSEM as MERGE_RSEM_GENES} from '../modules/local/merge_rsem' addParams( options: modules['merge_rsem_genes'] )
+include { MERGE_RSEM as MERGE_RSEM_ISOFORMS} from '../modules/local/merge_rsem' addParams( options: modules['merge_rsem_isoforms'] )
 
 /*
 ========================================================================================
@@ -163,7 +195,7 @@ workflow RAMDAQ {
 
     if (!ch_hisat2_idx){
         //
-        // MODULE: untar index.tar.gz [all genes]
+        // MODULE: untar index.tar.gz [hisat2 all genes]
         //
         UNTAR_HISAT2_IDX (
             params.hisat2_idx
@@ -173,13 +205,23 @@ workflow RAMDAQ {
     }
     if (!ch_hisat2_rrna_idx){
         //
-        // MODULE: untar index.tar.gz [rrna]
+        // MODULE: untar index.tar.gz [hisat2 rrna]
         //
         UNTAR_HISAT2_RRNA_IDX (
             params.hisat2_rrna_idx
         )
         .index_files
         .set { ch_hisat2_rrna_idx }
+    }
+    if (!ch_rsem_allgene_idx){
+        //
+        // MODULE: untar index.tar.gz [rsem all genes]
+        //
+        UNTAR_RSEM_ALLGENE_IDX (
+            params.rsem_allgene_idx
+        )
+        .index_files
+        .set { ch_rsem_allgene_idx }
     }
 
     //
@@ -358,5 +400,29 @@ workflow RAMDAQ {
         ch_counts_to_merge_histone.collect()
     )
 
+    //
+    // MODULE: Quantification with RSEM [all genes]
+    //
+    RSEM_BOWTIE2_ALLGENES (
+        ch_trimmed_reads,
+        ch_rsem_allgene_idx.collect()
+    )
+    ch_rsem_isoforms_to_merge = RSEM_BOWTIE2_ALLGENES.out.rsem_isoforms_to_merge
+    ch_rsem_genes_to_merge = RSEM_BOWTIE2_ALLGENES.out.rsem_genes_to_merge
+    ch_rsem_results_stat = RSEM_BOWTIE2_ALLGENES.out.rsem_results_stat
+
+    //
+    // MODULE: Merge RSEM output (genes)
+    //
+    MERGE_RSEM_GENES (
+        ch_rsem_genes_to_merge.collect()
+    )
+
+    //
+    // MODULE: Merge RSEM output (isoforms)
+    //
+    MERGE_RSEM_ISOFORMS (
+        ch_rsem_isoforms_to_merge.collect()
+    )
 }
 
