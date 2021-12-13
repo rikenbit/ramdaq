@@ -31,12 +31,20 @@ jobs:
       - name: Run pipeline with test data
         run: |
           nextflow run ${GITHUB_WORKSPACE} -profile test_SE_UST_M,docker
+          nextflow run ${GITHUB_WORKSPACE} -profile test_SE_UST_M_1,docker
           nextflow run ${GITHUB_WORKSPACE} -profile test_SE_ST_M,docker
       - name: Deploy to ramdaq-mouse-se-ust.surge.sh
         uses: dswistowski/surge-sh-action@v1
         with:
           domain: 'ramdaq-mouse-se-ust.surge.sh'
           project: './results_SE_UST_M/MultiQC'
+          login: ${{ secrets.SURGE_LOGIN }}
+          token: ${{ secrets.SURGE_TOKEN }}
+      - name: Deploy to ramdaq-mouse-se-ust_1.surge.sh
+        uses: dswistowski/surge-sh-action@v1
+        with:
+          domain: 'ramdaq-mouse-se-ust_1.surge.sh'
+          project: './results_SE_UST_M_1/MultiQC'
           login: ${{ secrets.SURGE_LOGIN }}
           token: ${{ secrets.SURGE_TOKEN }}
       - name: Deploy to ramdaq-mouse-se-st.surge.sh

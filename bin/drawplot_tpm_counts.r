@@ -70,7 +70,15 @@ countdata = read.table(inputfile, sep="\t", comment.char = "", header=T, check.n
 
 if (tool_name=="rsem"){
   rownames(countdata) = countdata[,1]
-  countdata = countdata[,-c(1,2)]
+  if (ncol(countdata) > 3){
+    countdata = countdata[,-c(1,2)]
+  } else {
+    tmp_rowname = rownames(countdata)
+    tmp_colname = colnames(countdata)
+    countdata = data.frame(tmp = countdata[,-c(1,2)])
+    colnames(countdata) = tmp_colname[3]
+    rownames(countdata) = tmp_rowname
+  }
   colnames(countdata) = str_replace_all(colnames(countdata), ".genes.results", "")
 }
 

@@ -33,7 +33,16 @@ ggplot_2D <- function(dset, x, y, title, celltype, outname, label=F) {
 
 countdata = read.table(inputfile, sep="\t", comment.char = "", header=T, check.names=FALSE, stringsAsFactors=F)
 rownames(countdata) = countdata[,1]
-countdata = countdata[,-c(1,2)]
+
+if (ncol(countdata) > 3){
+  countdata = countdata[,-c(1,2)]
+} else {
+  tmp_rowname = rownames(countdata)
+  tmp_colname = colnames(countdata)
+  countdata = data.frame(tmp = countdata[,-c(1,2)])
+  colnames(countdata) = tmp_colname[3]
+  rownames(countdata) = tmp_rowname
+}
 colnames(countdata) = str_replace_all(colnames(countdata), ".isoforms.results", "")
 
 counts_dettsnum = data.frame(colSums(countdata >0))
@@ -41,9 +50,9 @@ colnames(counts_dettsnum) = c("NumOfTs")
 counts_dettsnum$samplename = rownames(counts_dettsnum)
 counts_dettsnum = counts_dettsnum[order(counts_dettsnum$samplename),]
 
-  ylab_name = "Number of RSEM detected transcripts"
-  title = "Number of RSEM detected transcripts (TPM>0)"
-  file_name = "barplot_num_of_ts_rsem"
+ylab_name = "Number of RSEM detected transcripts"
+title = "Number of RSEM detected transcripts (TPM>0)"
+file_name = "barplot_num_of_ts_rsem"
 
 ### draw barplot
 g = ggplot(counts_dettsnum, aes(x=samplename,y=NumOfTs)) +
