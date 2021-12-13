@@ -14,6 +14,8 @@ process MERGE_FEATURECOUNTS {
     
     output:
     path "merged_*.txt", emit: merged_counts
+    path '*_TPM.txt', optional:true, emit: counts_tpm_merged
+    path '*_ERCC_TPM_log.txt', optional:true, emit: ercc_tpm_merged
     
     script:
     def prefix = "merged_featureCounts_${options.suffix}"
@@ -21,7 +23,15 @@ process MERGE_FEATURECOUNTS {
     def get_counts = input_files.collect{filename ->
         "<(tail $options.args ${filename} | sed 's:.bam::' | cut $options.args3)"}.join(" ")
 
-    """
-    paste $get_gene_ids $get_counts > ${prefix}.txt
-    """
+    if (options.suffix != 'allgene'){
+        """
+        paste $get_gene_ids $get_counts > ${prefix}.txt
+        """
+    } else {
+        """
+        paste $get_gene_ids $get_counts > ${prefix}.txt
+        calc_TPMCounts.r ${prefix}.txt
+        """
+    }
+
 }

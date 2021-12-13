@@ -108,14 +108,24 @@ if (params.rsem_allgene_idx) {
     }
 }
 
+//if (params.spike_in_ercc && params.spike_in_ercc.toString() == 'true') { ch_spike_in_ercc = params.spike_in_ercc_default_amount } else { ch_spike_in_ercc = params.spike_in_ercc }
+//if (params.spike_in_sirv && params.spike_in_sirv.toString() == 'true') { exit 1, "--spike_in_sirv option requires a dilution rate value" }
+//if (params.spike_in_sirv) { ch_spike_in_ercc = params.spike_in_sirv }
+
+if (params.spike_in_ercc) { ch_spike_in_ercc = params.spike_in_ercc_default_amount } else { ch_spike_in_ercc = params.spike_in_ercc }
 
 /*
 ========================================================================================
-    SET UP REPORT HEADERS
+    SET UP HEADERS FOR REPORT
 ========================================================================================
 */
 
 ch_biotypes_header = file("$projectDir/assets/biotypes_header.txt", checkIfExists: true)
+ch_mdsplot_header = file("$projectDir/assets/mdsplot_header.txt", checkIfExists: true)
+ch_heatmap_header = file("$projectDir/assets/heatmap_header.txt", checkIfExists: true)
+ch_ercc_data = params.spike_in_sirv ? file("$projectDir/assets/ercc_in_sirv_dataset.txt", checkIfExists: true) : file("$baseDir/assets/ercc_dataset.txt", checkIfExists: true)
+ch_ercc_corr_header = file("$projectDir/assets/ercc_correlation_header.txt", checkIfExists: true)
+ch_ercc_corr_header_gstat = file("$projectDir/assets/gstat_ercc_correlation_header.txt", checkIfExists: true)
 
 /*
 ========================================================================================
@@ -173,16 +183,19 @@ include { ADJUST_BED_NONCODING } from '../modules/local/adjust_bed_noncoding' ad
 include { RSEQC } from '../modules/local/rseqc' addParams( options: modules['rseqc'] )
 include { READCOVERAGE } from '../modules/local/readcoverage' addParams( options: modules['readcoverage'] )
 
-include { FEATURECOUNTS as FEATURECOUNTS_ALL_GTF} from '../modules/local/featurecounts' addParams( options: modules['featurecounts_all_gtf'] )
-include { FEATURECOUNTS as FEATURECOUNTS_MT_GTF} from '../modules/local/featurecounts' addParams( options: modules['featurecounts_mt_gtf'] )
-include { FEATURECOUNTS as FEATURECOUNTS_HISTONE_GTF} from '../modules/local/featurecounts' addParams( options: modules['featurecounts_histone_gtf'] )
-include { MERGE_FEATURECOUNTS as MERGE_FEATURECOUNTS_ALLGENE} from '../modules/local/merge_featurecounts' addParams( options: modules['merge_featurecounts_allgene'] )
-include { MERGE_FEATURECOUNTS as MERGE_FEATURECOUNTS_MT} from '../modules/local/merge_featurecounts' addParams( options: modules['merge_featurecounts_mt'] )
-include { MERGE_FEATURECOUNTS as MERGE_FEATURECOUNTS_HISTONE} from '../modules/local/merge_featurecounts' addParams( options: modules['merge_featurecounts_histone'] )
+include { FEATURECOUNTS as FEATURECOUNTS_ALL_GTF } from '../modules/local/featurecounts' addParams( options: modules['featurecounts_all_gtf'] )
+include { FEATURECOUNTS as FEATURECOUNTS_MT_GTF } from '../modules/local/featurecounts' addParams( options: modules['featurecounts_mt_gtf'] )
+include { FEATURECOUNTS as FEATURECOUNTS_HISTONE_GTF } from '../modules/local/featurecounts' addParams( options: modules['featurecounts_histone_gtf'] )
+include { MERGE_FEATURECOUNTS as MERGE_FEATURECOUNTS_ALLGENE } from '../modules/local/merge_featurecounts' addParams( options: modules['merge_featurecounts_allgene'] )
+include { MERGE_FEATURECOUNTS as MERGE_FEATURECOUNTS_MT } from '../modules/local/merge_featurecounts' addParams( options: modules['merge_featurecounts_mt'] )
+include { MERGE_FEATURECOUNTS as MERGE_FEATURECOUNTS_HISTONE } from '../modules/local/merge_featurecounts' addParams( options: modules['merge_featurecounts_histone'] )
 
 include { RSEM_BOWTIE2 as RSEM_BOWTIE2_ALLGENES } from '../modules/local/rsem_bowtie2' addParams( options: modules['rsem_bowtie2_allgenes'] )
-include { MERGE_RSEM as MERGE_RSEM_GENES} from '../modules/local/merge_rsem' addParams( options: modules['merge_rsem_genes'] )
-include { MERGE_RSEM as MERGE_RSEM_ISOFORMS} from '../modules/local/merge_rsem' addParams( options: modules['merge_rsem_isoforms'] )
+include { MERGE_RSEM as MERGE_RSEM_GENES } from '../modules/local/merge_rsem' addParams( options: modules['merge_rsem_genes'] )
+include { MERGE_RSEM as MERGE_RSEM_ISOFORMS } from '../modules/local/merge_rsem' addParams( options: modules['merge_rsem_isoforms'] )
+
+include { CALC_SAMPLE_CORRELATION } from '../modules/local/calc_sample_correlation' addParams( options: modules['calc_sample_correlation'] )
+include { CALC_ERCC_CORRELATION } from '../modules/local/calc_ercc_correlation' addParams( options: modules['calc_ercc_correlation'] )
 
 /*
 ========================================================================================
@@ -292,7 +305,8 @@ workflow RAMDAQ {
     ch_hisat2_bam_count
     .filter { name, bam, bai, flagstat -> check_mappedread(bam.baseName,flagstat,params.min_mapped_reads) }
     .map { it[1] }
-    .set { ch_bam_samplenum }
+    .set { ch_num_of_bam }
+    ch_num_of_bam_list = ch_num_of_bam.toList()
 
     //
     // MODULE: Merge summaryfiles [Hisat2 totalseq]
@@ -354,6 +368,7 @@ workflow RAMDAQ {
         ch_biotypes_header
     )
     ch_counts_to_merge_all = FEATURECOUNTS_ALL_GTF.out.counts_to_merge
+    ch_counts_to_merge_all_list = ch_counts_to_merge_all.toList()
     ch_counts_summary_all = FEATURECOUNTS_ALL_GTF.out.counts_summary
     ch_counts_to_plot_corr = FEATURECOUNTS_ALL_GTF.out.counts_to_plot_corr
 
@@ -363,6 +378,9 @@ workflow RAMDAQ {
     MERGE_FEATURECOUNTS_ALLGENE (
         ch_counts_to_merge_all.collect()
     )
+    ch_featurecounts_tpm_merged = MERGE_FEATURECOUNTS_ALLGENE.out.counts_tpm_merged
+    ch_ercc_tpm_merged = MERGE_FEATURECOUNTS_ALLGENE.out.ercc_tpm_merged
+    ch_ercc_tpm_merged_list = ch_ercc_tpm_merged.toList()
 
     //
     // MODULE: featureCounts (Mitocondria GTF)
@@ -424,5 +442,37 @@ workflow RAMDAQ {
     MERGE_RSEM_ISOFORMS (
         ch_rsem_isoforms_to_merge.collect()
     )
+    
+    //debug
+    //ch_num_of_bam_list.subscribe {  println "ch_num_of_bam: $it"  }
+    //ch_num_of_bam_list.size().subscribe {  println "ch_bam_size_chk: $it"  }
+    if (!params.sampleLevel) {
+        //
+        // MODULE: Calc sample corr
+        //
+        CALC_SAMPLE_CORRELATION (
+            ch_counts_to_plot_corr.collect(),
+            ch_num_of_bam_list.size(),
+            ch_mdsplot_header,
+            ch_heatmap_header
+        )
+    }
+
+    //debug
+    //ch_ercc_tpm_merged_list.subscribe {  println "ch_ercc_tpm_merged: $it"  }
+    //ch_ercc_tpm_merged_list.size().subscribe {  println "ch_ercc_size_chk: $it"  }
+    if (params.spike_in_ercc || params.spike_in_sirv) {
+        //
+        // MODULE: Calc ERCC mol vs exp corr
+        //
+        CALC_ERCC_CORRELATION (
+            ch_spike_in_ercc,
+            ch_ercc_tpm_merged_list.size(),
+            ch_ercc_tpm_merged,
+            ch_ercc_data,
+            ch_ercc_corr_header,
+            ch_ercc_corr_header_gstat
+        )
+    }
 }
 
