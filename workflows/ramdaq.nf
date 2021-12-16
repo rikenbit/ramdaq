@@ -126,6 +126,27 @@ ch_heatmap_header = file("$projectDir/assets/heatmap_header.txt", checkIfExists:
 ch_ercc_data = params.spike_in_sirv ? file("$projectDir/assets/ercc_in_sirv_dataset.txt", checkIfExists: true) : file("$baseDir/assets/ercc_dataset.txt", checkIfExists: true)
 ch_ercc_corr_header = file("$projectDir/assets/ercc_correlation_header.txt", checkIfExists: true)
 ch_ercc_corr_header_gstat = file("$projectDir/assets/gstat_ercc_correlation_header.txt", checkIfExists: true)
+ch_assignedgenome_header = file("$projectDir/assets/barplot_assignedgenome_rate_header.txt", checkIfExists: true)
+ch_assignedgenome_header_gstat = file("$projectDir/assets/gstat_assignedgenome_rate_header.txt", checkIfExists: true)
+
+ch_fcounts_allgene_header = Channel.fromPath("$baseDir/assets/barplot_fcounts_allgene_header.txt", checkIfExists: true)
+ch_fcounts_allgene_header_gstat = Channel.fromPath("$baseDir/assets/gstat_fcounts_allgene_header.txt", checkIfExists: true)
+ch_fcounts_mt_header = Channel.fromPath("$baseDir/assets/barplot_fcounts_mt_header.txt", checkIfExists: true)
+ch_fcounts_mt_header_gstat = Channel.fromPath("$baseDir/assets/gstat_fcounts_mt_header.txt", checkIfExists: true)
+ch_fcounts_histone_header = Channel.fromPath("$baseDir/assets/barplot_fcounts_histone_header.txt", checkIfExists: true)
+ch_fcounts_histone_header_gstat = Channel.fromPath("$baseDir/assets/gstat_fcounts_histone_header.txt", checkIfExists: true)
+
+ch_num_of_detgene_header = Channel.fromPath("$baseDir/assets/barplot_num_of_detgene_header.txt", checkIfExists: true)
+ch_num_of_detgene_header_gstat = Channel.fromPath("$baseDir/assets/gstat_num_of_detgene_header.txt", checkIfExists: true)
+ch_pcaplot_header = Channel.fromPath("$baseDir/assets/pcaplot_header.txt", checkIfExists: true)
+ch_tsneplot_header = Channel.fromPath("$baseDir/assets/tsneplot_header.txt", checkIfExists: true)
+ch_umapplot_header = Channel.fromPath("$baseDir/assets/umapplot_header.txt", checkIfExists: true)
+
+ch_num_of_gene_rsem_header = Channel.fromPath("$baseDir/assets/barplot_num_of_gene_rsem_header.txt", checkIfExists: true)
+ch_num_of_gene_rsem_header_gstat = Channel.fromPath("$baseDir/assets/gstat_num_of_gene_rsem_header.txt", checkIfExists: true)
+ch_num_of_ts_rsem_header = Channel.fromPath("$baseDir/assets/barplot_num_of_ts_rsem_header.txt", checkIfExists: true)
+ch_num_of_ts_rsem_header_gstat = Channel.fromPath("$baseDir/assets/gstat_num_of_ts_rsem_header.txt", checkIfExists: true)
+
 
 /*
 ========================================================================================
@@ -181,6 +202,7 @@ include { MERGE_SUMMARYFILE as MERGE_SUMMARYFILE_HISAT2 } from '../modules/local
 include { BAM2WIG as BAM2WIG_ALLGENES } from '../modules/local/bam2wig' addParams( options: modules['bam2wig'] )
 include { ADJUST_BED_NONCODING } from '../modules/local/adjust_bed_noncoding' addParams( options: modules['adjust_bed_noncoding'] )
 include { RSEQC } from '../modules/local/rseqc' addParams( options: modules['rseqc'] )
+include { MERGE_SUMMARYFILE as MERGE_SUMMARYFILE_READDIST } from '../modules/local/merge_summaryfile' addParams( options: modules['merge_summaryfile_readdist'] )
 include { READCOVERAGE } from '../modules/local/readcoverage' addParams( options: modules['readcoverage'] )
 
 include { FEATURECOUNTS as FEATURECOUNTS_ALL_GTF } from '../modules/local/featurecounts' addParams( options: modules['featurecounts_all_gtf'] )
@@ -196,6 +218,15 @@ include { MERGE_RSEM as MERGE_RSEM_ISOFORMS } from '../modules/local/merge_rsem'
 
 include { CALC_SAMPLE_CORRELATION } from '../modules/local/calc_sample_correlation' addParams( options: modules['calc_sample_correlation'] )
 include { CALC_ERCC_CORRELATION } from '../modules/local/calc_ercc_correlation' addParams( options: modules['calc_ercc_correlation'] )
+include { CALC_ASSIGNEDGENOME_RATE } from '../modules/local/calc_assignedgenome_rate' addParams( options: modules['calc_assignedgenome_rate'] )
+include { CALC_FEATURECOUNTS_MAPRATE as CALC_FEATURECOUNTS_MAPRATE_ALLGENE } from '../modules/local/calc_featurecounts_maprate' addParams( options: modules['calc_featurecounts_maprate_allgene'] )
+include { CALC_FEATURECOUNTS_MAPRATE as CALC_FEATURECOUNTS_MAPRATE_MT} from '../modules/local/calc_featurecounts_maprate' addParams( options: modules['calc_featurecounts_maprate_mt'] )
+include { CALC_FEATURECOUNTS_MAPRATE as CALC_FEATURECOUNTS_MAPRATE_HISTONE} from '../modules/local/calc_featurecounts_maprate' addParams( options: modules['calc_featurecounts_maprate_histone'] )
+include { CALC_DETECTEDGENES_DR as CALC_TPMCOUNTS_FEATURECOUNTS } from '../modules/local/calc_detectedgenes_dr' addParams( options: modules['calc_tpmcounts_featurecounts'] )
+
+include { CALC_DETECTEDGENES_DR as CALC_TPMCOUNTS_RSEM_GENE } from '../modules/local/calc_detectedgenes_dr' addParams( options: modules['calc_tpmcounts_rsem_gene'] )
+include { CALC_DETECTEDGENES_DR as CALC_TPMCOUNTS_RSEM_TS } from '../modules/local/calc_detectedgenes_dr' addParams( options: modules['calc_tpmcounts_rsem_ts'] )
+
 
 /*
 ========================================================================================
@@ -314,6 +345,10 @@ workflow RAMDAQ {
     MERGE_SUMMARYFILE_HISAT2 (
         ch_hisat2_summary.collect()
     )
+    .merged_summary
+    .set{
+        ch_hisat2_merged_totalseq
+    }
 
     //
     // MODULE: Alignment with Hisat2 [rrna]
@@ -352,6 +387,17 @@ workflow RAMDAQ {
     .set { ch_readdist_totalread }
 
     //
+    // MODULE: Merge summaryfiles [ReadDist totalread]
+    //
+    MERGE_SUMMARYFILE_READDIST (
+        ch_readdist_totalread.collect()
+    )
+    .merged_summary
+    .set{
+        ch_readdist_merged_totalread
+    }
+
+    //
     // MODULE: readcoverage.jl
     //
     READCOVERAGE (
@@ -378,6 +424,7 @@ workflow RAMDAQ {
     MERGE_FEATURECOUNTS_ALLGENE (
         ch_counts_to_merge_all.collect()
     )
+    ch_featurecounts_merged_allgene = MERGE_FEATURECOUNTS_ALLGENE.out.merged_counts
     ch_featurecounts_tpm_merged = MERGE_FEATURECOUNTS_ALLGENE.out.counts_tpm_merged
     ch_ercc_tpm_merged = MERGE_FEATURECOUNTS_ALLGENE.out.ercc_tpm_merged
     ch_ercc_tpm_merged_list = ch_ercc_tpm_merged.toList()
@@ -399,6 +446,10 @@ workflow RAMDAQ {
     MERGE_FEATURECOUNTS_MT (
         ch_counts_to_merge_mt.collect()
     )
+    .merged_counts
+    .set{
+        ch_featurecounts_merged_mt
+    }
 
     //
     // MODULE: featureCounts (Histone GTF)
@@ -417,6 +468,10 @@ workflow RAMDAQ {
     MERGE_FEATURECOUNTS_HISTONE (
         ch_counts_to_merge_histone.collect()
     )
+    .merged_counts
+    .set{
+        ch_featurecounts_merged_histone
+    }
 
     //
     // MODULE: Quantification with RSEM [all genes]
@@ -435,6 +490,10 @@ workflow RAMDAQ {
     MERGE_RSEM_GENES (
         ch_rsem_genes_to_merge.collect()
     )
+    .merged_counts
+    .set{
+        ch_rsem_merged_gene
+    }
 
     //
     // MODULE: Merge RSEM output (isoforms)
@@ -442,6 +501,10 @@ workflow RAMDAQ {
     MERGE_RSEM_ISOFORMS (
         ch_rsem_isoforms_to_merge.collect()
     )
+    .merged_counts
+    .set{
+        ch_rsem_merged_ts
+    }
     
     //debug
     //ch_num_of_bam_list.subscribe {  println "ch_num_of_bam: $it"  }
@@ -474,5 +537,81 @@ workflow RAMDAQ {
             ch_ercc_corr_header_gstat
         )
     }
+
+    //
+    // MODULE: Calc assignedgenome rate
+    //
+    CALC_ASSIGNEDGENOME_RATE (
+        ch_hisat2_merged_totalseq,
+        ch_readdist_merged_totalread,
+        ch_assignedgenome_header,
+        ch_assignedgenome_header_gstat
+    )
+
+    //
+    // MODULE: Calc featureCounts mapped rate (all genes)
+    //
+    CALC_FEATURECOUNTS_MAPRATE_ALLGENE (
+        ch_hisat2_merged_totalseq,
+        ch_featurecounts_merged_allgene,
+        ch_fcounts_allgene_header,
+        ch_fcounts_allgene_header_gstat
+    )
+
+    //
+    // MODULE: Calc featureCounts mapped rate (mt genes)
+    //
+    CALC_FEATURECOUNTS_MAPRATE_MT (
+        ch_hisat2_merged_totalseq,
+        ch_featurecounts_merged_mt,
+        ch_fcounts_mt_header,
+        ch_fcounts_mt_header_gstat
+    )
+
+    //
+    // MODULE: Calc featureCounts mapped rate (hisotne genes)
+    //
+    CALC_FEATURECOUNTS_MAPRATE_HISTONE (
+        ch_hisat2_merged_totalseq,
+        ch_featurecounts_merged_histone,
+        ch_fcounts_histone_header,
+        ch_fcounts_histone_header_gstat
+    )
+
+    //
+    // MODULE: Calc detected genes and dimentional reduction from featureCounts TPM
+    //
+    CALC_TPMCOUNTS_FEATURECOUNTS (
+        ch_featurecounts_tpm_merged,
+        ch_num_of_detgene_header,
+        ch_num_of_detgene_header_gstat,
+        ch_pcaplot_header,
+        ch_tsneplot_header,
+        ch_umapplot_header
+    )
+
+    //
+    // MODULE: Calc detected genes from RSEM TPM
+    //
+    CALC_TPMCOUNTS_RSEM_GENE (
+        ch_rsem_merged_gene,
+        ch_num_of_gene_rsem_header,
+        ch_num_of_gene_rsem_header_gstat,
+        ch_pcaplot_header,
+        ch_tsneplot_header,
+        ch_umapplot_header
+    )
+
+    //
+    // MODULE: Calc detected transcripts from RSEM TPM
+    //
+    CALC_TPMCOUNTS_RSEM_TS (
+        ch_rsem_merged_ts,
+        ch_num_of_ts_rsem_header,
+        ch_num_of_ts_rsem_header_gstat,
+        ch_pcaplot_header,
+        ch_tsneplot_header,
+        ch_umapplot_header
+    )
 }
 

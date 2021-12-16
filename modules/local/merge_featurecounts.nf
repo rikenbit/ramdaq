@@ -13,7 +13,7 @@ process MERGE_FEATURECOUNTS {
     file(input_files)
     
     output:
-    path "merged_*.txt", emit: merged_counts
+    path "merged_featureCounts_${options.suffix}.txt", emit: merged_counts
     path '*_TPM.txt', optional:true, emit: counts_tpm_merged
     path '*_ERCC_TPM_log.txt', optional:true, emit: ercc_tpm_merged
     

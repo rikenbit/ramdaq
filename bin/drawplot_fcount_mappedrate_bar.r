@@ -24,7 +24,17 @@ annotation_name <- args[4]
 ### function ###
 totalseq_data = read.table(input_totalseq, sep="", comment.char = "", header=F, check.names=FALSE, stringsAsFactors=F)
 fcount_merged_data = read.table(input_fcount_merged, sep="", comment.char = "", header=T, check.names=FALSE, stringsAsFactors=F)
-fcount_merged_data = fcount_merged_data[,!colnames(fcount_merged_data) %in% c("Geneid", "Length", "gene_name")]
+
+if (ncol(fcount_merged_data) > 4){
+  fcount_merged_data = fcount_merged_data[,!colnames(fcount_merged_data) %in% c("Geneid", "Length", "gene_name")]
+} else {
+  tmp_rowname = fcount_merged_data$Geneid
+  tmp_colname = colnames(fcount_merged_data)
+  fcount_merged_data = data.frame(tmp = fcount_merged_data[,-c(1,2,3)])
+  colnames(fcount_merged_data) = tmp_colname[4]
+  rownames(fcount_merged_data) = tmp_rowname
+}
+
 total_mapped_reads = data.frame(V1 = colnames(fcount_merged_data), mappedreads = colSums(fcount_merged_data), stringsAsFactors=F)
 
 plotdata = dplyr::left_join(totalseq_data, total_mapped_reads, by=c("V1"))

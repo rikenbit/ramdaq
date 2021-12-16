@@ -68,14 +68,33 @@ ggplot_2D <- function(dset, x, y, title, celltype, outname, label=F) {
 
 countdata = read.table(inputfile, sep="\t", comment.char = "", header=T, check.names=FALSE, stringsAsFactors=F)
 
-if (tool_name=="rsem"){
+if (tool_name!="fcounts"){
   rownames(countdata) = countdata[,1]
-  countdata = countdata[,-c(1,2)]
-  colnames(countdata) = str_replace_all(colnames(countdata), ".genes.results", "")
+  if (ncol(countdata) > 3){
+    countdata = countdata[,-c(1,2)]
+  } else {
+    tmp_rowname = rownames(countdata)
+    tmp_colname = colnames(countdata)
+    countdata = data.frame(tmp = countdata[,-c(1,2)])
+    colnames(countdata) = tmp_colname[3]
+    rownames(countdata) = tmp_rowname
+  }
+  if (tool_name=="rsem_gene"){
+    colnames(countdata) = str_replace_all(colnames(countdata), ".genes.results", "")
+  } else {
+    colnames(countdata) = str_replace_all(colnames(countdata), ".isoforms.results", "")
+  }
 }
 
 counts_detgenenum = data.frame(colSums(countdata >0))
-colnames(counts_detgenenum) = c("NumOfGenes")
+
+if (tool_name=="rsem_ts"){
+  colnames(counts_detgenenum) = c("NumOfTs")
+} else {
+  colnames(counts_detgenenum) = c("NumOfGenes")
+
+}
+
 counts_detgenenum$samplename = rownames(counts_detgenenum)
 counts_detgenenum = counts_detgenenum[order(counts_detgenenum$samplename),]
 
@@ -83,25 +102,45 @@ if (tool_name=="fcounts") {
   ylab_name = "Number of detected genes"
   title = "Number of detected genes (TPM>0)"
   file_name = "barplot_num_of_detectedgene"
-} else {
+} else if (tool_name=="rsem_gene")  {
   ylab_name = "Number of RSEM detected genes"
   title = "Number of RSEM detected genes (TPM>0)"
   file_name = "barplot_num_of_gene_rsem"
+} else {
+  ylab_name = "Number of RSEM detected transcripts"
+  title = "Number of RSEM detected transcripts (TPM>0)"
+  file_name = "barplot_num_of_ts_rsem"
 }
 
 ### draw barplot
-g = ggplot(counts_detgenenum, aes(x=samplename,y=NumOfGenes)) +
-    geom_bar(alpha=0.7, stat="identity") +
-    xlab("Sample") + ylab(ylab_name) + 
-    theme(axis.text.x=element_text(size=6, angle=90, hjust=1), legend.text=element_text(size=8)) +
-    ggtitle(title)
+if (tool_name!="rsem_ts"){
 
-ggsave(file = paste0(file_name, ".pdf"), plot=g, dpi=100, width=12, height=5)
+  g = ggplot(counts_detgenenum, aes(x=samplename,y=NumOfGenes)) +
+      geom_bar(alpha=0.7, stat="identity") +
+      xlab("Sample") + ylab(ylab_name) + 
+      theme(axis.text.x=element_text(size=6, angle=90, hjust=1), legend.text=element_text(size=8)) +
+      ggtitle(title)
+  ggsave(file = paste0(file_name, ".pdf"), plot=g, dpi=100, width=12, height=5)
 
-# Write correlation values to file
-outputdata = data.frame(name = counts_detgenenum$samplename, NumOfGenes=counts_detgenenum$NumOfGenes)
-rownames(outputdata) = outputdata$name
-write.csv(outputdata, paste0(file_name, ".csv"), quote=FALSE, append=TRUE)
+  outputdata = data.frame(name = counts_detgenenum$samplename, NumOfGenes=counts_detgenenum$NumOfGenes)
+  rownames(outputdata) = outputdata$name
+  write.csv(outputdata, paste0(file_name, ".csv"), quote=FALSE, append=TRUE)
+
+} else {
+
+  g = ggplot(counts_detgenenum, aes(x=samplename,y=NumOfTs)) +
+      geom_bar(alpha=0.7, stat="identity") +
+      xlab("Sample") + ylab(ylab_name) + 
+      theme(axis.text.x=element_text(size=6, angle=90, hjust=1), legend.text=element_text(size=8)) +
+      ggtitle(title)
+  ggsave(file = paste0(file_name, ".pdf"), plot=g, dpi=100, width=12, height=5)
+
+  outputdata = data.frame(name = counts_detgenenum$samplename, NumOfTs=counts_detgenenum$NumOfTs)
+  rownames(outputdata) = outputdata$name
+  write.csv(outputdata, paste0(file_name, ".csv"), quote=FALSE, append=TRUE)
+
+}
+
 
 ### draw pca, tsne, umapplot
 
