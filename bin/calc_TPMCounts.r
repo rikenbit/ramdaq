@@ -23,10 +23,24 @@ gene_length = data.frame(Geneid=raw_countdata$Geneid, Length=raw_countdata$Lengt
 
 trim_tpmmatrix <- function(data, ERCC=F){
 
-  if (ERCC) {
-    data = data[grepl("ERCC", rownames(data)),]
+  if (ncol(data) > 1){
+    if (ERCC) {
+      data = data[grepl("ERCC", rownames(data)),]
+    } else {
+      data = data[!grepl("ERCC", rownames(data)),]
+    }
   } else {
-    data = data[!grepl("ERCC", rownames(data)),]
+    tmp_rowname = rownames(data)
+    tmp_colname = colnames(data)
+    if (ERCC) {
+      data = data.frame(tmp = data[grepl("ERCC", rownames(data)),])
+      tmp_rowname = tmp_rowname[grepl("ERCC", tmp_rowname)]
+    } else {
+      data = data.frame(tmp = data[!grepl("ERCC", rownames(data)),])
+      tmp_rowname = tmp_rowname[!grepl("ERCC", tmp_rowname)]
+    }
+    colnames(data) = tmp_colname
+    rownames(data) = tmp_rowname
   }
 
   return(data)

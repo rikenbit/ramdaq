@@ -1918,7 +1918,7 @@ process create_plots_fromTPM {
 
     output:
     file "*.{txt,pdf}" into plots_from_tpmcounts_results
-    file "DRplot_*.csv" into tpmcounts_DRplot
+    file "DRplot_*.csv" optional true into tpmcounts_DRplot
     file "barplot_*.csv" into tpmcounts_barplot
     file "gstat_*.csv" into tpmcounts_gstat
 

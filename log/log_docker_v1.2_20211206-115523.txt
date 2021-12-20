@@ -1,0 +1,9 @@
+DATE=20211206-115523
+IMAGE_TAG=v1.2
+REPO_COMMIT=6a6c769
+YAML_COMMIT=718f5ac
+
+Docker log:
+docker build -t myoshimura080822/ramdaq:718f5ac .
+docker tag myoshimura080822/ramdaq:718f5ac myoshimura080822/ramdaq:v1.2
+docker push myoshimura080822/ramdaq:v1.2

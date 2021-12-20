@@ -1,4 +1,4 @@
-name: CI (mouse SE UST data)
+name: CI (human SE UST and ST data)
 # This workflow is triggered on pushes and PRs to the repository.
 # It runs the pipeline with the minimal test dataset to check that it completes without any syntax errors
 on: [push, pull_request]
@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         # Nextflow versions: check pipeline minimum and current latest
-        nxf_ver: ['19.10.0', '']
+        nxf_ver: ['']
     steps:
       - uses: actions/checkout@v2
       - name: Crean env
@@ -27,18 +27,23 @@ jobs:
           sudo mv nextflow /usr/local/bin/
       - name: Pull docker image
         run: |
-          docker pull myoshimura080822/ramdaq:v1.1
+          docker pull myoshimura080822/ramdaq:v1.2
       - name: Run pipeline with test data
         run: |
-          # TODO: You can customise CI pipeline run tests as required
-          # (eg. adding multiple test runs with different parameters)
-          # nextflow run ${GITHUB_WORKSPACE} -profile test,docker
-          nextflow run ${GITHUB_WORKSPACE} -profile test_SE_UST_M,docker
-      - name: Deploy to ramdaq-mouse-se-ust.surge.sh
+          nextflow run ${GITHUB_WORKSPACE} -profile test_SE_UST_H,docker
+          nextflow run ${GITHUB_WORKSPACE} -profile test_SE_ST_H,docker
+      - name: Deploy to ramdaq-human-se-ust.surge.sh
         uses: dswistowski/surge-sh-action@v1
         with:
-          domain: 'ramdaq-mouse-se-ust.surge.sh'
-          project: './results/MultiQC'
+          domain: 'ramdaq-human-se-ust.surge.sh'
+          project: './results_SE_UST_H/MultiQC'
+          login: ${{ secrets.SURGE_LOGIN }}
+          token: ${{ secrets.SURGE_TOKEN }}
+      - name: Deploy to ramdaq-human-se-st.surge.sh
+        uses: dswistowski/surge-sh-action@v1
+        with:
+          domain: 'ramdaq-human-se-st.surge.sh'
+          project: './results_SE_ST_H/MultiQC'
           login: ${{ secrets.SURGE_LOGIN }}
           token: ${{ secrets.SURGE_TOKEN }}
 
