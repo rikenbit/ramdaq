@@ -17,7 +17,7 @@ process FASTQC {
     tuple val(name), file(reads)
 
     output:
-    file "*_fastqc.{zip,html}"
+    path "*_fastqc.{zip,html}", emit: fastqc_results
 
     script:
     def prefix = options.suffix ? "${name}${options.suffix}" : "${name}"

@@ -20,7 +20,7 @@ process READCOVERAGE  {
     file bed
 
     output:
-    file "*.txt"
+    path "*.txt", emit: readcov_results
 
     script:
     """

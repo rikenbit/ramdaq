@@ -132,3 +132,5 @@ extra_fn_clean_exts:
       pattern: .inferexp
     - type: remove
       pattern: .junction_annotation
+    - type: remove
+      pattern: .rrna
