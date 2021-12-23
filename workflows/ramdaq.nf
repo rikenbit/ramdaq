@@ -668,6 +668,8 @@ workflow RAMDAQ {
     //debug
     //ch_ercc_tpm_merged_list.subscribe {  println "ch_ercc_tpm_merged: $it"  }
     //ch_ercc_tpm_merged_list.size().subscribe {  println "ch_ercc_size_chk: $it"  }
+    def ch_ercc_correlation_barplot  = []
+    def ch_ercc_correlation_gstat  = []
     if (params.spike_in_ercc || params.spike_in_sirv) {
         //
         // MODULE: Calc ERCC mol vs exp corr
@@ -789,8 +791,8 @@ workflow RAMDAQ {
         ch_counts_biotype.collect().ifEmpty([]),
         ch_rsem_results_stat.collect().ifEmpty([]),
         ch_sample_correlation.collect().ifEmpty([]),
-        ch_ercc_correlation_barplot.collect().ifEmpty([]),
-        ch_ercc_correlation_gstat.collect().ifEmpty([]),
+        ch_ercc_correlation_barplot.collect(),
+        ch_ercc_correlation_gstat.collect(),
         ch_counts_summary_all.collect().ifEmpty([]),
         ch_counts_summary_mt.collect().ifEmpty([]),
         ch_counts_summary_histone.collect().ifEmpty([]),
