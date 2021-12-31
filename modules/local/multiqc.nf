@@ -41,6 +41,8 @@ process MULTIQC {
     path ('plots_from_tpmcounts_rsem/*')
     path ('plots_from_tpmcounts_rsem/*')
     path ('plots_from_tpmcounts_rsem/*')
+    path ('plots_entropy_sirv/*')
+    path ('plots_entropy_sirv/*')
     path ('software_versions/*')
     path workflow_summary
     

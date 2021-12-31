@@ -14,6 +14,7 @@ process RSEM_BOWTIE2  {
                 }
 
     input:
+    tuple val(name), file(bam), file(bai) //for input check
     tuple val(name), file(reads)
     path rsem_indices
 

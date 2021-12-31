@@ -31,6 +31,10 @@ params.mt_gtf = params.genome ? params.genomes[ params.genome ].mt_gtf ?: false 
 params.histone_gtf = params.genome ? params.genomes[ params.genome ].histone_gtf ?: false : false
 params.rsem_allgene_idx = params.genome ? params.genomes[ params.genome ].rsem_allgene_idx ?: false : false
 
+// option: SIRV quantification
+params.hisat2_sirv_idx = params.genome ? params.genomes[ params.genome ].hisat2_sirv_idx ?: false : false
+params.rsem_sirv_idx = params.genome ? params.genomes[ params.genome ].rsem_sirv_idx ?: false : false
+
 /*
 ========================================================================================
     SET UP VARIABLES & VALIDATE INPUTS
@@ -108,11 +112,45 @@ if (params.rsem_allgene_idx) {
     }
 }
 
-//if (params.spike_in_ercc && params.spike_in_ercc.toString() == 'true') { ch_spike_in_ercc = params.spike_in_ercc_default_amount } else { ch_spike_in_ercc = params.spike_in_ercc }
-//if (params.spike_in_sirv && params.spike_in_sirv.toString() == 'true') { exit 1, "--spike_in_sirv option requires a dilution rate value" }
-//if (params.spike_in_sirv) { ch_spike_in_ercc = params.spike_in_sirv }
+// option: ERCC / SIRV quantification
+if (params.spike_in_ercc && params.spike_in_ercc.toString() == 'true') { ch_spike_in_ercc = params.spike_in_ercc_default_amount } else { ch_spike_in_ercc = params.spike_in_ercc }
+if (params.spike_in_sirv && params.spike_in_sirv.toString() == 'true') { exit 1, "--spike_in_sirv option requires a dilution rate value (e.g. --spike_in_sirv '4e-6')" }
+if (params.spike_in_sirv) { ch_spike_in_ercc = params.spike_in_sirv }
 
-if (params.spike_in_ercc) { ch_spike_in_ercc = params.spike_in_ercc_default_amount } else { ch_spike_in_ercc = params.spike_in_ercc }
+if (params.spike_in_sirv) {
+
+    if (params.hisat2_sirv_idx) {
+        if (params.hisat2_sirv_idx.endsWith('.tar.gz')) {
+            file(params.hisat2_sirv_idx, checkIfExists: true)
+            ch_hisat2_sirv_idx = false      
+
+        } else {
+            ch_hisat2_sirv_idx = Channel
+            .from(params.hisat2_sirv_idx)
+            .flatMap{file(params.hisat2_sirv_idx, checkIfExists: true)}
+            .ifEmpty { exit 1, "HISAT2 SIRVome index files not found: ${params.hisat2_sirv_idx}" }   
+        }
+    }
+
+    if (params.rsem_sirv_idx) {
+        if (params.rsem_sirv_idx.endsWith('.tar.gz')) {
+
+            file(params.rsem_sirv_idx, checkIfExists: true)
+            ch_rsem_sirv_idx = false      
+
+        } else {
+            ch_rsem_sirv_idx = Channel
+            .from(params.rsem_sirv_idx)
+            .flatMap{file(params.rsem_sirv_idx, checkIfExists: true)}
+            .ifEmpty { exit 1, "RSEM SIRVome index files not found: ${params.rsem_sirv_idx}" }   
+        }
+    }
+
+} else {
+    ch_hisat2_sirv_idx = false
+    ch_rsem_sirv_idx = false
+}
+
 
 /*
 ========================================================================================
@@ -147,6 +185,8 @@ ch_num_of_gene_rsem_header_gstat = file("$projectDir/assets/gstat_num_of_gene_rs
 ch_num_of_ts_rsem_header = file("$projectDir/assets/barplot_num_of_ts_rsem_header.txt", checkIfExists: true)
 ch_num_of_ts_rsem_header_gstat = file("$projectDir/assets/gstat_num_of_ts_rsem_header.txt", checkIfExists: true)
 
+ch_entropy_of_sirv_header = Channel.fromPath("$projectDir/assets/barplot_entropy_of_sirv_header.txt", checkIfExists: true)
+ch_entropy_of_sirv_header_gstat = Channel.fromPath("$projectDir/assets/gstat_entropy_of_sirv_header.txt", checkIfExists: true)
 
 /*
 ========================================================================================
@@ -169,7 +209,9 @@ ch_tools_dir = workflow.scriptFile.parent + "/tools"
 
 // Function that checks the number of mapped reads from flagstat output
 // and returns true if > params.min_mapped_reads and otherwise false
-def check_mappedread(name,flagstat_path,min_mapped_reads=10) {
+def check_mappedread(bam,flagstat_path,min_mapped_reads=10) {
+
+    def filename = bam.getName()
     def flagstat_file = new File(flagstat_path.toString())
     def mapped = 0
     flagstat_file.eachLine { line ->
@@ -178,7 +220,31 @@ def check_mappedread(name,flagstat_path,min_mapped_reads=10) {
         }
     }
     if (mapped < min_mapped_reads.toInteger()) {
-        log.info ">>>> $name FAILED MAPPED READ THRESHOLD: ${mapped} < ${params.min_mapped_reads}. IGNORING FOR FURTHER DOWNSTREAM ANALYSIS! <<<<"
+        log.warn "[ramdaq] ${filename} Failed mapped reads threshold: ${mapped} < ${params.min_mapped_reads}. Ignoring downstream analysis."
+        return false
+    } else {
+        return true
+    }
+}
+
+def check_mappedread_sirv(bam,flagstat_path,min_mapped_reads=10) {
+    
+    def filename = bam.getName()
+
+    //trim R1 or R2 bams
+    if (filename.indexOf(".R1.") > 0 || filename.indexOf(".R2.") > 0){
+        return false
+    }
+    
+    def flagstat_file = new File(flagstat_path.toString())
+    def mapped = 0
+    flagstat_file.eachLine { line ->
+        if (line.contains(' mapped (')) {
+            mapped = line.tokenize().first().toInteger()
+        }
+    }
+    if (mapped < min_mapped_reads.toInteger()) {
+        log.warn "[ramdaq] ${filename} Failed mapped reads threshold: ${mapped} < ${params.min_mapped_reads}. Ignoring downstream SIRV quantification."
         return false
     } else {
         return true
@@ -249,8 +315,6 @@ if (params.stranded)  {
 summary['Save Reference'] = params.saveReference ? 'Yes' : 'No'
 if (params.hisat2_idx) summary['HISAT2 Index'] = params.hisat2_idx
 if (params.hisat2_rrna_idx) summary['HISAT2 rRNA Index'] = params.hisat2_rrna_idx
-//if (params.hisat2_sirv_idx) summary['HISAT2 SIRVome Index'] = params.hisat2_sirv_idx
-//if (params.rsem_sirv_idx) summary['RSEM-Bowtie2 SIRVome Index'] = params.rsem_sirv_idx
 if (params.rsem_allgene_idx) summary['RSEM-Bowtie2 All genes Index'] = params.rsem_allgene_idx
 if (params.chrsize)  summary['Chromosome sizes'] = params.chrsize
 if (params.bed) summary['BED Annotation'] = params.bed
@@ -266,6 +330,8 @@ if (params.group_features_type) summary['Biotype GTF field'] = params.group_feat
 if (params.min_mapped_reads) summary['Min Mapped Reads'] = params.min_mapped_reads
 summary['ERCC quantification mode']   = params.spike_in_ercc || params.spike_in_sirv ? 'On' : 'Off'
 summary['SIRV quantification mode']   = params.spike_in_sirv ? 'On' : 'Off'
+if (params.hisat2_sirv_idx) summary['HISAT2 SIRVome Index'] = params.hisat2_sirv_idx
+if (params.rsem_sirv_idx) summary['RSEM-Bowtie2 SIRVome Index'] = params.rsem_sirv_idx
 
 summary['Resource allocation for the entire workflow']  = "$params.entire_max_cpus cpus, $params.entire_max_memory memory"
 summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
@@ -320,6 +386,9 @@ include { UNTAR_INDEX as UNTAR_HISAT2_IDX } from '../modules/local/untar_index' 
 include { UNTAR_INDEX as UNTAR_HISAT2_RRNA_IDX } from '../modules/local/untar_index' addParams( options: modules['untar_index_hisat2'] )
 include { UNTAR_INDEX as UNTAR_RSEM_ALLGENE_IDX } from '../modules/local/untar_index' addParams( options: modules['untar_index_rsem'] )
 
+include { UNTAR_INDEX as UNTAR_HISAT2_SIRV_IDX } from '../modules/local/untar_index' addParams( options: modules['untar_index_hisat2'] )
+include { UNTAR_INDEX as UNTAR_RSEM_SIRV_IDX } from '../modules/local/untar_index' addParams( options: modules['untar_index_rsem'] )
+
 include { FASTQC as FASTQC_RAW } from '../modules/local/fastqc' addParams( options: modules['fastqc'] )
 include { FASTQC as FASTQC_TRIM } from '../modules/local/fastqc' addParams( options: modules['fastqc_trim'] )
 include { FASTQMCF } from '../modules/local/fastqmcf' addParams( options: modules['fastqmcf'] )
@@ -355,6 +424,14 @@ include { CALC_DETECTEDGENES_DR as CALC_TPMCOUNTS_FEATURECOUNTS } from '../modul
 include { CALC_DETECTEDGENES_DR as CALC_TPMCOUNTS_RSEM_GENE } from '../modules/local/calc_detectedgenes_dr' addParams( options: modules['calc_tpmcounts_rsem_gene'] )
 include { CALC_DETECTEDGENES_DR as CALC_TPMCOUNTS_RSEM_TS } from '../modules/local/calc_detectedgenes_dr' addParams( options: modules['calc_tpmcounts_rsem_ts'] )
 
+// option: ERCC / SIRV quantification
+include { HISAT2 as HISAT2_SIRV } from '../modules/local/hisat2' addParams( options: modules['hisat2_sirv'] )
+include { READCOVERAGE_SIRV } from '../modules/local/readcoverage_sirv' addParams( options: modules['readcoverage_sirv'] )
+include { MERGE_READCOVERAGE_SIRV } from '../modules/local/merge_readcoverage_sirv' addParams( options: modules['merge_readcoverage_sirv'] )
+include { RSEM_BOWTIE2 as RSEM_BOWTIE2_SIRV } from '../modules/local/rsem_bowtie2' addParams( options: modules['rsem_bowtie2_sirv'] )
+include { MERGE_RSEM as MERGE_RSEM_ISOFORMS_SIRV } from '../modules/local/merge_rsem' addParams( options: modules['merge_rsem_isoforms_sirv'] )
+include { CALC_ENTROPY_SIRV } from '../modules/local/calc_entropy_sirv' addParams( options: modules['calc_entropy_sirv'] )
+
 include { MULTIQC } from '../modules/local/multiqc' addParams( options: modules['multiqc'] )
 
 /*
@@ -375,7 +452,7 @@ workflow RAMDAQ {
 
     if (!ch_hisat2_idx){
         //
-        // MODULE: untar index.tar.gz [hisat2 all genes]
+        // MODULE: untar index.tar.gz [hisat2 all genome]
         //
         UNTAR_HISAT2_IDX (
             params.hisat2_idx
@@ -385,7 +462,7 @@ workflow RAMDAQ {
     }
     if (!ch_hisat2_rrna_idx){
         //
-        // MODULE: untar index.tar.gz [hisat2 rrna]
+        // MODULE: untar index.tar.gz [hisat2 rrna genome]
         //
         UNTAR_HISAT2_RRNA_IDX (
             params.hisat2_rrna_idx
@@ -402,6 +479,28 @@ workflow RAMDAQ {
         )
         .index_files
         .set { ch_rsem_allgene_idx }
+    }
+
+    if (params.spike_in_sirv && !ch_hisat2_sirv_idx){
+        //
+        // MODULE: untar index.tar.gz [hisat2 sirv genome]
+        //
+        UNTAR_HISAT2_SIRV_IDX (
+            params.hisat2_sirv_idx
+        )
+        .index_files
+        .set { ch_hisat2_sirv_idx }
+    }
+
+    if (params.spike_in_sirv && !ch_rsem_sirv_idx){
+        //
+        // MODULE: untar index.tar.gz [rsem sirv genes]
+        //
+        UNTAR_RSEM_SIRV_IDX (
+            params.rsem_sirv_idx
+        )
+        .index_files
+        .set { ch_rsem_sirv_idx }
     }
 
     //
@@ -444,11 +543,11 @@ workflow RAMDAQ {
     ch_hisat2_summary = HISAT2_GENOME.out.hisat2_summary
 
     //
-    // FUNCTION: Filtering low mapped reads bams [for bamQC]
+    // FUNCTION: Filtering low mapped reads bams [for bamQC, RSEM]
     //
     ch_hisat2_bam_qc
     .transpose()
-    .filter { name, bam, bai, flagstat -> check_mappedread(name,flagstat,params.min_mapped_reads) }
+    .filter { name, bam, bai, flagstat -> check_mappedread(bam,flagstat,params.min_mapped_reads) }
     .map { it[0..2] }
     .set{
         ch_hisat2_bam_qc_filtered
@@ -458,7 +557,7 @@ workflow RAMDAQ {
     // FUNCTION: Filtering low mapped reads bams [for featureCounts]
     //
     ch_hisat2_bam_count
-    .filter { name, bam, bai, flagstat -> check_mappedread(name,flagstat,params.min_mapped_reads) }
+    .filter { name, bam, bai, flagstat -> check_mappedread(bam,flagstat,params.min_mapped_reads) }
     .map { it[0..2] }
     .set { 
         ch_hisat2_bam_featurecount
@@ -472,7 +571,7 @@ workflow RAMDAQ {
     // FUNCTION: Count the number of valid samples [for correlation plot]
     //
     ch_hisat2_bam_count
-    .filter { name, bam, bai, flagstat -> check_mappedread(bam.baseName,flagstat,params.min_mapped_reads) }
+    .filter { name, bam, bai, flagstat -> check_mappedread(bam,flagstat,params.min_mapped_reads) }
     .map { it[1] }
     .set { ch_num_of_bam }
     ch_num_of_bam_list = ch_num_of_bam.toList()
@@ -620,6 +719,7 @@ workflow RAMDAQ {
     // MODULE: Quantification with RSEM [all genes]
     //
     RSEM_BOWTIE2_ALLGENES (
+        ch_hisat2_bam_qc_filtered,
         ch_trimmed_reads,
         ch_rsem_allgene_idx.collect()
     )
@@ -665,11 +765,8 @@ workflow RAMDAQ {
         .set { ch_sample_correlation }
     }
 
-    //debug
-    //ch_ercc_tpm_merged_list.subscribe {  println "ch_ercc_tpm_merged: $it"  }
-    //ch_ercc_tpm_merged_list.size().subscribe {  println "ch_ercc_size_chk: $it"  }
-    def ch_ercc_correlation_barplot  = []
-    def ch_ercc_correlation_gstat  = []
+    def ch_ercc_correlation_barplot  =  Channel.empty()
+    def ch_ercc_correlation_gstat  =  Channel.empty()
     if (params.spike_in_ercc || params.spike_in_sirv) {
         //
         // MODULE: Calc ERCC mol vs exp corr
@@ -777,9 +874,85 @@ workflow RAMDAQ {
     ch_detectedgene_barplot_rsem_ts = CALC_TPMCOUNTS_RSEM_TS.out.detectedgene_barplot
     ch_detectedgene_gstat_rsem_ts = CALC_TPMCOUNTS_RSEM_TS.out.detectedgene_gstat
 
-    //
+    // =================================================
+    // optional: ERCC / SIRV quantification
+    // =================================================
+
+    def ch_entropy_sirv_barplot  =  Channel.empty()
+    def ch_entropy_sirv_gstat  =  Channel.empty()
+    if (params.spike_in_sirv) {
+        //
+        // MODULE: Alignment with Hisat2 [sirv]
+        //
+        HISAT2_SIRV (
+            ch_trimmed_reads,
+            ch_hisat2_sirv_idx.collect(),
+            ch_tools_dir
+        ).hisat2_bam_qc
+        .set { ch_hisat2_bam_qc_sirv }
+    
+        //
+        // FUNCTION: Filtering low mapped reads bams [for SIRV readcoverage]
+        //
+        ch_hisat2_bam_qc_sirv
+        .transpose()
+        .filter { name, bam, bai, flagstat -> check_mappedread_sirv(bam,flagstat,params.min_mapped_reads) }
+        .map { it[0..2] }
+        .set{
+            ch_hisat2_bam_qc_sirv_filtered
+        }
+        
+        //
+        // MODULE: readcoverage.jl [sirv]
+        //
+        READCOVERAGE_SIRV (
+            ch_hisat2_bam_qc_sirv_filtered
+        ).readcov_sirv_results
+        .set { ch_readcov_sirv_results}
+
+        //
+        // MODULE: merge sirv readcoverage outputs
+        //
+        MERGE_READCOVERAGE_SIRV (
+            ch_readcov_sirv_results.collect()
+        )
+
+        //
+        // MODULE: Quantification with RSEM [sirv]
+        //
+        RSEM_BOWTIE2_SIRV (
+            ch_hisat2_bam_qc_sirv_filtered,
+            ch_trimmed_reads,
+            ch_rsem_sirv_idx.collect()
+        ).rsem_isoforms_to_merge
+        .set { ch_rsem_isoforms_sirv_to_merge }
+
+        //
+        // MODULE: Merge RSEM output (sirv isoforms)
+        //
+        MERGE_RSEM_ISOFORMS_SIRV (
+            ch_rsem_isoforms_sirv_to_merge.collect()
+        )
+        .merged_counts
+        .set{
+            ch_rsem_merged_ts_sirv
+        }
+
+        //
+        // MODULE: Merge RSEM output (sirv isoforms)
+        //
+        CALC_ENTROPY_SIRV (
+            ch_rsem_merged_ts_sirv.collect(),
+            ch_entropy_of_sirv_header,
+            ch_entropy_of_sirv_header_gstat
+        )
+        ch_entropy_sirv_barplot = CALC_ENTROPY_SIRV.out.entropy_barplot
+        ch_entropy_sirv_gstat = CALC_ENTROPY_SIRV.out.entropy_gstat
+    }
+
+    //=================================================
     // MODULE: MultiQC report
-    //
+    //=================================================
     MULTIQC (
         ch_multiqc_config,
         ch_multiqc_custom_config.collect().ifEmpty([]),
@@ -791,8 +964,8 @@ workflow RAMDAQ {
         ch_counts_biotype.collect().ifEmpty([]),
         ch_rsem_results_stat.collect().ifEmpty([]),
         ch_sample_correlation.collect().ifEmpty([]),
-        ch_ercc_correlation_barplot.collect(),
-        ch_ercc_correlation_gstat.collect(),
+        ch_ercc_correlation_barplot.collect().ifEmpty([]),
+        ch_ercc_correlation_gstat.collect().ifEmpty([]),
         ch_counts_summary_all.collect().ifEmpty([]),
         ch_counts_summary_mt.collect().ifEmpty([]),
         ch_counts_summary_histone.collect().ifEmpty([]),
@@ -811,6 +984,8 @@ workflow RAMDAQ {
         ch_detectedgene_gstat_rsem_gene.collect().ifEmpty([]),
         ch_detectedgene_barplot_rsem_ts.collect().ifEmpty([]),
         ch_detectedgene_gstat_rsem_ts.collect().ifEmpty([]),
+        ch_entropy_sirv_barplot.collect().ifEmpty([]),
+        ch_entropy_sirv_gstat.collect().ifEmpty([]),
         ch_software_versions_yaml.collect(),
         ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
     ).multiqc_report

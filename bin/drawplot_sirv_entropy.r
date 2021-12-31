@@ -26,6 +26,7 @@ shannon.entropy <- function(p)
 }
 
 input_tpm <- args[1]
+filename <- args[2]
 
 ### create sirv counts
 sirv_tpm = read.table(input_tpm, sep="", comment.char = "", header=T, check.names=FALSE, stringsAsFactors=F)
@@ -35,7 +36,16 @@ sirv_tpm = as.data.frame(sirv_tpm)
 sirv_tpm = subset(sirv_tpm, !grepl("ERCC", gene_id))
 
 rownames(sirv_tpm) = sirv_tpm$transcript_id
-sirv_tpm = sirv_tpm[,-c(1,2)]
+
+if (ncol(sirv_tpm) > 3){
+  sirv_tpm = sirv_tpm[,-c(1,2)]
+} else {
+  tmp_rowname = rownames(sirv_tpm)
+  tmp_colname = colnames(sirv_tpm)
+  sirv_tpm = data.frame(tmp = sirv_tpm[,-c(1,2)])
+  colnames(sirv_tpm) = tmp_colname[3]
+  rownames(sirv_tpm) = tmp_rowname
+}
 
 ### calc entropy
 samplenum = ncol(sirv_tpm)
@@ -60,12 +70,12 @@ g = ggplot(plotdata, aes(x=samplename,y=entropy)) +
     theme(axis.text.x=element_text(size=6, angle=90, hjust=1), legend.text=element_text(size=8)) +
     ggtitle("Entropy of sirv isoforms")
 
-ggsave(file = "barplot_entropy_of_sirv.pdf", plot=g, dpi=100, width=12, height=5)
+ggsave(file = paste0("barplot_", filename, ".pdf"), plot=g, dpi=100, width=12, height=5)
 
 # Write rate values to file
 outputdata = data.frame(name = plotdata$samplename, entropy=plotdata$entropy)
 rownames(outputdata) = outputdata$name
-write.csv(outputdata, 'barplot_entropy_of_sirv.csv', quote=FALSE, append=TRUE)
+write.csv(outputdata, paste0("barplot_", filename, ".csv"), quote=FALSE, append=TRUE)
 
 # Printing sessioninfo to standard out
 print("Draw plot info:")
