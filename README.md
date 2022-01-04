@@ -129,7 +129,9 @@ The ramdaq pipeline comes with documentation about the pipeline, found in the `d
         - the current version supports human (GRCh38) and mouse (GRCm38).
     - [Using ramdaq on the NIG Supercomputer System](docs/nig_supercomputer_system.md)
 4. [Output and how to interpret the results](docs/output.md)
-5. [Troubleshooting](https://nf-co.re/usage/troubleshooting)
+5. Troubleshooting
+    - [Troubleshooting » nf-core](https://nf-co.re/usage/troubleshooting)
+    - [Troubleshooting specific to ramdaq](docs/troubleshooting.md)
 
 ## Credits
 
