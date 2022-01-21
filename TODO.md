@@ -28,5 +28,5 @@ Progress | Process Name
 &#9745; | Create plots from RSEM TPM counts (num of detected genes, num of detected transcripts) |  
 &#9745; | SIRV entropy barplot |  
 &#9745; | MultiQC Report |  
-&#9744; | helpMessage() |  
-&#9744; | get_software_versions() |  
+&#9745; | helpMessage() |  
+&#9745; | get_software_versions() |  
