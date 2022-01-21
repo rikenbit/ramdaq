@@ -9,6 +9,12 @@ if (!(workflow.runName ==~ /[a-z]+_[a-z]+/)) {
 // Don't overwrite global params.modules, create a copy instead and use that within the main script.
 def modules = params.modules.clone()
 
+// Show help message
+if (params.help) {
+    helpMessage()
+    exit 0
+}
+
 /*
 ========================================================================================
     SET UP CONFIGURATION VARIABLES
@@ -263,9 +269,9 @@ def nfcoreHeader() {
     c_white = params.monochrome_logs ? '' : "\033[0;37m";
     c_yellow = params.monochrome_logs ? '' : "\033[0;33m";
 
-    return """    ${c_green}----------------------------------------------------${c_reset}
+    return """    ${c_green}============================================================${c_reset}
             ${c_purple}ramdaq v${workflow.manifest.version}${c_reset}
-    ${c_green}----------------------------------------------------${c_reset}
+    ${c_green}============================================================${c_reset}
     """.stripIndent()
 }
 
@@ -279,7 +285,7 @@ def checkHostname() {
         params.hostnames.each { prof, hnames ->
             hnames.each { hname ->
                 if (hostname.contains(hname) && !workflow.profile.contains(prof)) {
-                    log.error "====================================================\n" +
+                    log.error "============================================================\n" +
                             "  ${c_red}WARNING!${c_reset} You are running with `-profile $workflow.profile`\n" +
                             "  but your machine hostname is ${c_white}'$hostname'${c_reset}\n" +
                             "  ${c_yellow_bold}It's highly recommended that you use `-profile $prof${c_reset}`\n" +
@@ -289,6 +295,74 @@ def checkHostname() {
         }
     }
 }
+
+def helpMessage() {
+    log.info nfcoreHeader()
+    log.info"""
+
+    Usage:
+
+    The typical command for running the pipeline is as follows:
+
+    nextflow run rikenbit/ramdaq --reads '*_R{1,2}.fastq.gz' -profile docker
+
+    Pipeline setting:
+      -profile [str]                  Configuration profile to use. Can use multiple (comma separated)
+                                      Available: docker, singularity, test, and more
+      -c                              Specify the path to a specific config file
+      --reads [file]                  Path to input data (must be surrounded with quotes)
+      --single_end                    Specifies that the input is single-end reads
+      --stranded [str]                unstranded : default
+                                      fr-firststrand : First read corresponds to the reverse complemented counterpart of a transcript
+                                      fr-secondstrand : First read corresponds to a transcript
+      --genome [str]                  Name of human or mouse latest reference: ${params.genomes.keySet().join(", ")}
+      --saveReference                 Save the generated reference files to the results directory
+      --local_annot_dir [str]         Base path for local annotation files
+      --entire_max_cpus [N]            Maximum number of CPUs to use for each step of the pipeline. Should be in form e.g. --entire_max_cpus 16. Default: '${params.entire_max_cpus}'
+      --entire_max_memory [str]        Memory limit for each step of pipeline. Should be in form e.g. --entire_max_memory '16.GB'. Default: '${params.entire_max_memory}'  
+        
+    Other:
+      --outdir [str]                  The output directory where the results will be saved
+      -name [str]                     Name for the pipeline run. If not specified, Nextflow will automatically generate a random mnemonic
+      -resume                         Specify this when restarting a pipeline
+      --max_memory [str]              Memory limit for each step of pipeline. Should be in form e.g. --max_memory '8.GB'. Default: '${params.max_memory}'
+      --max_time [str]                Time limit for each step of the pipeline. Should be in form e.g. --max_time '2.h'. Default: '${params.max_time}'
+      --max_cpus [str]                Maximum number of CPUs to use for each step of the pipeline. Should be in form e.g. --max_cpus 1. Default: '${params.max_cpus}'
+      --monochrome_logs               Set to disable colourful command line output and live life in monochrome
+
+    Fastqmcf:
+      --maxReadLength [N]             Maximum remaining sequence length (Default: 75)
+      --minReadLength [N]             Minimum remaining sequence length (Default: 36)
+      --skew [N]                      Skew percentage-less-than causing cycle removal (Default: 4)
+      --quality [N]                   Quality threshold causing base removal (Default: 30)
+    
+    Hisat2:
+      --softclipping                  HISAT2 allow soft-clip reads near their 5' and 3' ends (Default: disallow)
+      --hs_threads_num [N]            HISAT2 to launch a specified number of parallel search threads (Default: 1)
+    
+    RSEM:
+      --rsem_threads_num [N]          Number of threads to use (Default: 1)
+    
+    FeatureCounts:
+      --extra_attributes              Define which extra parameters should also be included in featureCounts (Default: 'gene_name')
+      --group_features                Define the attribute type used to group features (Default: 'gene_id')
+      --count_type                    Define the type used to assign reads (Default: 'exon')
+      --allow_multimap                Multi-mapping reads/fragments will be counted (Default: true)
+      --allow_overlap                 Reads will be allowed to be assigned to more than one matched meta-feature (Default: true)
+      --count_fractionally            Assign fractional counts to features  (Default: true / This option must be used together with ‘--allow_multimap’ or ‘--allow_overlap’ or both)
+      --fc_threads_num [N]            Number of the threads (Default: 1)
+      --group_features_type           Define the type attribute used to group features based on the group attribute (default: 'gene_type')
+    
+    For ERCC RNA Spike-In Controls:
+      --spike_in_ercc [str]           Dilution rate of the ERCC Spike-In Control Mix 1. Use when the samples contain the ERCC Spike-In Control Mix 1. The value is used to calculate copy number of ERCC. If the value is not specified, '2e-7' is used as dilution rate. (default: false)
+      --spike_in_sirv [str]           Dilution rate of the SIRV-Set 4. Use when the samples contain the SIRV-Set 4. The value is used to calculate copy number of ERCC in the SIRV-Set 4. (default: false)
+    
+    MultiQC report:
+      --sampleLevel                   Used to turn off the edgeR MDS and heatmap. Set automatically when running on fewer than 3 samples
+
+    """.stripIndent()
+}
+
 
 /*
 ========================================================================================

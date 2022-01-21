@@ -22,7 +22,6 @@ process GET_SOFTWARE_VERSIONS {
     echo $workflow.manifest.version > v_pipeline.txt
     echo $workflow.nextflow.version > v_nextflow.txt
     fastqc --version > v_fastqc.txt
-    multiqc --version > v_multiqc.txt
     fastq-mcf -V > v_fastqmcf.txt
     hisat2 --version > v_hisat2.txt
     samtools --version > v_samtools.txt
@@ -32,8 +31,11 @@ process GET_SOFTWARE_VERSIONS {
     infer_experiment.py --version > v_infer_experiment.txt
     inner_distance.py --version > v_inner_distance.txt
     junction_annotation.py --version > v_junction_annotation.txt
-    featureCounts -v > v_featurecounts.txt
+    featureCounts -v > v_featurecounts.txt 2>&1
+    rsem-calculate-expression --version > v_rsem.txt
+    Rscript -e "write(x=as.character(R.version.string), file='v_R.txt')"
     Rscript -e "library(edgeR); write(x=as.character(packageVersion('edgeR')), file='v_edgeR.txt')"
+    multiqc --version > v_multiqc.txt
     scrape_software_versions.py &> software_versions_mqc.yaml
     """
 }
