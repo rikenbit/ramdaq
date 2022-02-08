@@ -613,7 +613,6 @@ workflow RAMDAQ {
     )
     ch_hisat2_bam_qc = HISAT2_GENOME.out.hisat2_bam_qc
     ch_hisat2_bam_count = HISAT2_GENOME.out.hisat2_bam_count
-    //ch_hisat2_bam_samplenum = HISAT2_GENOME.out.hisat2_bam_samplenum
     ch_hisat2_summary = HISAT2_GENOME.out.hisat2_summary
 
     //

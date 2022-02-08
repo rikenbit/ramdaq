@@ -25,7 +25,7 @@ module_order:
         anchor: 'hisat2_whole'
         info: 'This section of the report shows hisat2 summary of alignments whole genomes.'
         path_filters:
-            - './hisat2/*'
+            - './hisat2_genome/*'
     - bowtie2:
         name: 'hisat2 summary of rRNA genomes'
         anchor: 'hisat2_rrna'
@@ -37,25 +37,19 @@ module_order:
         anchor: 'featureCounts_summary_all'
         info: 'This section of the report shows FeatureCounts summary of assignments all-genes.'
         path_filters:
-            - './featureCounts/*'
+            - './featurecounts_all_gtf/*'
     - featureCounts:
         name: 'featureCounts (summary of Mitochondrial genes)'
         anchor: 'featureCounts_summary_mt'
         info: 'This section of the report shows FeatureCounts summary of assignments mitocondorial-genes.'
         path_filters:
-            - './featureCounts_Mitocondria/*'
-    - featureCounts:
-        name: 'featureCounts (summary of rRNA)'
-        anchor: 'featureCounts_summary_rrna'
-        info: 'This section of the report shows FeatureCounts summary of assignments rrna.'
-        path_filters:
-            - './featureCounts_rRNA/*'
+            - './featurecounts_mt_gtf/*'
     - featureCounts:
         name: 'featureCounts (summary of Histone genes)'
         anchor: 'featureCounts_summary_histone'
         info: 'This section of the report shows FeatureCounts summary of assignments histone.'
         path_filters:
-            - './featureCounts_Histone/*'
+            - './featurecounts_histone_gtf/*'
     - fastqc:
         name: 'FastQC (raw, read1)'
         anchor: 'fastqc_raw_1'
