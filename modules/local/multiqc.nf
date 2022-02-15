@@ -8,7 +8,7 @@ process MULTIQC {
 
     label 'process_medium'
     publishDir "${params.outdir}/${options.publish_dir}", mode: 'copy', overwrite: true
-    container "quay.io/biocontainers/multiqc:1.10.1--pyhdfd78af_1"
+    container "quay.io/biocontainers/multiqc:1.11--pyhdfd78af_0"
 
     input:
     path multiqc_config
@@ -47,9 +47,9 @@ process MULTIQC {
     path workflow_summary
     
     output:
-    path "*multiqc_report.html", emit: multiqc_report
-    path "*_data"              , emit: data
-    path "*_plots"             , optional:true, emit: plots
+    path "*.html", emit: multiqc_report
+    path "*_data", emit: data
+    path "*_plots", optional:true, emit: plots
     
     script:
     def custom_config = params.multiqc_config ? "--config $multiqc_custom_config" : ''
