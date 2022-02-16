@@ -5,6 +5,24 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## v1.6 (`-r 1.6`) [2022-XX-XX]
+
+### `v1.6 Added`
+
+- Add troubleshooting.md
+
+### `v1.6 Fixed`
+
+- Fixed an error when running only one sample
+
+## v1.5 (`-r 1.5`) [2021-12-20]
+
+### `v1.5 Added`
+
+- Add surge.sh publish action to all CI test cases
+- Support for genocode v38/vM27 annotations
+- Update the docker image (some technical changes)
+
 ## v1.4.1 (`-r 1.4.1`) [2021-09-09]
 
 ### `v1.4.1 Fixed`
