@@ -32,19 +32,17 @@ jobs:
         run: |
           nextflow run ${GITHUB_WORKSPACE} -profile test_PE_UST_H,docker
           nextflow run ${GITHUB_WORKSPACE} -profile test_PE_ST_H,docker
-      #- name: Deploy to ramdaq-human-pe-ust.surge.sh
-      #  uses: dswistowski/surge-sh-action@v1
-      #  with:
-      #    domain: 'ramdaq-human-pe-ust.surge.sh'
-      #    project: './results_PE_UST_H/MultiQC'
-      #    login: ${{ secrets.SURGE_LOGIN }}
-      #    token: ${{ secrets.SURGE_TOKEN }}
-      #- name: Deploy to ramdaq-human-pe-st.surge.sh
-      #  uses: dswistowski/surge-sh-action@v1
-      #  with:
-      #    domain: 'ramdaq-human-pe-st.surge.sh'
-      #    project: './results_PE_ST_H/MultiQC'
-      #    login: ${{ secrets.SURGE_LOGIN }}
-      #    token: ${{ secrets.SURGE_TOKEN }}
-          
-
+      - name: Deploy to ramdaq-human-pe-ust.surge.sh
+        uses: dswistowski/surge-sh-action@v1
+        with:
+          domain: 'ramdaq-human-pe-ust.surge.sh'
+          project: './results_PE_UST_H/MultiQC'
+          login: ${{ secrets.SURGE_LOGIN }}
+          token: ${{ secrets.SURGE_TOKEN }}
+      - name: Deploy to ramdaq-human-pe-st.surge.sh
+        uses: dswistowski/surge-sh-action@v1
+        with:
+          domain: 'ramdaq-human-pe-st.surge.sh'
+          project: './results_PE_ST_H/MultiQC'
+          login: ${{ secrets.SURGE_LOGIN }}
+          token: ${{ secrets.SURGE_TOKEN }}
