@@ -426,8 +426,8 @@ if (params.email || params.email_on_fail) {
     summary['MultiQC maxsize']   = params.max_multiqc_email_size
 }
 log.info summary.collect { k,v -> "${k.padRight(18)}: $v" }.join("\n")
-log.info "\033[32m----------------------------------------------------\033[0m"
-log.info "\033[32m----------------------------------------------------\033[0m"
+log.info "\033[32m------------------------------------------------------------\033[0m"
+log.info "\033[32m------------------------------------------------------------\033[0m"
 
 // Check the hostnames against configured profiles
 checkHostname()
@@ -1173,14 +1173,17 @@ workflow.onComplete {
         log.info "-${c_green}Number of successfully ran process(es) : ${workflow.stats.succeedCount} ${c_reset}-"
     }
 
-    log.info "${c_green}----------------------------------------------------${c_reset}"
-    log.info "${c_green}----------------------------------------------------${c_reset}"
+    log.info "${c_green}------------------------------------------------------------${c_reset}"
+    log.info "${c_green}------------------------------------------------------------${c_reset}"
 
     if (workflow.success) {
         log.info "${c_purple}[ramdaq]${c_green} Pipeline completed successfully!${c_reset}"
     } else {
         checkHostname()
         log.info "${c_purple}[ramdaq]${c_red} Pipeline completed with errors!${c_reset}"
+        log.info "${c_purple}[ramdaq]${c_red} If you get an error when using ramdaq, please refer to the foillowing:${c_reset}"
+        log.info "${c_purple}[ramdaq]${c_red}    ・https://github.com/rikenbit/ramdaq/blob/master/docs/troubleshooting.md ${c_reset}"
+        log.info "${c_purple}[ramdaq]${c_red}    ・https://nf-co.re/usage/troubleshooting ${c_reset}"
     }
     
     // copy .nextflow.log
