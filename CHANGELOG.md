@@ -5,7 +5,9 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## v1.6 (`-r 1.6`) [2022-XX-XX]
+## v1.6 (`-r 1.6`) [2022-02-22]
+
+- Pipeline has been re-implemented in [Nextflow DSL2](https://www.nextflow.io/docs/latest/dsl2.html)
 
 ### `v1.6 Added`
 
