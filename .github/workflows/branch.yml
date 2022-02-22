@@ -14,4 +14,4 @@ jobs:
       - name: Check PRs
         if: github.repository == 'rikenbit/ramdaq'
         run: |
-          { [[ ${{github.event.pull_request.head.repo.full_name }} == rikenbit/ramdaq ]] && [[ $GITHUB_HEAD_REF = "dsl2" ]]; } || [[ $GITHUB_HEAD_REF == "patch" ]]
+          { [[ ${{github.event.pull_request.head.repo.full_name }} == rikenbit/ramdaq ]] && [[ $GITHUB_HEAD_REF = "dev" ]]; } || [[ $GITHUB_HEAD_REF == "patch" ]]
