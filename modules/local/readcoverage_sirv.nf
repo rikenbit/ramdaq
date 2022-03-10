@@ -12,7 +12,7 @@ process READCOVERAGE_SIRV  {
     publishDir "${params.outdir}/${options.publish_dir}", mode: 'copy', overwrite: true
  
     when:
-    !params.suppress_sirv_coverage
+    params.sirv_coverage
 
     input:
     tuple val(name), file(bam), file(bai)
