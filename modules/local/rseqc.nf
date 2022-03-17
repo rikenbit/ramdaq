@@ -27,17 +27,18 @@ process RSEQC  {
     path "${name}.readdist.txt", optional:true, emit: readdist_totalread
 
     script:
+    def min_intron = params.min_intron > 0 ? "-m ${params.min_intron}" : ''
     if (params.single_end) {
         """
         read_distribution.py -i ${bam} -r $bed > ${bam.baseName}.readdist.txt
         infer_experiment.py -i ${bam} -r $bed > ${bam.baseName}.inferexp.txt
-        junction_annotation.py -i ${bam} -o ${bam.baseName} -r $bed 2> ${bam.baseName}.junction_annotation.log
+        junction_annotation.py -i ${bam} -o ${bam.baseName} -r $bed $min_intron 2> ${bam.baseName}.junction_annotation.log
         """
     } else {
         """
         read_distribution.py -i ${bam} -r $bed > ${bam.baseName}.readdist.txt
         infer_experiment.py -i ${bam} -r $bed > ${bam.baseName}.inferexp.txt
-        junction_annotation.py -i ${bam} -o ${bam.baseName} -r $bed 2> ${bam.baseName}.junction_annotation.log
+        junction_annotation.py -i ${bam} -o ${bam.baseName} -r $bed $min_intron 2> ${bam.baseName}.junction_annotation.log
         inner_distance.py -i ${bam} -o ${bam.baseName} -r $bed
         """
     }
