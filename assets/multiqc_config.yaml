@@ -21,78 +21,78 @@ module_order:
     - rseqc
     - rsem
     - bowtie2:
-        name: 'hisat2 summary of whole genomes'
-        anchor: 'hisat2_whole'
-        info: 'This section of the report shows hisat2 summary of alignments whole genomes.'
-        path_filters:
-            - './hisat2_genome/*'
+          name: 'hisat2 summary of whole genomes'
+          anchor: 'hisat2_whole'
+          info: 'This section of the report shows hisat2 summary of alignments whole genomes.'
+          path_filters:
+              - './hisat2_genome/*'
     - bowtie2:
-        name: 'hisat2 summary of rRNA genomes'
-        anchor: 'hisat2_rrna'
-        info: 'This section of the report shows hisat2 summary of alignments rRNA genomes.'
-        path_filters:
-            - './hisat2_rrna/*'
+          name: 'hisat2 summary of rRNA genomes'
+          anchor: 'hisat2_rrna'
+          info: 'This section of the report shows hisat2 summary of alignments rRNA genomes.'
+          path_filters:
+              - './hisat2_rrna/*'
     - featureCounts:
-        name: 'featureCounts (summary of all genes)'
-        anchor: 'featureCounts_summary_all'
-        info: 'This section of the report shows FeatureCounts summary of assignments all-genes.'
-        path_filters:
-            - './featurecounts_all_gtf/*'
+          name: 'featureCounts (summary of all genes)'
+          anchor: 'featureCounts_summary_all'
+          info: 'This section of the report shows FeatureCounts summary of assignments all-genes.'
+          path_filters:
+              - './featurecounts_all_gtf/*'
     - featureCounts:
-        name: 'featureCounts (summary of Mitochondrial genes)'
-        anchor: 'featureCounts_summary_mt'
-        info: 'This section of the report shows FeatureCounts summary of assignments mitocondorial-genes.'
-        path_filters:
-            - './featurecounts_mt_gtf/*'
+          name: 'featureCounts (summary of Mitochondrial genes)'
+          anchor: 'featureCounts_summary_mt'
+          info: 'This section of the report shows FeatureCounts summary of assignments mitocondorial-genes.'
+          path_filters:
+              - './featurecounts_mt_gtf/*'
     - featureCounts:
-        name: 'featureCounts (summary of Histone genes)'
-        anchor: 'featureCounts_summary_histone'
-        info: 'This section of the report shows FeatureCounts summary of assignments histone.'
-        path_filters:
-            - './featurecounts_histone_gtf/*'
+          name: 'featureCounts (summary of Histone genes)'
+          anchor: 'featureCounts_summary_histone'
+          info: 'This section of the report shows FeatureCounts summary of assignments histone.'
+          path_filters:
+              - './featurecounts_histone_gtf/*'
     - fastqc:
-        name: 'FastQC (raw, read1)'
-        anchor: 'fastqc_raw_1'
-        info: 'This section of the report shows FastQC results for Read1 before adapter trimming.'
-        path_filters:
-            - '*_1.raw_fastqc.zip'
+          name: 'FastQC (raw, read1)'
+          anchor: 'fastqc_raw_1'
+          info: 'This section of the report shows FastQC results for Read1 before adapter trimming.'
+          path_filters:
+              - '*_1.raw_fastqc.zip'
     - fastqc:
-        name: 'FastQC (raw, read2)'
-        anchor: 'fastqc_raw_2'
-        info: 'This section of the report shows FastQC results for Read2 before adapter trimming.'
-        path_filters:
-            - '*_2.raw_fastqc.zip'
+          name: 'FastQC (raw, read2)'
+          anchor: 'fastqc_raw_2'
+          info: 'This section of the report shows FastQC results for Read2 before adapter trimming.'
+          path_filters:
+              - '*_2.raw_fastqc.zip'
     - fastqc:
-        name: 'FastQC (trim, read1)'
-        anchor: 'fastqc_trim_1'
-        info: 'This section of the report shows FastQC results for Read 1 after adapter trimming.'
-        path_filters:
-            - '*_1.trim_fastqc.zip'
+          name: 'FastQC (trim, read1)'
+          anchor: 'fastqc_trim_1'
+          info: 'This section of the report shows FastQC results for Read 1 after adapter trimming.'
+          path_filters:
+              - '*_1.trim_fastqc.zip'
     - fastqc:
-        name: 'FastQC (trim, read2)'
-        anchor: 'fastqc_trim_2'
-        info: 'This section of the report shows FastQC results for Read 2 after adapter trimming.'
-        path_filters:
-            - '*_2.trim_fastqc.zip'
+          name: 'FastQC (trim, read2)'
+          anchor: 'fastqc_trim_2'
+          info: 'This section of the report shows FastQC results for Read 2 after adapter trimming.'
+          path_filters:
+              - '*_2.trim_fastqc.zip'
     - fastqc:
-        name: 'FastQC (raw)'
-        anchor: 'fastqc_raw'
-        info: 'This section of the report shows FastQC results before adapter trimming.'
-        path_filters:
-            - '*.raw_fastqc.zip'
-        path_filters_exclude:
-            - '*_1.raw_fastqc.zip'
-            - '*_2.raw_fastqc.zip'
+          name: 'FastQC (raw)'
+          anchor: 'fastqc_raw'
+          info: 'This section of the report shows FastQC results before adapter trimming.'
+          path_filters:
+              - '*.raw_fastqc.zip'
+          path_filters_exclude:
+              - '*_1.raw_fastqc.zip'
+              - '*_2.raw_fastqc.zip'
     - fastqc:
-        name: 'FastQC (trimmed)'
-        anchor: 'fastqc_trimmed'
-        info: 'This section of the report shows FastQC results after adapter trimming.'
-        target: ''
-        path_filters:
-            - '*.trim_fastqc.zip'
-        path_filters_exclude:
-            - '*_1.trim_fastqc.zip'
-            - '*_2.trim_fastqc.zip'
+          name: 'FastQC (trimmed)'
+          anchor: 'fastqc_trimmed'
+          info: 'This section of the report shows FastQC results after adapter trimming.'
+          target: ''
+          path_filters:
+              - '*.trim_fastqc.zip'
+          path_filters_exclude:
+              - '*_1.trim_fastqc.zip'
+              - '*_2.trim_fastqc.zip'
 
 
 extra_fn_clean_exts:

@@ -54,4 +54,3 @@ jobs:
           project: './results_SE_ST_M/MultiQC'
           login: ${{ secrets.SURGE_LOGIN }}
           token: ${{ secrets.SURGE_TOKEN }}
-

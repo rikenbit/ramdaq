@@ -15,7 +15,7 @@ jobs:
       - name: Install markdownlint
         run: npm install -g markdownlint-cli
       - name: Run Markdownlint
-        run: markdownlint .
+        run: markdownlint ${GITHUB_WORKSPACE} -c ${GITHUB_WORKSPACE}/.github/markdownlint.yml
   YAML:
     runs-on: ubuntu-latest
     steps:
@@ -25,4 +25,3 @@ jobs:
         run: npm install -g yaml-lint
       - name: Run yaml-lint
         run: yamllint $(find ${GITHUB_WORKSPACE} -type f -name "*.yml" -o -name "*.yaml") -c ${GITHUB_WORKSPACE}/.yamllint.yml
-
