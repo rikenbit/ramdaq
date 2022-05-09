@@ -1,4 +1,3 @@
-  
 name: ramdaq branch protection
 # This workflow is triggered on PRs to master branch on the repository
 # It fails when someone tries to make a PR against the ramdaq `master` branch instead of `dev`
