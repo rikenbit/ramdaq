@@ -68,7 +68,7 @@ process RSEM_BOWTIE2  {
             """
             rsem-calculate-expression $threads_num --paired-end ${reads[0]} ${reads[1]} --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ \\
             $index_base ${prefix}
-            samtools sort ${prefix}.transcript.bam -o ${name}.rsem.bam
+            samtools sort ${prefix}.transcript.bam -o ${prefix}.rsem.bam
             samtools index ${prefix}.rsem.bam
             samtools flagstat ${prefix}.rsem.bam > ${prefix}.rsem.bam.flagstat
             rm ${prefix}.transcript.bam
