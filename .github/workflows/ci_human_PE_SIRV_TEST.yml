@@ -1,4 +1,4 @@
-name: CI (human PE UST and ST data)
+name: CI (human PE SIRV data)
 # This workflow is triggered on pushes and PRs to the repository.
 # It runs the pipeline with the minimal test dataset to check that it completes without any syntax errors
 on: [push, pull_request]
@@ -30,19 +30,19 @@ jobs:
           docker pull myoshimura080822/ramdaq:v1.2
       - name: Run pipeline with test data
         run: |
-          nextflow run ${GITHUB_WORKSPACE} -profile test_PE_UST_H,docker
-          nextflow run ${GITHUB_WORKSPACE} -profile test_PE_ST_H,docker
-      - name: Deploy to ramdaq-human-pe-ust.surge.sh
+          nextflow run ${GITHUB_WORKSPACE} -profile test_PE_UST_H_SIRV,docker
+          nextflow run ${GITHUB_WORKSPACE} -profile test_PE_ST_H_SIRV,docker
+      - name: Deploy to ramdaq-human-pe-ust-sirv.surge.sh
         uses: dswistowski/surge-sh-action@v1
         with:
-          domain: 'ramdaq-human-pe-ust.surge.sh'
-          project: './results_PE_UST_H/MultiQC'
+          domain: 'ramdaq-human-pe-ust-sirv.surge.sh'
+          project: './results_PE_UST_H_SIRV/MultiQC'
           login: ${{ secrets.SURGE_LOGIN }}
           token: ${{ secrets.SURGE_TOKEN }}
-      - name: Deploy to ramdaq-human-pe-st.surge.sh
+      - name: Deploy to ramdaq-human-pe-st-sirv.surge.sh
         uses: dswistowski/surge-sh-action@v1
         with:
-          domain: 'ramdaq-human-pe-st.surge.sh'
-          project: './results_PE_ST_H/MultiQC'
+          domain: 'ramdaq-human-pe-st-sirv.surge.sh'
+          project: './results_PE_ST_H_SIRV/MultiQC'
           login: ${{ secrets.SURGE_LOGIN }}
           token: ${{ secrets.SURGE_TOKEN }}
