@@ -5,6 +5,19 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## v1.7 (`-r 1.7`) [2022-05-19]
+
+### `v1.7 Added`
+
+- Support for genocode v39/vM28, v40/vM29 annotations
+
+### `v1.7 Fixed`
+
+- Fixed an error in the RSEM-SIRV process when execute PE unstranded mode
+- Extended "max time" of process-specific resource requirements
+- Added hidden option to changed SIRV coverage process to off by default
+- Added hidden option to avoid error when only short introns are detected in RSeQC
+
 ## v1.6 (`-r 1.6`) [2022-02-22]
 
 - Pipeline has been re-implemented in [Nextflow DSL2](https://www.nextflow.io/docs/latest/dsl2.html)
