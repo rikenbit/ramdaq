@@ -590,7 +590,7 @@ workflow RAMDAQ {
     //
     FASTQMCF (
         ch_reads,
-        params.adapter
+        ch_adapter
     )
     .trimmed_reads
     .set { ch_trimmed_reads }
