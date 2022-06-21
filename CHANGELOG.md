@@ -5,6 +5,12 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## v1.8 (`-r 1.8`) [2022-06-21]
+
+### `v1.8 Fixed`
+
+- Fixed a problem with Fastq-mcf incorrect arguments that prevented fastq trimming from working properly
+
 ## v1.7 (`-r 1.7`) [2022-05-19]
 
 ### `v1.7 Added`
