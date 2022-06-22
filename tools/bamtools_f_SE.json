@@ -1,7 +1,7 @@
 {
     "filters" : [
         { "id" : "forward",
-          "isReverseStrand" : "true"
+          "tag" : "XS:+"
         }
     ],
     "rule" : "forward"
