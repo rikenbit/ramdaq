@@ -1,7 +1,7 @@
 {
     "filters" : [
         { "id" : "reverse",
-          "isReverseStrand" : "false"
+          "tag" : "XS:-"
         }
     ],
     "rule" : "reverse"
