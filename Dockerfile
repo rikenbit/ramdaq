@@ -2,8 +2,11 @@ FROM nfcore/base:1.9
 LABEL authors="Mika Yoshimura and Haruka Ozaki" \
       description="Docker image containing all software requirements for the ramdaq pipeline"
 
-RUN apt update && \
-    apt install -y --no-install-recommends libtbb2
+RUN sed -i "s/buster/bullseye/g" /etc/apt/sources.list &&  \
+    sed -i 's/bullseye\/updates/bullseye-security/g' /etc/apt/sources.list
+
+RUN apt-get update && \
+    apt-get install -y libtbb2
 
 # Install the conda environment
 COPY environment.yml /
