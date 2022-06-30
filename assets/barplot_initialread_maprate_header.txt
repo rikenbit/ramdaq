@@ -1,0 +1,14 @@
+#id: 'mappedrate_of_initialreads'
+#section_name: 'Rate of initial reads mapped to genome [%]'
+#description: "show rate of initial reads mapped to genome from initial reads"
+#plot_type: 'bargraph'
+#anchor: 'mappedrate_of_initialreads'
+#pconfig:
+#    id: 'mappedrate_of_initialreads_barplot'
+#    title: 'Rate of initial reads mapped to genome [%]'
+#    cpswitch: False
+#    tt_percentages: False
+#    hide_zero_cats: False
+#    ymin: 0
+#    ymax: 100
+

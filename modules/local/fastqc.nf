@@ -18,6 +18,7 @@ process FASTQC {
 
     output:
     path "*_fastqc.{zip,html}", emit: fastqc_results
+    path "${name}.seqcount.txt", emit: fastqc_seqcount
 
     script:
     def prefix = options.suffix ? "${name}${options.suffix}" : "${name}"
@@ -31,6 +32,7 @@ process FASTQC {
             ln -s $reads $newfastq
         fi
         fastqc $options.args --threads $task.cpus $newfastq
+        n=\$(zcat $reads | wc -l) && echo \$((n/4)) > ${name}.seqcount.txt
         """
     } else {
         newfastq1 = (reads[0].getName() =~ /\.gz$/) ? "${prefix_1}.fastq.gz" : "${prefix_1}}.fastq"
@@ -42,6 +44,8 @@ process FASTQC {
         fi
         fastqc $options.args --threads $task.cpus $newfastq1
         fastqc $options.args --threads $task.cpus $newfastq2
+
+        n1=\$(zcat ${reads[0]} | wc -l) && n2=\$(zcat ${reads[1]} | wc -l) && echo \$(((n1+n2)/4)) > ${name}.seqcount.txt
         """
     }
 }

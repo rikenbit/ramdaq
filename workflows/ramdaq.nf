@@ -170,8 +170,9 @@ ch_heatmap_header = file("$projectDir/assets/heatmap_header.txt", checkIfExists:
 ch_ercc_data = params.spike_in_sirv ? file("$projectDir/assets/ercc_in_sirv_dataset.txt", checkIfExists: true) : file("$projectDir/assets/ercc_dataset.txt", checkIfExists: true)
 ch_ercc_corr_header = file("$projectDir/assets/ercc_correlation_header.txt", checkIfExists: true)
 ch_ercc_corr_header_gstat = file("$projectDir/assets/gstat_ercc_correlation_header.txt", checkIfExists: true)
+ch_initialread_maprate_header = file("$projectDir/assets/barplot_initialread_maprate_header.txt", checkIfExists: true)
+ch_initialread_maprate_header_gstat = file("$projectDir/assets/gstat_initialread_maprate_header.txt", checkIfExists: true)
 ch_assignedgenome_header = file("$projectDir/assets/barplot_assignedgenome_rate_header.txt", checkIfExists: true)
-ch_assignedgenome_header_gstat = file("$projectDir/assets/gstat_assignedgenome_rate_header.txt", checkIfExists: true)
 
 ch_fcounts_allgene_header = file("$projectDir/assets/barplot_fcounts_allgene_header.txt", checkIfExists: true)
 ch_fcounts_allgene_header_gstat = file("$projectDir/assets/gstat_fcounts_allgene_header.txt", checkIfExists: true)
@@ -464,6 +465,8 @@ include { UNTAR_INDEX as UNTAR_HISAT2_SIRV_IDX } from '../modules/local/untar_in
 include { UNTAR_INDEX as UNTAR_RSEM_SIRV_IDX } from '../modules/local/untar_index' addParams( options: modules['untar_index_rsem'] )
 
 include { FASTQC as FASTQC_RAW } from '../modules/local/fastqc' addParams( options: modules['fastqc'] )
+include { MERGE_SUMMARYFILE as MERGE_SUMMARYFILE_FASTQC_RAW } from '../modules/local/merge_summaryfile' addParams( options: modules['merge_summaryfile_fastqc_raw'] )
+
 include { FASTQC as FASTQC_TRIM } from '../modules/local/fastqc' addParams( options: modules['fastqc_trim'] )
 include { FASTQMCF } from '../modules/local/fastqmcf' addParams( options: modules['fastqmcf'] )
 
@@ -490,6 +493,7 @@ include { MERGE_RSEM as MERGE_RSEM_ISOFORMS } from '../modules/local/merge_rsem'
 
 include { CALC_SAMPLE_CORRELATION } from '../modules/local/calc_sample_correlation' addParams( options: modules['calc_sample_correlation'] )
 include { CALC_ERCC_CORRELATION } from '../modules/local/calc_ercc_correlation' addParams( options: modules['calc_ercc_correlation'] )
+include { CALC_INITIALREADS_MAPRATE } from '../modules/local/calc_initialreads_maprate' addParams( options: modules['calc_initialreads_maprate'] )
 include { CALC_ASSIGNEDGENOME_RATE } from '../modules/local/calc_assignedgenome_rate' addParams( options: modules['calc_assignedgenome_rate'] )
 include { CALC_FEATURECOUNTS_MAPRATE as CALC_FEATURECOUNTS_MAPRATE_ALLGENE } from '../modules/local/calc_featurecounts_maprate' addParams( options: modules['calc_featurecounts_maprate_allgene'] )
 include { CALC_FEATURECOUNTS_MAPRATE as CALC_FEATURECOUNTS_MAPRATE_MT} from '../modules/local/calc_featurecounts_maprate' addParams( options: modules['calc_featurecounts_maprate_mt'] )
@@ -583,7 +587,19 @@ workflow RAMDAQ {
     FASTQC_RAW (
         ch_reads
     ).fastqc_results
-    .set { ch_fastqc_results_raw }
+    ch_fastqc_results_raw = FASTQC_RAW.out.fastqc_results
+    ch_fastqc_seqcount_raw = FASTQC_RAW.out.fastqc_seqcount
+
+    //
+    // MODULE: Merge summaryfiles [FastQC(raw) seqcount]
+    //
+    MERGE_SUMMARYFILE_FASTQC_RAW (
+        ch_fastqc_seqcount_raw.collect()
+    )
+    .merged_summary
+    .set{
+        ch_fastqc_raw_merged_seqcount
+    }
 
     //
     // MODULE: Adapter trimming
@@ -601,7 +617,8 @@ workflow RAMDAQ {
     FASTQC_TRIM (
         ch_trimmed_reads
     ).fastqc_results
-    .set { ch_fastqc_results_trimmed }
+    ch_fastqc_results_trimmed = FASTQC_TRIM.out.fastqc_results
+    ch_fastqc_seqcount_trimmed = FASTQC_TRIM.out.fastqc_seqcount
 
     //
     // MODULE: Alignment with Hisat2 [all genes]
@@ -859,14 +876,24 @@ workflow RAMDAQ {
     //
     // MODULE: Calc assignedgenome rate
     //
+    CALC_INITIALREADS_MAPRATE (
+        ch_fastqc_raw_merged_seqcount,
+        ch_readdist_merged_totalread,
+        ch_initialread_maprate_header,
+        ch_initialread_maprate_header_gstat
+    )
+    ch_initialread_maprate_barplot = CALC_INITIALREADS_MAPRATE.out.initialread_maprate_barplot
+    ch_initialread_maprate_gstat = CALC_INITIALREADS_MAPRATE.out.initialread_maprate_gstat
+
+    //
+    // MODULE: Calc assignedgenome rate
+    //
     CALC_ASSIGNEDGENOME_RATE (
         ch_hisat2_merged_totalseq,
         ch_readdist_merged_totalread,
-        ch_assignedgenome_header,
-        ch_assignedgenome_header_gstat
+        ch_assignedgenome_header
     )
     ch_assignedgenome_rate_barplot = CALC_ASSIGNEDGENOME_RATE.out.assignedgenome_rate_barplot
-    ch_assignedgenome_rate_gstat = CALC_ASSIGNEDGENOME_RATE.out.assignedgenome_rate_gstat
 
     //
     // MODULE: Calc featureCounts mapped rate (all genes)
@@ -1042,8 +1069,9 @@ workflow RAMDAQ {
         ch_counts_summary_all.collect().ifEmpty([]),
         ch_counts_summary_mt.collect().ifEmpty([]),
         ch_counts_summary_histone.collect().ifEmpty([]),
+        ch_initialread_maprate_barplot.collect().ifEmpty([]),
+        ch_initialread_maprate_gstat.collect().ifEmpty([]),
         ch_assignedgenome_rate_barplot.collect().ifEmpty([]),
-        ch_assignedgenome_rate_gstat.collect().ifEmpty([]),
         ch_fcounts_maprate_barplot_allgene.collect().ifEmpty([]),
         ch_fcounts_maprate_gstat_allgene.collect().ifEmpty([]),
         ch_fcounts_maprate_barplot_mt.collect().ifEmpty([]),

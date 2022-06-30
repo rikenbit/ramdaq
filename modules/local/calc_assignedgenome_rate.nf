@@ -13,12 +13,10 @@ process CALC_ASSIGNEDGENOME_RATE {
     file(totalseq_merged)
     file(totalread_merged)
     file(assignedgenome_header)
-    file(assignedgenome_header_gstat)
     
     output:
     path "*.{txt,pdf}", emit: assignedgenome_rate_results
     path "barplot_*.csv", emit: assignedgenome_rate_barplot
-    path "gstat_*.csv", emit: assignedgenome_rate_gstat
     
     script:
     def is_pairedend = params.single_end ? "False" : "True"
@@ -27,7 +25,5 @@ process CALC_ASSIGNEDGENOME_RATE {
     cp barplot_assignedgenome_rate.csv gstat_assignedgenome_rate.csv
     cat $assignedgenome_header barplot_assignedgenome_rate.csv >> tmp_file
     mv tmp_file barplot_assignedgenome_rate_mqc.csv
-    cat $assignedgenome_header_gstat gstat_assignedgenome_rate.csv >> tmp_file
-    mv tmp_file gstat_assignedgenome_rate_mqc.csv
     """
 }
