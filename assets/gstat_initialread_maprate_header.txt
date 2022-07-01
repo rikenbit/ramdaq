@@ -1,0 +1,12 @@
+#id: 'mappedrate_of_initialreads_gstat'
+#plot_type: 'generalstats'
+#anchor: 'mappedrate_of_initialreads_gstat'
+#pconfig:
+#    initialReadsMapRate:
+#        title: 'initialReadsMappedRate'
+#        namespace: 'initialReadsMappedRate'
+#        description: 'Rate of initial reads mapped to genome'
+#        max: 100
+#        min: 0
+#        scale: 'RdYlGn-rev'
+#        format: '{:.1f}%'
