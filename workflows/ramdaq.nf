@@ -396,10 +396,11 @@ if (params.bed) summary['BED Annotation'] = params.bed
 if (params.gtf) summary['GTF Annotation'] = params.gtf
 if (params.mt_gtf) summary['Mitocondria GTF Annotation'] = params.mt_gtf
 if (params.histone_gtf) summary['Histone GTF Annotation'] = params.histone_gtf
+
 // featureCounts options
-if (params.allow_multimap) summary['Multimap Reads'] = params.allow_multimap ? 'Allow' : 'Disallow'
-if (params.allow_overlap) summary['Overlap Reads'] = params.allow_overlap ? 'Allow' : 'Disallow'
-if (params.count_fractionally) summary['Fractional counting'] = params.count_fractionally ? 'Enabled' : 'Disabled'
+summary['Multimap Reads'] = params.allow_multimap ? 'Allow' : 'Disallow'
+summary['Overlap Reads'] = params.allow_overlap ? 'Allow' : 'Disallow'
+summary['Fractional counting'] = params.count_fractionally ? 'Enabled' : 'Disabled'
 if (params.group_features_type) summary['Biotype GTF field'] = params.group_features_type
 
 if (params.min_mapped_reads) summary['Min Mapped Reads'] = params.min_mapped_reads
@@ -647,7 +648,7 @@ workflow RAMDAQ {
     // FUNCTION: Filtering low mapped reads bams [for featureCounts]
     //
     ch_hisat2_bam_count
-    .filter { name, bam, bai, flagstat -> check_mappedread(bam,flagstat,params.min_mapped_reads) }
+    //.filter { name, bam, bai, flagstat -> check_mappedread(bam,flagstat,params.min_mapped_reads) }
     .map { it[0..2] }
     .set { 
         ch_hisat2_bam_featurecount
@@ -662,9 +663,8 @@ workflow RAMDAQ {
     //
     ch_hisat2_bam_count
     .filter { name, bam, bai, flagstat -> check_mappedread(bam,flagstat,params.min_mapped_reads) }
-    .map { it[1] }
+    .map { it[0..1] }
     .set { ch_num_of_bam }
-    ch_num_of_bam_list = ch_num_of_bam.toList()
 
     //
     // MODULE: Merge summaryfiles [Hisat2 totalseq]
@@ -809,7 +809,6 @@ workflow RAMDAQ {
     // MODULE: Quantification with RSEM [all genes]
     //
     RSEM_BOWTIE2_ALLGENES (
-        ch_hisat2_bam_qc_filtered,
         ch_trimmed_reads,
         ch_rsem_allgene_idx.collect()
     )
@@ -840,15 +839,26 @@ workflow RAMDAQ {
     }
     
     //debug
-    //ch_num_of_bam_list.subscribe {  println "ch_num_of_bam: $it"  }
-    //ch_num_of_bam_list.size().subscribe {  println "ch_bam_size_chk: $it"  }
+    //ch_counts_to_plot_corr.subscribe {  println "ch_counts_to_plot_corr: $it"  }
+    //ch_num_of_bam.subscribe {  println "ch_num_of_bam: $it"  }
+    //ch_num_of_bam.toList().size().subscribe {  println "ch_num_of_bam size: $it"  }
+    
+    // trim low-mapped reads bams
+    ch_join_bam = ch_num_of_bam.join(ch_counts_to_plot_corr)
+    //ch_join_bam.subscribe {  println "ch_join_bam: $it"  }
+
+    ch_join_bam
+    .map { it[2] }
+    .set { ch_counts_to_plot_corr_trim }
+    //ch_counts_to_plot_corr_trim.subscribe {  println "ch_counts_to_plot_corr_trim: $it"  }
+
     if (!params.sampleLevel) {
         //
         // MODULE: Calc sample corr
         //
         CALC_SAMPLE_CORRELATION (
-            ch_counts_to_plot_corr.collect(),
-            ch_num_of_bam_list.size(),
+            ch_counts_to_plot_corr_trim.collect(),
+            ch_num_of_bam.toList().size(),
             ch_mdsplot_header,
             ch_heatmap_header
         ).sample_correlation
@@ -1021,7 +1031,6 @@ workflow RAMDAQ {
         // MODULE: Quantification with RSEM [sirv]
         //
         RSEM_BOWTIE2_SIRV (
-            ch_hisat2_bam_qc_sirv_filtered,
             ch_trimmed_reads,
             ch_rsem_sirv_idx.collect()
         ).rsem_isoforms_to_merge

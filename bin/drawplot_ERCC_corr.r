@@ -43,6 +43,9 @@ ercc_ref_sort = dplyr::left_join(ercc_ref_sort, ercc_ref, by=c("ERCC.ID"))
 plotdata = cor(ercc_countdata_tpm_log, ercc_ref_sort$copy.number.log)
 plotdata = data.frame(corr=plotdata[,1],sample_name=as.character(rownames(plotdata)))
 plotdata = plotdata[order(plotdata$sample_name),]
+
+# replace NA value with zero
+plotdata$corr[is.na(plotdata$corr)] <- 0
 plotdata = SDset(plotdata$sample_name, plotdata$corr)
 
 ### draw plot

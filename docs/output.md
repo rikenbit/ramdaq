@@ -152,6 +152,8 @@ We output more detailed QC plots using our own custom rRNA, mitochondrial, and h
 
 [RSeQC]((http://rseqc.sourceforge.net/)) is a package of scripts designed to evaluate the quality of RNA-seq data. This pipeline runs several, but not all RSeQC scripts. Default will run : `bam2wig.py`, `infer_experiment.py`, `read_distribution.py` and `inner_distance.py` (on pair-end).
 
+* We note that ramdaq skips some of the bam-QC processes for the BAM files with low mapped reads (less than 10 by default; This threshold can be changed by the option --min_mapped_reads N). Thus, the samples with low mapped reads are omitted RSeQC and ReadCoverage.jl plots in MultiQC report.
+
 ### Infer experiment
 
 This script predicts the "strandedness" of the protocol (i.e. unstranded, sense or antisense) that was used to prepare the sample for sequencing by assessing the orientation in which aligned reads overlay gene features in the reference genome.

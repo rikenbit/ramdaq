@@ -61,6 +61,11 @@ count_tpm = calc_tpm(count_tpm[,!colnames(count_tpm) %in% c("Geneid","Length","g
 count_tpm = as.data.frame(count_tpm)
 rownames(count_tpm) = raw_countdata$Geneid
 
+# replace NaN value with zero
+count_tpm = as.matrix(count_tpm)
+count_tpm[is.nan(count_tpm)] <- 0
+count_tpm = as.data.frame(count_tpm)
+
 # create all-genes counts
 count_tpm_gene = trim_tpmmatrix(count_tpm)
 write.table(count_tpm_gene,"merged_featureCounts_allgene_TPM.txt",sep="\t", append=F, quote=F, row.names=T, col.names=T)
