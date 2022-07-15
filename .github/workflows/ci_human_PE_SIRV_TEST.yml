@@ -30,8 +30,8 @@ jobs:
           docker pull myoshimura080822/ramdaq:v1.2
       - name: Run pipeline with test data
         run: |
-          nextflow run ${GITHUB_WORKSPACE} -profile test_PE_UST_H_SIRV,docker
-          nextflow run ${GITHUB_WORKSPACE} -profile test_PE_ST_H_SIRV,docker
+          nextflow run ${GITHUB_WORKSPACE} -profile test_PE_UST_H_SIRV,docker --entire_max_cpus 2 --entire_max_memory '4.GB'
+          nextflow run ${GITHUB_WORKSPACE} -profile test_PE_ST_H_SIRV,docker --entire_max_cpus 2 --entire_max_memory '4.GB'
       - name: Deploy to ramdaq-human-pe-ust-sirv.surge.sh
         uses: dswistowski/surge-sh-action@v1
         with:

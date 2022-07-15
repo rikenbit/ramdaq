@@ -30,9 +30,9 @@ jobs:
           docker pull myoshimura080822/ramdaq:v1.2
       - name: Run pipeline with test data
         run: |
-          nextflow run ${GITHUB_WORKSPACE} -profile test_SE_UST_M,docker
-          nextflow run ${GITHUB_WORKSPACE} -profile test_SE_UST_M_1,docker
-          nextflow run ${GITHUB_WORKSPACE} -profile test_SE_ST_M,docker
+          nextflow run ${GITHUB_WORKSPACE} -profile test_SE_UST_M,docker --entire_max_cpus 2 --entire_max_memory '4.GB'
+          nextflow run ${GITHUB_WORKSPACE} -profile test_SE_UST_M_1,docker --entire_max_cpus 2 --entire_max_memory '4.GB'
+          nextflow run ${GITHUB_WORKSPACE} -profile test_SE_ST_M,docker --entire_max_cpus 2 --entire_max_memory '4.GB'
       - name: Deploy to ramdaq-mouse-se-ust.surge.sh
         uses: dswistowski/surge-sh-action@v1
         with:
