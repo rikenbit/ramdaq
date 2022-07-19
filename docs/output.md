@@ -16,7 +16,7 @@ and processes data using the following steps:
 * [SAMtools](#samtools) - sort and index alignments
 * [featureCounts](#featurecounts) - read counting relative to gene and biotype
 * [RSeQC](#rseqc) - various RNA-seq QC metrics
-* [ReadCoverage.jl](#readcoverage.jl)
+* [ReadCoverage.jl](#readcoveragejl) - calculate absolute and relative gene body coverage
 * [RSEM via Bowtie2](#rsem-via-bowtie2) - alignment and quantification of expression levels
 * [MultiQC](#multiqc) - aggregate report, describing results of the whole pipeline
 * [Pipeline information](#pipeline-information) - report metrics generated during the workflow execution
