@@ -23,7 +23,7 @@ process FEATURECOUNTS {
     output:
     path "*.featureCounts.txt", emit: counts_to_merge
     path "*.featureCounts.txt.summary", emit: counts_summary
-    path "${name}.allgene.featureCounts.txt", optional:true, emit: counts_to_plot_corr
+    tuple val(name), file("${name}.allgene.featureCounts.txt"), optional:true, emit: counts_to_plot_corr
     path "${name}_biotype_counts*mqc.{txt,tsv}", optional:true, emit: counts_biotype
 
     script:
