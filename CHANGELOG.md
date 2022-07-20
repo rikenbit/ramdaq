@@ -5,6 +5,19 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## v1.9 (`-r 1.9`) [2022-07-20]
+
+### `v1.9 Added`
+
+- Add barplot alligned genome rates of initial fastq reads
+
+### `v1.9 Fixed`
+
+- Change setting testcase resource limits
+- Fixed the unintended samples omit problem in low mapped reads bam QC processes
+- Remove duplicate column from General statistics
+- Changed bamtools filter option for create strand-specific bams
+
 ## v1.8 (`-r 1.8`) [2022-06-21]
 
 ### `v1.8 Fixed`
