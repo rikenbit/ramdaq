@@ -27,16 +27,19 @@ process FASTQC {
 
     if (params.single_end) {
         newfastq = (reads.getName() =~ /\.gz$/) ? "${prefix}.fastq.gz" : "${prefix}.fastq"
+        seqcount_command = (reads.getName() =~ /\.gz$/) ? "(zcat ${prefix}.fastq.gz | wc -l)" : "(cat ${prefix}.fastq | wc -l)"
         """
         if [ ! -f $newfastq ]; then
             ln -s $reads $newfastq
         fi
         fastqc $options.args --threads $task.cpus $newfastq
-        n=\$(zcat $reads | wc -l) && echo \$((n/4)) > ${name}.seqcount.txt
+        n=\$$seqcount_command && echo \$((n/4)) > ${name}.seqcount.txt
         """
     } else {
-        newfastq1 = (reads[0].getName() =~ /\.gz$/) ? "${prefix_1}.fastq.gz" : "${prefix_1}}.fastq"
+        newfastq1 = (reads[0].getName() =~ /\.gz$/) ? "${prefix_1}.fastq.gz" : "${prefix_1}.fastq"
         newfastq2 = (reads[1].getName() =~ /\.gz$/) ? "${prefix_2}.fastq.gz" : "${prefix_2}.fastq"
+        seqcount_command1 = (reads[0].getName() =~ /\.gz$/) ? "(zcat ${prefix_1}.fastq.gz | wc -l)" : "(cat ${prefix_1}.fastq | wc -l)"
+        seqcount_command2 = (reads[1].getName() =~ /\.gz$/) ? "(zcat ${prefix_2}.fastq.gz | wc -l)" : "(cat ${prefix_2}.fastq | wc -l)"
         """
         if [ ! -f $newfastq1 ]; then
             ln -s ${reads[0]} $newfastq1
@@ -45,7 +48,7 @@ process FASTQC {
         fastqc $options.args --threads $task.cpus $newfastq1
         fastqc $options.args --threads $task.cpus $newfastq2
 
-        n1=\$(zcat ${reads[0]} | wc -l) && n2=\$(zcat ${reads[1]} | wc -l) && echo \$(((n1+n2)/4)) > ${name}.seqcount.txt
+        n1=\$$seqcount_command1 && n2=\$$seqcount_command2 && echo \$(((n1+n2)/4)) > ${name}.seqcount.txt
         """
     }
 }
