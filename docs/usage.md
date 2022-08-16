@@ -139,7 +139,6 @@ Please note the following requirements:
 1. The path must be enclosed in quotes
 2. The path must have at least one `*` wildcard character
 3. When using the pipeline with paired end data, the path must use `{1,2}` notation to specify read pairs.
-4. The FASTQ files have to be 'gzipped' (e.g., `.fastq.gz`, `.fq.gz`). (Otherwise, You would get an error).
 
 If left unspecified, a default pattern is used: `fastq_files/*{1,2}.fastq.gz`
 
