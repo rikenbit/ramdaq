@@ -16,9 +16,6 @@ if (!require("dplyr")){
 inputfile <- args[1]
 raw_countdata = read.table(inputfile, sep="\t", comment.char = "", header=T, check.names=FALSE, stringsAsFactors=F)
 
-# create gene length data
-gene_length = data.frame(Geneid=raw_countdata$Geneid, Length=raw_countdata$Length, stringsAsFactors=F)
-
 ### function ###
 
 trim_tpmmatrix <- function(data, ERCC=F){
@@ -52,9 +49,6 @@ calc_tpm <- function(counts,len) {
 }
 
 count_tpm = raw_countdata
-count_tpm$Geneid = rownames(count_tpm)
-#count_tpm = dplyr::left_join(count_tpm, gene_length, by=c("Geneid"))
-rownames(count_tpm) = count_tpm$Geneid
 
 # calc TPM
 count_tpm = calc_tpm(count_tpm[,!colnames(count_tpm) %in% c("Geneid","Length","gene_name"), drop=FALSE], as.numeric(count_tpm$Length))

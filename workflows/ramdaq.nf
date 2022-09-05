@@ -41,6 +41,9 @@ params.rsem_allgene_idx = params.genome ? params.genomes[ params.genome ].rsem_a
 params.hisat2_sirv_idx = params.genome ? params.genomes[ params.genome ].hisat2_sirv_idx ?: false : false
 params.rsem_sirv_idx = params.genome ? params.genomes[ params.genome ].rsem_sirv_idx ?: false : false
 
+// nuclearRNA QC(human or mouse)
+params.nuclearRNA_qc = params.genome ? params.genomes[ params.genome ].nuclearRNA_qc ?: false : false
+
 /*
 ========================================================================================
     SET UP VARIABLES & VALIDATE INPUTS
@@ -195,6 +198,7 @@ ch_num_of_ts_rsem_header_gstat = file("$projectDir/assets/gstat_num_of_ts_rsem_h
 ch_entropy_of_sirv_header = Channel.fromPath("$projectDir/assets/barplot_entropy_of_sirv_header.txt", checkIfExists: true)
 ch_entropy_of_sirv_header_gstat = Channel.fromPath("$projectDir/assets/gstat_entropy_of_sirv_header.txt", checkIfExists: true)
 
+ch_nuclear_rna_header = Channel.fromPath("$projectDir/assets/barplot_nuclear_rna_header.txt", checkIfExists: true)
 /*
 ========================================================================================
     SET UP DIR/FILE PATH VARIABLES
@@ -511,6 +515,10 @@ include { RSEM_BOWTIE2 as RSEM_BOWTIE2_SIRV } from '../modules/local/rsem_bowtie
 include { MERGE_RSEM as MERGE_RSEM_ISOFORMS_SIRV } from '../modules/local/merge_rsem' addParams( options: modules['merge_rsem_isoforms_sirv'] )
 include { CALC_ENTROPY_SIRV } from '../modules/local/calc_entropy_sirv' addParams( options: modules['calc_entropy_sirv'] )
 
+// option: Nuclear RNA QC
+include { CALC_NUCLEAR_RNA_EXP } from '../modules/local/calc_nuclear_rna_exp' addParams( options: modules['calc_nuclear_rna_exp'] )
+
+// MultiQC report
 include { MULTIQC } from '../modules/local/multiqc' addParams( options: modules['multiqc'] )
 
 /*
@@ -1059,6 +1067,19 @@ workflow RAMDAQ {
         ch_entropy_sirv_gstat = CALC_ENTROPY_SIRV.out.entropy_gstat
     }
 
+    //
+    // MODULE: Calc Nuclear RNA expression
+    //
+    def ch_nuclear_rna_barplot  =  Channel.empty()
+    if (params.nuclearRNA_qc) {
+        CALC_NUCLEAR_RNA_EXP (
+            ch_featurecounts_merged_allgene,
+            ch_rsem_merged_gene,
+            ch_nuclear_rna_header
+        )
+        ch_nuclear_rna_barplot = CALC_NUCLEAR_RNA_EXP.out.nuclear_rna_barplot
+    }
+
     //=================================================
     // MODULE: MultiQC report
     //=================================================
@@ -1096,6 +1117,7 @@ workflow RAMDAQ {
         ch_detectedgene_gstat_rsem_ts.collect().ifEmpty([]),
         ch_entropy_sirv_barplot.collect().ifEmpty([]),
         ch_entropy_sirv_gstat.collect().ifEmpty([]),
+        ch_nuclear_rna_barplot.collect().ifEmpty([]),
         ch_software_versions_yaml.collect(),
         ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
     ).multiqc_report
