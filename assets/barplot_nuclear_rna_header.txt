@@ -1,0 +1,12 @@
+#id: 'expression_of_nuclear_rna'
+#section_name: 'Expression of nuclear RNA genes'
+#description: "show expression of nuclear RNA genes from TPM(log) counts"
+#plot_type: 'bargraph'
+#anchor: 'expression_of_nuclear_rna'
+#pconfig:
+#    id: 'expression_of_nuclear_rna_barplot'
+#    title: 'Expression of nuclear RNA genes'
+#    cpswitch: False
+#    tt_percentages: False
+#    hide_zero_cats: False
+
