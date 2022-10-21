@@ -1,4 +1,4 @@
-name: CI (human PE ST data)
+name: CI (human PE UST data)
 # This workflow is triggered on pushes and PRs to the repository.
 # It runs the pipeline with the minimal test dataset to check that it completes without any syntax errors
 on: [push, pull_request]
@@ -30,11 +30,35 @@ jobs:
           docker pull myoshimura080822/ramdaq:v1.2
       - name: Run pipeline with test data
         run: |
+          nextflow run ${GITHUB_WORKSPACE} -profile test_PE_UST_H,docker --entire_max_cpus 2 --entire_max_memory '4.GB'
           nextflow run ${GITHUB_WORKSPACE} -profile test_PE_ST_H,docker --entire_max_cpus 2 --entire_max_memory '4.GB'
+          nextflow run ${GITHUB_WORKSPACE} -profile test_SE_UST_H,docker --entire_max_cpus 2 --entire_max_memory '4.GB'
+          nextflow run ${GITHUB_WORKSPACE} -profile test_SE_ST_H,docker --entire_max_cpus 2 --entire_max_memory '4.GB'
+      - name: Deploy to ramdaq-human-pe-ust.surge.sh
+        uses: dswistowski/surge-sh-action@v1
+        with:
+          domain: 'ramdaq-human-pe-ust.surge.sh'
+          project: './results_PE_UST_H/MultiQC'
+          login: ${{ secrets.SURGE_LOGIN }}
+          token: ${{ secrets.SURGE_TOKEN }}
       - name: Deploy to ramdaq-human-pe-st.surge.sh
         uses: dswistowski/surge-sh-action@v1
         with:
           domain: 'ramdaq-human-pe-st.surge.sh'
           project: './results_PE_ST_H/MultiQC'
+          login: ${{ secrets.SURGE_LOGIN }}
+          token: ${{ secrets.SURGE_TOKEN }}
+      - name: Deploy to ramdaq-human-se-ust.surge.sh
+        uses: dswistowski/surge-sh-action@v1
+        with:
+          domain: 'ramdaq-human-se-ust.surge.sh'
+          project: './results_SE_UST_H/MultiQC'
+          login: ${{ secrets.SURGE_LOGIN }}
+          token: ${{ secrets.SURGE_TOKEN }}
+      - name: Deploy to ramdaq-human-se-st.surge.sh
+        uses: dswistowski/surge-sh-action@v1
+        with:
+          domain: 'ramdaq-human-se-st.surge.sh'
+          project: './results_SE_ST_H/MultiQC'
           login: ${{ secrets.SURGE_LOGIN }}
           token: ${{ secrets.SURGE_TOKEN }}
