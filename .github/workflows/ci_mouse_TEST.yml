@@ -1,4 +1,4 @@
-name: CI (mouse PE UST and ST data)
+name: CI (mouse UST and ST data)
 # This workflow is triggered on pushes and PRs to the repository.
 # It runs the pipeline with the minimal test dataset to check that it completes without any syntax errors
 on: [push, pull_request]
@@ -28,12 +28,18 @@ jobs:
       - name: Pull docker image
         run: |
           docker pull myoshimura080822/ramdaq:v1.2
-      - name: Run pipeline with test data
+      - name: Run pipeline with test_PE_UST_M
         run: |
           nextflow run ${GITHUB_WORKSPACE} -profile test_PE_UST_M,docker --entire_max_cpus 2 --entire_max_memory '4.GB'
+      - name: Run pipeline with test_PE_ST_M
+        run: |
           nextflow run ${GITHUB_WORKSPACE} -profile test_PE_ST_M,docker --entire_max_cpus 2 --entire_max_memory '4.GB'
+      - name: Run pipeline with test_SE_UST_M
+        run: |
           nextflow run ${GITHUB_WORKSPACE} -profile test_SE_UST_M,docker --entire_max_cpus 2 --entire_max_memory '4.GB'
           nextflow run ${GITHUB_WORKSPACE} -profile test_SE_UST_M_1,docker --entire_max_cpus 2 --entire_max_memory '4.GB'
+      - name: Run pipeline with test_SE_ST_M
+        run: |
           nextflow run ${GITHUB_WORKSPACE} -profile test_SE_ST_M,docker --entire_max_cpus 2 --entire_max_memory '4.GB'
       - name: Deploy to ramdaq-mouse-pe-ust.surge.sh
         uses: dswistowski/surge-sh-action@v1
@@ -56,17 +62,17 @@ jobs:
           project: './results_SE_UST_M/MultiQC'
           login: ${{ secrets.SURGE_LOGIN }}
           token: ${{ secrets.SURGE_TOKEN }}
-      - name: Deploy to ramdaq-mouse-se-ust_1.surge.sh
-        uses: dswistowski/surge-sh-action@v1
-        with:
-          domain: 'ramdaq-mouse-se-ust_1.surge.sh'
-          project: './results_SE_UST_M_1/MultiQC'
-          login: ${{ secrets.SURGE_LOGIN }}
-          token: ${{ secrets.SURGE_TOKEN }}
       - name: Deploy to ramdaq-mouse-se-st.surge.sh
         uses: dswistowski/surge-sh-action@v1
         with:
           domain: 'ramdaq-mouse-se-st.surge.sh'
           project: './results_SE_ST_M/MultiQC'
+          login: ${{ secrets.SURGE_LOGIN }}
+          token: ${{ secrets.SURGE_TOKEN }}
+      - name: Deploy to ramdaq-mouse-se-ust_1.surge.sh
+        uses: dswistowski/surge-sh-action@v1
+        with:
+          domain: 'ramdaq-mouse-se-ust_1.surge.sh'
+          project: './results_SE_UST_M_1/MultiQC'
           login: ${{ secrets.SURGE_LOGIN }}
           token: ${{ secrets.SURGE_TOKEN }}
