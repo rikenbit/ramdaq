@@ -5,6 +5,18 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## v1.9.1 (`-r 1.9.1`) [2022-10-25]
+
+### `v1.9.1 Added`
+
+- Support for genocode v41/vM30 annotations
+- Add barplot expression of nucluear RNA genes
+
+### `v1.9.1 Fixed`
+
+- Changed URL for downloading all external files
+- Fixed an error in the FastQC for uncompressed fastq
+
 ## v1.9 (`-r 1.9`) [2022-07-20]
 
 ### `v1.9 Added`
