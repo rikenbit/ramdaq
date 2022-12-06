@@ -48,7 +48,7 @@ process FASTQC {
         fastqc $options.args --threads $task.cpus $newfastq1
         fastqc $options.args --threads $task.cpus $newfastq2
 
-        n1=\$$seqcount_command1 && n2=\$$seqcount_command2 && echo \$(((n1+n2)/4)) > ${name}.seqcount.txt
+        n1=\$$seqcount_command1 && n2=\$$seqcount_command2 && echo \$((((n1+n2)/2)/4)) > ${name}.seqcount.txt
         """
     }
 }
