@@ -21,8 +21,9 @@ process CALC_INITIALREADS_MAPRATE {
     path "gstat_initialread_maprate_*.csv", emit: initialread_maprate_gstat
     
     script:
+    def is_pairedend = params.single_end ? "False" : "True"
     """
-    drawplot_initialread_maprate_bar.r $seqcounts_merged $totalread_merged
+    drawplot_initialread_maprate_bar.r $seqcounts_merged $totalread_merged $is_pairedend
     cp barplot_initialread_maprate.csv gstat_initialread_maprate.csv
     
     cat $initialread_maprate_header barplot_initialread_maprate.csv >> tmp_file

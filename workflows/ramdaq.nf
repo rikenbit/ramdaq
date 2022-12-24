@@ -383,6 +383,9 @@ def summary = [:]
 if (workflow.revision) summary['Pipeline Release'] = workflow.revision
 summary['Run Name'] = custom_runName ?: workflow.runName
 if (!params.readPaths) summary['Reads'] = params.reads
+if (params.maxReadLength) summary['Max readLength'] = params.maxReadLength
+if (params.minReadLength) summary['Min readLength'] = params.minReadLength
+
 summary['Data Type'] = params.single_end ? 'Single-End' : 'Paired-End'
 if (params.stranded)  {
     if (params.stranded == 'unstranded') summary['Strandness'] = 'Unstranded'
@@ -391,6 +394,7 @@ if (params.stranded)  {
 } else {
     summary['Strandness'] = 'Unstranded'
 }
+
 summary['Save Reference'] = params.saveReference ? 'Yes' : 'No'
 if (params.hisat2_idx) summary['HISAT2 Index'] = params.hisat2_idx
 if (params.hisat2_rrna_idx) summary['HISAT2 rRNA Index'] = params.hisat2_rrna_idx
