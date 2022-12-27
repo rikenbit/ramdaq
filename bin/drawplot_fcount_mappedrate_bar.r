@@ -35,7 +35,8 @@ if (ncol(fcount_merged_data) > 4){
   rownames(fcount_merged_data) = tmp_rowname
 }
 
-total_mapped_reads = data.frame(V1 = colnames(fcount_merged_data), mappedreads = colSums(fcount_merged_data), stringsAsFactors=F)
+totalseq_data$V1  = as.character(totalseq_data$V1)
+total_mapped_reads = data.frame(V1 = as.character(colnames(fcount_merged_data)), mappedreads = colSums(fcount_merged_data), stringsAsFactors=F)
 
 plotdata = dplyr::left_join(totalseq_data, total_mapped_reads, by=c("V1"))
 colnames(plotdata) = c("samplename", "totalseq", "mappedreads")
