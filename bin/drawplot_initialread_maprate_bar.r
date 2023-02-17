@@ -18,6 +18,7 @@ if (!require("ggplot2")){
 
 input_seqcounts <- args[1]
 input_totalread <- args[2]
+isPairedEnd <- args[3]
 
 ### function ###
 seqcountsdata = read.table(input_seqcounts, sep="", comment.char = "", header=F, check.names=FALSE, stringsAsFactors=F)
@@ -26,7 +27,13 @@ totalreaddata = read.table(input_totalread, sep="", comment.char = "", header=F,
 plotdata = dplyr::left_join(seqcountsdata, totalreaddata, by=c("V1"))
 colnames(plotdata) = c("samplename", "initialreads", "totalread")
 plotdata[is.na(plotdata)] <- 0
-plotdata$initialReadsMapRate = (plotdata$totalread / plotdata$initialreads) *100
+
+if (isPairedEnd=="True"){
+    plotdata$initialReadsMapRate = (plotdata$totalread / (plotdata$initialreads*2)) *100
+} else {
+    plotdata$initialReadsMapRate = (plotdata$totalread / plotdata$initialreads) *100
+}
+
 plotdata = plotdata[order(plotdata$samplename),]
 
 ### draw barplot

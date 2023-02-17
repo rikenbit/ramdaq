@@ -10,5 +10,3 @@
 #        min: 0
 #        scale: 'RdYlGn-rev'
 #        format: '{:.1f}%'
-
-

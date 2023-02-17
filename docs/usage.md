@@ -33,7 +33,8 @@
     - [featureCounts](#featurecounts)
   - [Results report options](#results-report-options)
     - [`--sampleLevel`](#--samplelevel)
-
+  - [Threshold](#threshold)
+    - [`--min_mapped_reads`](#--min_mapped_reads)
 <!--
     - [`--email`](#--email)
     - [`--email_on_fail`](#--email_on_fail)
@@ -354,3 +355,9 @@ Specify a path to a custom MultiQC configuration file.
 ### `--sampleLevel`
 
 Used to turn off the edgeR MDS and heatmap. Set automatically when running on fewer than 3 samples.
+
+## Threshold
+
+### `--min_mapped_reads`
+
+BAM files with a small number of mapped reads cause errors in Mapping/alignment QC (RSeQC, readcoverage.jl) and sample correlation processes. To avoid such errors, ramdaq skips these processes for BAM files (samples) with a smaller number of reads than the value set by this option. The default value is 500. E.g. `--min_mapped_reads 1000`
