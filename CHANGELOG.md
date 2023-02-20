@@ -5,6 +5,19 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## v1.9.2 (`-r 1.9.2`) [2022-02-17]
+
+### `v1.9.2 Added`
+
+- Update the MultiQC version to 1.13
+
+### `v1.9.2 Fixed`
+
+- Fixed an incorrect calculating paired-end reads counts in the FastQC process
+- Fixed a bug in the report when using 1 sample
+- Fixed an error in the R script when using integer samplename
+- Changed default threshold for the minimum number of mapped reads filter
+
 ## v1.9.1 (`-r 1.9.1`) [2022-10-25]
 
 ### `v1.9.1 Added`
