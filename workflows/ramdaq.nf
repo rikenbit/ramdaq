@@ -101,11 +101,11 @@ if (params.hisat2_rrna_idx) {
     }
 }
 
-if (params.chrsize) { ch_chrsize= file(params.chrsize, checkIfExists: true) } else { exit 1, "Chromosome sizes file not found: ${params.chrsize}" }
-if (params.bed) { ch_bed= file(params.bed, checkIfExists: true) } else { exit 1, "BED file not found: ${params.bed}" }
-if (params.gtf) { ch_gtf= file(params.gtf, checkIfExists: true) } else { exit 1, "GTF annotation file not found: ${params.gtf}" }
-if (params.mt_gtf) { ch_mt_gtf= file(params.mt_gtf, checkIfExists: true) } else { exit 1, "Mitocondria GTF annotation file not found: ${params.mt_gtf}" }
-if (params.histone_gtf) { ch_histone_gtf= file(params.histone_gtf, checkIfExists: true) } else { exit 1, "Histone GTF annotation file not found: ${params.histone_gtf}" }
+if (params.chrsize) { ch_chrsize= file(params.chrsize, checkIfExists: true) } else { exit 1, "Chromosome sizes file not specified: ${params.chrsize}" }
+if (params.bed) { ch_bed= file(params.bed, checkIfExists: true) } else { exit 1, "BED file not specified: ${params.bed}" }
+if (params.gtf) { ch_gtf= file(params.gtf, checkIfExists: true) } else { exit 1, "GTF annotation file not specified: ${params.gtf}" }
+if (params.mt_gtf) { ch_mt_gtf= file(params.mt_gtf, checkIfExists: true) } else { exit 1, "Mitocondria GTF annotation file not specified: ${params.mt_gtf}" }
+if (params.histone_gtf) { ch_histone_gtf= file(params.histone_gtf, checkIfExists: true) } else { exit 1, "Histone GTF annotation file not specified: ${params.histone_gtf}" }
 
 if (params.rsem_allgene_idx) {
     if (params.rsem_allgene_idx.endsWith('.tar.gz')) {
@@ -117,7 +117,7 @@ if (params.rsem_allgene_idx) {
         ch_rsem_allgene_idx = Channel
         .from(params.rsem_allgene_idx)
         .flatMap{file(params.rsem_allgene_idx, checkIfExists: true)}
-        .ifEmpty { exit 1, "RSEM All genes files not found: ${params.rsem_allgene_idx}" }   
+        .ifEmpty { exit 1, "RSEM all genes index files not found: ${params.rsem_allgene_idx}" }   
     }
 }
 
