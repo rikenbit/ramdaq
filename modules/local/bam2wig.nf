@@ -19,7 +19,8 @@ process BAM2WIG  {
     file "*.wig"
 
     script:
+    def wigsum = params.wigsum && params.wigsum > 0 ? "--wigsum ${params.wigsum}" : ''
     """
-    bam2wig.py -i ${bam} -s $chrsize -u -o ${bam.baseName}
+    bam2wig.py -i ${bam} -s $chrsize ${wigsum} -u -o ${bam.baseName}
     """
 }

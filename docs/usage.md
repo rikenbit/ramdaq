@@ -329,6 +329,13 @@ Specify a path to a custom MultiQC configuration file.
 - `--hs_threads_num [N]`
   - HISAT2 to launch a specified number of parallel search threads (Default: 1)
 
+### Bam2wig
+
+> [bam2wig.py](https://rseqc.sourceforge.net/#bam2wig-py) : bam2wig.py converts all types of RNA-seq data from BAM format into wiggle format.
+
+- `--wigsum`
+  - Specified wigsum. Eg: 1,000,000,000 equals to coverage of 10 million 100nt reads. Set false this option to disable normalization. (Default: 100000000)
+
 ### featureCounts
 
 > [featureCounts](http://subread.sourceforge.net/) : a software program developed for counting reads to genomic features such as genes, exons, promoters and genomic bins.

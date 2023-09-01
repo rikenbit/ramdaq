@@ -345,6 +345,9 @@ def helpMessage() {
       --softclipping                  HISAT2 allow soft-clip reads near their 5' and 3' ends (Default: disallow)
       --hs_threads_num [N]            HISAT2 to launch a specified number of parallel search threads (Default: 1)
     
+    Bam2wig:
+      --wigsum [N]                    Bam2wig normalize option. Default: '${params.wigsum}' equals coverage of 10 million 100nt reads. Set false this option to disable normalization.
+
     RSEM:
       --rsem_threads_num [N]          Number of threads to use (Default: 1)
     
