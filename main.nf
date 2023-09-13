@@ -51,17 +51,33 @@ params.salmon_index  = WorkflowMain.getGenomeAttribute(params, 'salmon')
 
 /*
 ========================================================================================
-    RUN WORKFLOWS
+    NAMED WORKFLOW FOR PIPELINE
 ========================================================================================
 */
 
-include { RAMDAQ } from './workflows/ramdaq'
+include { DL_REFERENCES } from './workflows/download_references'
+include { RAMDAQ }        from './workflows/ramdaq'
 
 //
-// WORKFLOW: Run main ramdaq analysis pipeline
+// WORKFLOW: Run main ramdaq pipeline
 //
+workflow RAMDAQ_WF {
+
+    if (params.dl_references) {
+        DL_REFERENCES()
+    } else {
+        RAMDAQ()
+    }
+}
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    RUN ALL WORKFLOWS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
 workflow {
-    RAMDAQ ()
+    RAMDAQ_WF ()
 }
 
 /*
