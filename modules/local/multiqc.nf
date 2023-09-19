@@ -8,7 +8,7 @@ process MULTIQC {
 
     label 'process_medium'
     publishDir "${params.outdir}/${options.publish_dir}", mode: 'copy', overwrite: true
-    container "quay.io/biocontainers/multiqc:1.13--pyhdfd78af_0"
+    container "quay.io/biocontainers/multiqc:1.14--pyhdfd78af_0"
 
     input:
     path multiqc_config
