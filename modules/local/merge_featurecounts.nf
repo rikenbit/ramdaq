@@ -21,7 +21,7 @@ process MERGE_FEATURECOUNTS {
     def prefix = "merged_featureCounts_${options.suffix}"
     def get_gene_ids = "<(tail $options.args ${input_files[0]} | cut $options.args2 )"
     def get_counts = input_files.collect{filename ->
-        "<(tail $options.args ${filename} | sed 's:.bam::' | cut $options.args3)"}.join(" ")
+        "<(tail $options.args ${filename} | sed '1s/.bam//' | cut $options.args3)"}.join(" ")
 
     if (options.suffix != 'allgene'){
         """

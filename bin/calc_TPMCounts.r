@@ -14,7 +14,7 @@ if (!require("dplyr")){
 }
 
 inputfile <- args[1]
-raw_countdata = read.table(inputfile, sep="\t", comment.char = "", header=T, check.names=FALSE, stringsAsFactors=F)
+raw_countdata = read.table(inputfile, sep="\t", comment.char = "", quote = "", header=T, check.names=FALSE, stringsAsFactors=F)
 
 ### function ###
 

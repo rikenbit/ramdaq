@@ -66,7 +66,7 @@ ggplot_2D <- function(dset, x, y, title, celltype, outname, label=F) {
   
 }
 
-countdata = read.table(inputfile, sep="\t", comment.char = "", header=T, check.names=FALSE, stringsAsFactors=F)
+countdata = read.table(inputfile, sep="\t", comment.char = "", quote = "", header=T, check.names=FALSE, stringsAsFactors=F)
 
 if (tool_name!="fcounts"){
   rownames(countdata) = countdata[,1]
