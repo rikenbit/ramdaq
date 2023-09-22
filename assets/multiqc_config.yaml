@@ -18,7 +18,18 @@ read_count_prefix: "K"
 read_count_desc: "thousands"
 
 module_order:
-    - rseqc
+    - rseqc:
+          name: 'RSeQC'
+          anchor: 'rseqc'
+          info: 'package provides a number of useful modules that can comprehensively evaluate high throughput RNA-seq data.'
+          path_filters:
+              - './rseqc/*'
+    - rseqc:
+          name: 'gene body coverage (all)'
+          anchor: 'genecov_all'
+          info: 'This section plots all the coverage for each bam output by paired-end/stranded mode.'
+          path_filters:
+              - './rseqc_allcoverage/*'
     - rsem
     - bowtie2:
           name: 'hisat2 summary of whole genomes'

@@ -19,7 +19,8 @@ process HISAT2  {
     path tools_dir
 
     output:
-    tuple val(name), file("*.bam"), file("*.bai"), file("*.flagstat"), emit: hisat2_bam_qc
+    tuple val(name), file("*.bam"), file("*.bai"), file("*.flagstat"), emit: hisat2_bam_all
+    tuple val(name), file("${name}.bam"), file("${name}.bam.bai"), file("${name}.bam.flagstat"), optional:true, emit: hisat2_bam_qc
     tuple val(name), file("${name}.bam"), file("${name}.bam.bai"), file("${name}.bam.flagstat"), optional:true, emit: hisat2_bam_count
     path "*.summary.txt", emit: hisat2_summary
 

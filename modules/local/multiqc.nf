@@ -18,6 +18,7 @@ process MULTIQC {
     path ('hisat2_genome/*')
     path ('hisat2_rrna/*')
     path ('rseqc/*')
+    path ('rseqc_allcoverage/*')
     path ('featureCounts/biotype_counts/*')
     path ('rsem_bowtie2_allgenes/*')
     path ('plot_sample_correlation/*')

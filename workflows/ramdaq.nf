@@ -265,6 +265,12 @@ def check_mappedread_sirv(bam,flagstat_path,min_mapped_reads=10) {
     }
 }
 
+def filterContainStrings(filename, excludeStrings) {
+    return excludeStrings.every { excludeString ->
+        !filename.contains(excludeString)
+    }
+}
+
 def nfcoreHeader() {
     // Log colors ANSI codes
     c_black = params.monochrome_logs ? '' : "\033[0;30m";
@@ -651,12 +657,24 @@ workflow RAMDAQ {
         ch_hisat2_idx.collect(),
         ch_tools_dir
     )
+    ch_hisat2_bam_all = HISAT2_GENOME.out.hisat2_bam_all
     ch_hisat2_bam_qc = HISAT2_GENOME.out.hisat2_bam_qc
     ch_hisat2_bam_count = HISAT2_GENOME.out.hisat2_bam_count
     ch_hisat2_summary = HISAT2_GENOME.out.hisat2_summary
 
     //
-    // FUNCTION: Filtering low mapped reads bams [for bamQC, RSEM]
+    // FUNCTION: Filtering low mapped reads bams [for bamQC]
+    //
+    ch_hisat2_bam_all
+    .transpose()
+    .filter { name, bam, bai, flagstat -> check_mappedread(bam,flagstat,params.min_mapped_reads) }
+    .map { it[0..2] }
+    .set{
+        ch_hisat2_bam_all_filtered
+    }
+
+    //
+    // FUNCTION: Filtering low mapped reads bams [for bamQC]
     //
     ch_hisat2_bam_qc
     .transpose()
@@ -710,10 +728,23 @@ workflow RAMDAQ {
     .set { ch_hisat2_summary_rrna }
 
     //
+    // FUNCTION: Filtering unneed samples [for bam2wig]
+    //
+    ch_hisat2_bam_all_filtered
+    .transpose()
+    .filter { name, bam, bai -> 
+        filterContainStrings(bam.getName(), params.bam2wig_excludeStrings)
+    }
+    .map { it[0..2] }
+    .set{
+        ch_hisat2_bam_bam2wig
+    }
+
+    //
     // MODULE: Bam to BigWig
     //
     BAM2WIG_ALLGENES (
-        ch_hisat2_bam_qc_filtered,
+        ch_hisat2_bam_bam2wig,
         ch_chrsize
     )
 
@@ -751,12 +782,31 @@ workflow RAMDAQ {
     // MODULE: readcoverage.jl
     //
     READCOVERAGE (
-        ch_hisat2_bam_qc_filtered,
+        ch_hisat2_bam_all_filtered,
         ch_bed
     ).readcov_results
-    .set { ch_readcov_results }
+    ch_readcov_results = READCOVERAGE.out.readcov_results
 
-    ch_rseqc_results_merge = ch_rseqc_results.concat(ch_readcov_results)
+    def ch_readcov_results_all = Channel.empty()
+    if (!params.single_end || params.stranded != 'unstranded') {
+        ch_readcov_results_all = READCOVERAGE.out.readcov_results
+    }
+
+    //
+    // FUNCTION: Filtering unplot samples [for genebodycoverage]
+    //
+    ch_readcov_results
+        .transpose()
+        .filter { file -> 
+            filterContainStrings(file.getName(), params.readcov_excludeStrings)
+        }
+        .set{
+            ch_readcov_results_filtered
+        }
+
+    //debug
+    //ch_readcov_results_filtered.subscribe {  println "ch_readcov_results_filtered: $it"  }
+    ch_rseqc_results_merge = ch_rseqc_results.concat(ch_readcov_results_filtered)
 
     //
     // MODULE: featureCounts (All-genes GTF)
@@ -1105,6 +1155,7 @@ workflow RAMDAQ {
         ch_hisat2_summary.collect().ifEmpty([]),
         ch_hisat2_summary_rrna.collect().ifEmpty([]),
         ch_rseqc_results_merge.collect().ifEmpty([]),
+        ch_readcov_results_all.collect().ifEmpty([]),
         ch_counts_biotype.collect().ifEmpty([]),
         ch_rsem_results_stat.collect().ifEmpty([]),
         ch_sample_correlation.collect().ifEmpty([]),

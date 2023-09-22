@@ -14,6 +14,12 @@ process READCOVERAGE  {
             if (filename.indexOf("geneBodyCoverage.txt") > 0) "genebody_coverage/$filename"
             else "$filename"
             }
+    
+    publishDir "${params.outdir}/${options.args}/", mode: 'copy', overwrite: true,
+            saveAs: {filename ->
+            if (filename.indexOf("geneBodyCoverage.txt") > 0) "genebody_coverage/$filename"
+            else "$filename"
+            }
  
     input:
     tuple val(name), file(bam), file(bai)
