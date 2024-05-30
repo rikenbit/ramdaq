@@ -21,7 +21,7 @@ if (params.help) {
 ========================================================================================
 */
 
-if (!params.dl_references && !params.local_annot_dir) {
+if (!params.dl_references && !params.local_annot_dir && !params.github_action) {
     exit 1, "The 'local_annot_dir' parameter is not specified. Please specify the output directory of the previously executed dl_references workflow."
 }
 
