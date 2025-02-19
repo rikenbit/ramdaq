@@ -9,7 +9,7 @@ regexes = {
     'Nextflow': ['v_nextflow.txt', r"(\S+)"],
     'FastQC': ['v_fastqc.txt', r"FastQC v(\S+)"],
     'Fastq-mcf': ['v_fastqmcf.txt', r"Version: (\S+)"],
-    'Hisat2': ['v_hisat2.txt', r"/opt/conda/envs/ramdaq-1.0dev/bin/hisat2-align-s version (\S+)"],
+    'Hisat2': ['v_hisat2.txt', r"/opt/conda/envs/ramdaq-2.0dev/bin/hisat2-align-s version (\S+)"],
     'Samtools': ['v_samtools.txt', r"samtools (\S+)"],
     'Bam2Wig': ['v_bam2wig.txt', r"bam2wig.py (\S+)"],
     'Bamtools': ['v_bamtools.txt', r"bamtools (\S+)"],

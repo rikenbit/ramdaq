@@ -38,7 +38,7 @@ process RSEM_BOWTIE2  {
     if (params.single_end) {
         if (params.stranded && params.stranded != 'unstranded') {
             """
-            rsem-calculate-expression $threads_num $strandness $reads --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ $index_base ${prefix}
+            rsem-calculate-expression $threads_num $strandness $reads --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-2.0dev/bin/ $index_base ${prefix}
             samtools sort ${prefix}.transcript.bam -o ${prefix}.rsem.bam
             samtools index ${prefix}.rsem.bam
             samtools flagstat ${prefix}.rsem.bam > ${prefix}.rsem.bam.flagstat
@@ -46,7 +46,7 @@ process RSEM_BOWTIE2  {
             """
         } else {
             """
-            rsem-calculate-expression $threads_num $reads --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ $index_base ${prefix}
+            rsem-calculate-expression $threads_num $reads --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-2.0dev/bin/ $index_base ${prefix}
             samtools sort ${prefix}.transcript.bam -o ${prefix}.rsem.bam
             samtools index ${prefix}.rsem.bam
             samtools flagstat ${prefix}.rsem.bam > ${prefix}.rsem.bam.flagstat
@@ -56,7 +56,7 @@ process RSEM_BOWTIE2  {
     } else {
         if (params.stranded && params.stranded != 'unstranded') {
             """
-            rsem-calculate-expression $threads_num $strandness --paired-end ${reads[0]} ${reads[1]} --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ \\
+            rsem-calculate-expression $threads_num $strandness --paired-end ${reads[0]} ${reads[1]} --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-2.0dev/bin/ \\
             $index_base ${prefix}
             samtools sort ${prefix}.transcript.bam -o ${prefix}.rsem.bam
             samtools index ${prefix}.rsem.bam
@@ -65,7 +65,7 @@ process RSEM_BOWTIE2  {
             """
         } else {
             """
-            rsem-calculate-expression $threads_num --paired-end ${reads[0]} ${reads[1]} --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-1.0dev/bin/ \\
+            rsem-calculate-expression $threads_num --paired-end ${reads[0]} ${reads[1]} --bowtie2 --bowtie2-path /opt/conda/envs/ramdaq-2.0dev/bin/ \\
             $index_base ${prefix}
             samtools sort ${prefix}.transcript.bam -o ${prefix}.rsem.bam
             samtools index ${prefix}.rsem.bam

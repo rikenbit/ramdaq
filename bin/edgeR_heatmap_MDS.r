@@ -50,17 +50,17 @@ dataDGE <- DGEList( counts=data.matrix(data) )
 dataNorm <- calcNormFactors(dataDGE)
 
 # Make MDS plot
-pdf('edgeR_MDS_plot.pdf')
-MDSdata <- plotMDS(dataNorm)
-dev.off()
+#pdf('edgeR_MDS_plot.pdf')
+MDSdata <- plotMDS(dataNorm, plot=FALSE)
+#dev.off()
 
 # Print distance matrix to file
-write.csv(MDSdata$distance.matrix, 'edgeR_MDS_distance_matrix.csv', quote=FALSE,append=TRUE)
+write.csv(MDSdata$distance.matrix.squared, 'edgeR_MDS_distance_matrix.csv', quote=FALSE)
 
 # Print plot x,y co-ordinates to file
-MDSxy = MDSdata$cmdscale.out
+MDSxy = data.frame(MDSdata$x, MDSdata$y)
 colnames(MDSxy) = c(paste(MDSdata$axislabel, '1'), paste(MDSdata$axislabel, '2'))
-write.csv(MDSxy, 'edgeR_MDS_Aplot_coordinates_mqc.csv', quote=FALSE, append=TRUE)
+write.csv(MDSxy, 'edgeR_MDS_Aplot_coordinates_mqc.csv', quote=FALSE)
 
 # Get the log counts per million values
 logcpm <- cpm(dataNorm, prior.count=2, log=TRUE)
@@ -75,7 +75,7 @@ hmap <- heatmap.2(as.matrix(cor(logcpm, method="pearson")),
 dev.off()
 
 # Write correlation values to file
-write.csv(hmap$carpet, 'log2CPM_sample_correlation_mqc.csv', quote=FALSE, append=TRUE)
+write.csv(hmap$carpet, 'log2CPM_sample_correlation_mqc.csv', quote=FALSE)
 
 # Plot the heatmap dendrogram
 pdf('log2CPM_sample_distances_dendrogram.pdf')
