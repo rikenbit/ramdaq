@@ -41,13 +41,13 @@ iii. Download the pipeline automatically and test it on a minimal dataset with a
 *1.* Example of test using Docker
 
 ```bash
-nextflow run rikenbit/ramdaq -profile test,docker
+nextflow run rikenbit/ramdaq -profile test,docker --genome GRCm39_vM30_chr19
 ```
 
 *2.* Example of test using Singularity
 
 ```bash
-nextflow run rikenbit/ramdaq -profile test,singularity
+nextflow run rikenbit/ramdaq -profile test,singularity --genome GRCm39_vM30_chr19
 ```
 
 iv. Start running your own analysis!
