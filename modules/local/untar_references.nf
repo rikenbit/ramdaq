@@ -12,6 +12,7 @@ process UNTAR_REFERENCES {
     input:
     path gz
     val common_dirname
+    val options
     
     output:
     path "*", emit: untar_files

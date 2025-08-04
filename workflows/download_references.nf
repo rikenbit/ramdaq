@@ -137,25 +137,25 @@ def helpMessage() {
 */
 
 include { WGET_REFERENCES as WGET_COMMON_FILES } from '../modules/local/wget_references' 
-include { UNTAR_REFERENCES as UNTAR_COMMON_FILES } from '../modules/local/untar_references' addParams( options: modules['untar_common_files'] )
+include { UNTAR_REFERENCES as UNTAR_COMMON_FILES } from '../modules/local/untar_references' 
 
 include { WGET_REFERENCES as WGET_HISAT2_IDX } from '../modules/local/wget_references'
-include { UNTAR_REFERENCES as UNTAR_HISAT2_IDX } from '../modules/local/untar_references' addParams( options: modules['untar_index_hisat2'] )
+include { UNTAR_REFERENCES as UNTAR_HISAT2_IDX } from '../modules/local/untar_references' 
 
 include { WGET_REFERENCES as WGET_HISAT2_RRNA_IDX } from '../modules/local/wget_references' 
-include { UNTAR_REFERENCES as UNTAR_HISAT2_RRNA_IDX } from '../modules/local/untar_references' addParams( options: modules['untar_index_hisat2'] )
+include { UNTAR_REFERENCES as UNTAR_HISAT2_RRNA_IDX } from '../modules/local/untar_references'
 
 include { WGET_REFERENCES as WGET_GTF_FILES } from '../modules/local/wget_references' 
-include { UNTAR_REFERENCES as UNTAR_GTF_FILES } from '../modules/local/untar_references' addParams( options: modules['untar_gtf_files'] )
+include { UNTAR_REFERENCES as UNTAR_GTF_FILES } from '../modules/local/untar_references' 
 
 include { WGET_REFERENCES as WGET_HISAT2_SIRV_IDX } from '../modules/local/wget_references' 
-include { UNTAR_REFERENCES as UNTAR_HISAT2_SIRV_IDX } from '../modules/local/untar_references' addParams( options: modules['untar_index_hisat2'] )
+include { UNTAR_REFERENCES as UNTAR_HISAT2_SIRV_IDX } from '../modules/local/untar_references' 
 
 include { WGET_REFERENCES as WGET_RSEM_ALLGENE_IDX } from '../modules/local/wget_references' 
-include { UNTAR_REFERENCES as UNTAR_RSEM_ALLGENE_IDX } from '../modules/local/untar_references' addParams( options: modules['untar_index_rsem'] )
+include { UNTAR_REFERENCES as UNTAR_RSEM_ALLGENE_IDX } from '../modules/local/untar_references' 
 
 include { WGET_REFERENCES as WGET_RSEM_SIRV_IDX } from '../modules/local/wget_references' 
-include { UNTAR_REFERENCES as UNTAR_RSEM_SIRV_IDX } from '../modules/local/untar_references' addParams( options: modules['untar_index_rsem'] )
+include { UNTAR_REFERENCES as UNTAR_RSEM_SIRV_IDX } from '../modules/local/untar_references' 
 
 
 /*
@@ -245,9 +245,11 @@ workflow DL_REFERENCES {
     .filter { it == params.common_md5sum }
     .ifEmpty { exit 1, "DL did not complete successfully. : ${params.common}" }
 
+    options_ch  = Channel.value( params.modules.untar_common_files )
     UNTAR_COMMON_FILES (
         ch_common_gz,
-        ch_common_dirname
+        ch_common_dirname,
+        options_ch
     )
 
     //
@@ -265,9 +267,11 @@ workflow DL_REFERENCES {
     .filter { it == params.hisat2_idx_md5sum }
     .ifEmpty { exit 1, "DL did not complete successfully. : ${params.hisat2_idx}" }
 
+    options_ch  = Channel.value( params.modules.untar_index_hisat2 )    
     UNTAR_HISAT2_IDX (
         ch_hisat2_idx_gz,
-        ch_empty_dirname
+        ch_empty_dirname,
+        options_ch
     )
 
     //
@@ -285,9 +289,11 @@ workflow DL_REFERENCES {
     .filter { it == params.hisat2_rrna_idx_md5sum }
     .ifEmpty { exit 1, "DL did not complete successfully. : ${params.hisat2_rrna_idx}" }
 
+    options_ch  = Channel.value( params.modules.untar_index_hisat2 ) 
     UNTAR_HISAT2_RRNA_IDX (
         ch_hisat2_rrna_idx_gz,
-        ch_empty_dirname
+        ch_empty_dirname,
+        options_ch
     )
 
     //
@@ -305,9 +311,11 @@ workflow DL_REFERENCES {
     .filter { it == params.annotation_gtf_md5sum }
     .ifEmpty { exit 1, "DL did not complete successfully. : ${params.annotation_gtf}" }
 
+    options_ch  = Channel.value( params.modules.untar_gtf_files ) 
     UNTAR_GTF_FILES (
         ch_gtf_gz,
-        annotation_gtf_dirname
+        annotation_gtf_dirname,
+        options_ch
     )
 
     //
@@ -325,9 +333,11 @@ workflow DL_REFERENCES {
     .filter { it == params.hisat2_sirv_idx_md5sum }
     .ifEmpty { exit 1, "DL did not complete successfully. : ${params.hisat2_sirv_idx}" }
 
+    options_ch  = Channel.value( params.modules.untar_index_hisat2 ) 
     UNTAR_HISAT2_SIRV_IDX (
         ch_hisat2_sirv_idx_gz,
-        ch_empty_dirname
+        ch_empty_dirname,
+        options_ch
     )
 
     //
@@ -345,9 +355,11 @@ workflow DL_REFERENCES {
     .filter { it == params.rsem_allgene_idx_md5sum }
     .ifEmpty { exit 1, "DL did not complete successfully. : ${params.rsem_allgene_idx}" }
 
+    options_ch  = Channel.value( params.modules.untar_index_rsem ) 
     UNTAR_RSEM_ALLGENE_IDX (
         ch_rsem_allgene_idx_gz,
-        ch_empty_dirname
+        ch_empty_dirname,
+        options_ch
     )
 
     //
@@ -365,9 +377,11 @@ workflow DL_REFERENCES {
     .filter { it == params.rsem_sirv_idx_md5sum }
     .ifEmpty { exit 1, "DL did not complete successfully. : ${params.rsem_sirv_idx}" }
 
+    options_ch  = Channel.value( params.modules.untar_index_rsem ) 
     UNTAR_RSEM_SIRV_IDX (
         ch_rsem_sirv_idx_gz,
-        ch_empty_dirname
+        ch_empty_dirname,
+        options_ch
     )
 
 }
