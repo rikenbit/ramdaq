@@ -177,8 +177,6 @@ summary['Run Name'] = custom_runName ?: workflow.runName
 if (params.dl_directory_url) summary['Download URL'] = params.dl_directory_url
 if (params.species) summary['Species'] = params.species
 summary['References ver'] = params.annot_ver
-
-summary['Resource allocation for the entire workflow']  = "$params.entire_max_cpus cpus, $params.entire_max_memory memory"
 summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
 summary['Save dir']       = params.outdir

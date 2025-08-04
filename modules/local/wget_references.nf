@@ -7,7 +7,6 @@ options        = initOptions(params.options)
 process WGET_REFERENCES {
 
     label 'process_low'
-    //publishDir "${params.outdir}/${params.species}", mode: 'copy', overwrite: true
     
     input:
     val gz
