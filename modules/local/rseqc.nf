@@ -6,7 +6,7 @@ options        = initOptions(params.options)
 
 process RSEQC  {
     tag "$name"
-    label 'process_high'
+    label 'process_low'
 
     publishDir "${params.outdir}/${options.publish_dir}", mode: 'copy', overwrite: true,
         saveAs: {filename ->

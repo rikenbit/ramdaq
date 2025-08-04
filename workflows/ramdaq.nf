@@ -339,8 +339,6 @@ def helpMessage() {
       --genome [str]                  Name of human or mouse latest reference: ${params.genomes.keySet().join(", ")}
       --saveReference                 Save the generated reference files to the results directory
       --local_annot_dir [str]         Base path for local annotation files
-      --entire_max_cpus [N]            Maximum number of CPUs to use for each step of the pipeline. Should be in form e.g. --entire_max_cpus 16. Default: '${params.entire_max_cpus}'
-      --entire_max_memory [str]        Memory limit for each step of pipeline. Should be in form e.g. --entire_max_memory '16.GB'. Default: '${params.entire_max_memory}'  
         
     Other:
       --outdir [str]                  The output directory where the results will be saved
@@ -438,7 +436,6 @@ summary['SIRV quantification mode']   = params.spike_in_sirv ? 'On' : 'Off'
 if (params.hisat2_sirv_idx) summary['HISAT2 SIRVome Index'] = params.hisat2_sirv_idx
 if (params.rsem_sirv_idx) summary['RSEM-Bowtie2 SIRVome Index'] = params.rsem_sirv_idx
 
-summary['Resource allocation for the entire workflow']  = "$params.entire_max_cpus cpus, $params.entire_max_memory memory"
 summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
 summary['Output dir']       = params.outdir
@@ -487,7 +484,8 @@ Channel.from(summary.collect{ [it.key, it.value] })
 ========================================================================================
 */
 
-include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions' addParams( options: modules['get_software_versions'] )
+include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions' 
+//addParams( options: modules['get_software_versions'] )
 
 include { UNTAR_INDEX as UNTAR_HISAT2_IDX } from '../modules/local/untar_index' addParams( options: modules['untar_index_hisat2'] )
 include { UNTAR_INDEX as UNTAR_HISAT2_RRNA_IDX } from '../modules/local/untar_index' addParams( options: modules['untar_index_hisat2'] )
@@ -496,10 +494,12 @@ include { UNTAR_INDEX as UNTAR_RSEM_ALLGENE_IDX } from '../modules/local/untar_i
 include { UNTAR_INDEX as UNTAR_HISAT2_SIRV_IDX } from '../modules/local/untar_index' addParams( options: modules['untar_index_hisat2'] )
 include { UNTAR_INDEX as UNTAR_RSEM_SIRV_IDX } from '../modules/local/untar_index' addParams( options: modules['untar_index_rsem'] )
 
-include { FASTQC as FASTQC_RAW } from '../modules/local/fastqc' addParams( options: modules['fastqc'] )
+include { FASTQC as FASTQC_RAW } from '../modules/local/fastqc' 
+//addParams( options: modules['fastqc'] )
 include { MERGE_SUMMARYFILE as MERGE_SUMMARYFILE_FASTQC_RAW } from '../modules/local/merge_summaryfile' addParams( options: modules['merge_summaryfile_fastqc_raw'] )
 
-include { FASTQC as FASTQC_TRIM } from '../modules/local/fastqc' addParams( options: modules['fastqc_trim'] )
+include { FASTQC as FASTQC_TRIM } from '../modules/local/fastqc' 
+//addParams( options: modules['fastqc_trim'] )
 include { FASTQMCF } from '../modules/local/fastqmcf' addParams( options: modules['fastqmcf'] )
 
 include { HISAT2 as HISAT2_GENOME } from '../modules/local/hisat2' addParams( options: modules['hisat2_genome'] )
@@ -560,7 +560,8 @@ workflow RAMDAQ {
     //
     // MODULE: Software version output
     //
-    GET_SOFTWARE_VERSIONS ()
+    options_ch  = Channel.value( params.modules.get_software_versions )
+    GET_SOFTWARE_VERSIONS (options_ch)
     .software_versions_yaml
     .set { ch_software_versions_yaml }
 
@@ -620,8 +621,10 @@ workflow RAMDAQ {
     //
     // MODULE: Read QC
     //
+    options_ch  = Channel.value( params.modules.fastqc )
     FASTQC_RAW (
-        ch_reads
+        ch_reads,
+        options_ch
     ).fastqc_results
     ch_fastqc_results_raw = FASTQC_RAW.out.fastqc_results
     ch_fastqc_seqcount_raw = FASTQC_RAW.out.fastqc_seqcount
@@ -650,8 +653,10 @@ workflow RAMDAQ {
     //
     // MODULE: Trimmed Read QC
     //
+    options_ch  = Channel.value( params.modules.fastqc_trim )
     FASTQC_TRIM (
-        ch_trimmed_reads
+        ch_trimmed_reads,
+        options_ch
     ).fastqc_results
     ch_fastqc_results_trimmed = FASTQC_TRIM.out.fastqc_results
     ch_fastqc_seqcount_trimmed = FASTQC_TRIM.out.fastqc_seqcount
@@ -794,7 +799,7 @@ workflow RAMDAQ {
     ).readcov_results
     ch_readcov_results = READCOVERAGE.out.readcov_results
 
-    def ch_readcov_results_all = Channel.empty()
+    ch_readcov_results_all = Channel.empty()
     if (!params.single_end || params.stranded != 'unstranded') {
         ch_readcov_results_all = READCOVERAGE.out.readcov_results
     }
@@ -840,48 +845,54 @@ workflow RAMDAQ {
     ch_ercc_tpm_merged = MERGE_FEATURECOUNTS_ALLGENE.out.ercc_tpm_merged
     ch_ercc_tpm_merged_list = ch_ercc_tpm_merged.toList()
 
-    //
-    // MODULE: featureCounts (Mitocondria GTF)
-    //
-    FEATURECOUNTS_MT_GTF (
-        ch_hisat2_bam_featurecount,
-        ch_mt_gtf,
-        ch_biotypes_header
-    )
-    ch_counts_to_merge_mt = FEATURECOUNTS_MT_GTF.out.counts_to_merge
-    ch_counts_summary_mt = FEATURECOUNTS_MT_GTF.out.counts_summary
+    ch_counts_summary_mt = Channel.empty()
+    if (params.mt_gtf) {
+        //
+        // MODULE: featureCounts (Mitocondria GTF)
+        //
+        FEATURECOUNTS_MT_GTF (
+            ch_hisat2_bam_featurecount,
+            ch_mt_gtf,
+            ch_biotypes_header
+        )
+        ch_counts_to_merge_mt = FEATURECOUNTS_MT_GTF.out.counts_to_merge
+        ch_counts_summary_mt = FEATURECOUNTS_MT_GTF.out.counts_summary
 
-    //
-    // MODULE: Merge featureCounts output (Mitocondria-genes)
-    //
-    MERGE_FEATURECOUNTS_MT (
-        ch_counts_to_merge_mt.collect()
-    )
-    .merged_counts
-    .set{
-        ch_featurecounts_merged_mt
-    }
+        //
+        // MODULE: Merge featureCounts output (Mitocondria-genes)
+        //
+        MERGE_FEATURECOUNTS_MT (
+            ch_counts_to_merge_mt.collect()
+        )
+        .merged_counts
+        .set{
+            ch_featurecounts_merged_mt
+        }
+    } 
 
-    //
-    // MODULE: featureCounts (Histone GTF)
-    //
-    FEATURECOUNTS_HISTONE_GTF (
-        ch_hisat2_bam_featurecount,
-        ch_histone_gtf,
-        ch_biotypes_header
-    )
-    ch_counts_to_merge_histone = FEATURECOUNTS_HISTONE_GTF.out.counts_to_merge
-    ch_counts_summary_histone = FEATURECOUNTS_HISTONE_GTF.out.counts_summary
+    ch_counts_summary_histone = Channel.empty()
+    if (params.histone_gtf) {
+        //
+        // MODULE: featureCounts (Histone GTF)
+        //
+        FEATURECOUNTS_HISTONE_GTF (
+            ch_hisat2_bam_featurecount,
+            ch_histone_gtf,
+            ch_biotypes_header
+        )
+        ch_counts_to_merge_histone = FEATURECOUNTS_HISTONE_GTF.out.counts_to_merge
+        ch_counts_summary_histone = FEATURECOUNTS_HISTONE_GTF.out.counts_summary
 
-    //
-    // MODULE: Merge featureCounts output (Histone-genes)
-    //
-    MERGE_FEATURECOUNTS_HISTONE (
-        ch_counts_to_merge_histone.collect()
-    )
-    .merged_counts
-    .set{
-        ch_featurecounts_merged_histone
+        //
+        // MODULE: Merge featureCounts output (Histone-genes)
+        //
+        MERGE_FEATURECOUNTS_HISTONE (
+            ch_counts_to_merge_histone.collect()
+        )
+        .merged_counts
+        .set{
+            ch_featurecounts_merged_histone
+        }
     }
 
     //
@@ -944,8 +955,8 @@ workflow RAMDAQ {
         .set { ch_sample_correlation }
     }
 
-    def ch_ercc_correlation_barplot  =  Channel.empty()
-    def ch_ercc_correlation_gstat  =  Channel.empty()
+    ch_ercc_correlation_barplot  =  Channel.empty()
+    ch_ercc_correlation_gstat  =  Channel.empty()
     if (params.spike_in_ercc || params.spike_in_sirv) {
         //
         // MODULE: Calc ERCC mol vs exp corr
@@ -996,29 +1007,37 @@ workflow RAMDAQ {
     ch_fcounts_maprate_barplot_allgene = CALC_FEATURECOUNTS_MAPRATE_ALLGENE.out.fcounts_maprate_barplot
     ch_fcounts_maprate_gstat_allgene = CALC_FEATURECOUNTS_MAPRATE_ALLGENE.out.fcounts_maprate_gstat
 
-    //
-    // MODULE: Calc featureCounts mapped rate (mt genes)
-    //
-    CALC_FEATURECOUNTS_MAPRATE_MT (
-        ch_hisat2_merged_totalseq,
-        ch_featurecounts_merged_mt,
-        ch_fcounts_mt_header,
-        ch_fcounts_mt_header_gstat
-    )
-    ch_fcounts_maprate_barplot_mt = CALC_FEATURECOUNTS_MAPRATE_MT.out.fcounts_maprate_barplot
-    ch_fcounts_maprate_gstat_mt = CALC_FEATURECOUNTS_MAPRATE_MT.out.fcounts_maprate_gstat
+    ch_fcounts_maprate_barplot_mt  =  Channel.empty()
+    ch_fcounts_maprate_gstat_mt  =  Channel.empty()
+    if (params.mt_gtf) {
+        //
+        // MODULE: Calc featureCounts mapped rate (mt genes)
+        //
+        CALC_FEATURECOUNTS_MAPRATE_MT (
+            ch_hisat2_merged_totalseq,
+            ch_featurecounts_merged_mt,
+            ch_fcounts_mt_header,
+            ch_fcounts_mt_header_gstat
+        )
+        ch_fcounts_maprate_barplot_mt = CALC_FEATURECOUNTS_MAPRATE_MT.out.fcounts_maprate_barplot
+        ch_fcounts_maprate_gstat_mt = CALC_FEATURECOUNTS_MAPRATE_MT.out.fcounts_maprate_gstat
+    } 
 
-    //
-    // MODULE: Calc featureCounts mapped rate (hisotne genes)
-    //
-    CALC_FEATURECOUNTS_MAPRATE_HISTONE (
-        ch_hisat2_merged_totalseq,
-        ch_featurecounts_merged_histone,
-        ch_fcounts_histone_header,
-        ch_fcounts_histone_header_gstat
-    )
-    ch_fcounts_maprate_barplot_histone = CALC_FEATURECOUNTS_MAPRATE_HISTONE.out.fcounts_maprate_barplot
-    ch_fcounts_maprate_gstat_histone = CALC_FEATURECOUNTS_MAPRATE_HISTONE.out.fcounts_maprate_gstat
+    ch_fcounts_maprate_barplot_histone  =  Channel.empty()
+    ch_fcounts_maprate_gstat_histone  =  Channel.empty()
+    if (params.histone_gtf) {
+        //
+        // MODULE: Calc featureCounts mapped rate (hisotne genes)
+        //
+        CALC_FEATURECOUNTS_MAPRATE_HISTONE (
+            ch_hisat2_merged_totalseq,
+            ch_featurecounts_merged_histone,
+            ch_fcounts_histone_header,
+            ch_fcounts_histone_header_gstat
+        )
+        ch_fcounts_maprate_barplot_histone = CALC_FEATURECOUNTS_MAPRATE_HISTONE.out.fcounts_maprate_barplot
+        ch_fcounts_maprate_gstat_histone = CALC_FEATURECOUNTS_MAPRATE_HISTONE.out.fcounts_maprate_gstat
+    } 
 
     //
     // MODULE: Calc detected genes and dimentional reduction from featureCounts TPM
@@ -1067,8 +1086,8 @@ workflow RAMDAQ {
     // optional: ERCC / SIRV quantification
     // =================================================
 
-    def ch_entropy_sirv_barplot  =  Channel.empty()
-    def ch_entropy_sirv_gstat  =  Channel.empty()
+    ch_entropy_sirv_barplot  =  Channel.empty()
+    ch_entropy_sirv_gstat  =  Channel.empty()
     if (params.spike_in_sirv) {
         //
         // MODULE: Alignment with Hisat2 [sirv]
@@ -1141,7 +1160,7 @@ workflow RAMDAQ {
     //
     // MODULE: Calc Nuclear RNA expression
     //
-    def ch_nuclear_rna_barplot  =  Channel.empty()
+    ch_nuclear_rna_barplot  =  Channel.empty()
     if (params.nuclearRNA_qc) {
         CALC_NUCLEAR_RNA_EXP (
             ch_featurecounts_merged_allgene,

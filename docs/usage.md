@@ -224,22 +224,10 @@ When this option is specified, ramdaq outputs the between-sample correlation of 
 
 ### Resource allocation for the entire workflow
 
-#### `--entire_max_cpus`
-
-Maximum number of CPUs to use for each step of the pipeline.
-Should be a string in the format integer-unit. eg. `--entire_max_cpus 16`.
-
-#### `--entire_max_memory`
-
-Memory limit for each step of the pipeline.
-Should be a string in the format integer-unit. eg. `--entire_max_memory '16.GB'`.
-
-### Resource allocation for each process
-
 #### `--max_cpus`
 
 Use to set a top limit for the default CPU requirement for each process.
-Should be a string in the format integer-unit. eg. `--max_cpus 1`
+Should be a string in the format integer-unit. eg. `--max_cpus 2`
 
 #### `--max_memory`
 
@@ -249,7 +237,7 @@ Should be a string in the format integer-unit. eg. `--max_memory '8.GB'`
 #### `--max_time`
 
 Use to set a top limit for the default time requirement for each process.
-Should be a string in the format integer-unit. eg. `--max_time '2.h'`
+Should be a string in the format integer-unit. eg. `--max_time '24.h'`
 
 ## Other command line parameters
 

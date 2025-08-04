@@ -1,8 +1,8 @@
 // Import generic module functions
 include { initOptions } from './functions'
 
-params.options = [:]
-options        = initOptions(params.options)
+//params.options = [:]
+//options        = initOptions(params.options)
 
 process GET_SOFTWARE_VERSIONS {
 
@@ -12,6 +12,8 @@ process GET_SOFTWARE_VERSIONS {
                   if (filename.indexOf(".csv") > 0) filename
                   else null
             }
+    input:
+    val options
     
     output:
     path "software_versions_mqc.yaml", emit: software_versions_yaml

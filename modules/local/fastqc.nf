@@ -1,8 +1,8 @@
 // Import generic module functions
 include { initOptions } from './functions'
 
-params.options = [:]
-options        = initOptions(params.options)
+//params.options = [:]
+//options        = initOptions(params.options)
 
 process FASTQC {
     label 'process_low'
@@ -15,6 +15,7 @@ process FASTQC {
 
     input:
     tuple val(name), file(reads)
+    val options
 
     output:
     path "*_fastqc.{zip,html}", emit: fastqc_results
