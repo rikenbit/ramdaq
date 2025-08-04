@@ -30,21 +30,17 @@ jobs:
           sudo mv nextflow /usr/local/bin/
       - name: Pre-pull pipeline image as SIF
         run: |
-          mkdir -p /home/runner/.cache/apptainer
-          apptainer pull --dir /home/runner/.cache/apptainer \
+          mkdir -p $HOME/.cache/singularity
+          apptainer pull --dir $HOME/.cache/singularity \
             docker://myoshimura080822/ramdaq:v2.0
       #- name: Pull docker image
       #  run: |
       #    docker pull myoshimura080822/ramdaq:v2.0
       - name: Run pipeline with test_PE_UST_H
-        env:
-          NXF_APPTAINER_CACHEDIR: /home/runner/.cache/apptainer
         run: |
           nextflow run ${GITHUB_WORKSPACE} -profile test_PE_UST_H,apptainer --genome GRCh38_v41_chr19 --max_cpus 2 --max_memory '4.GB' --github_action
           sudo rm -rf /home/runner/work/ramdaq/ramdaq/results/pipeline_info
       - name: Run pipeline with test_PE_ST_H
-        env:
-          NXF_APPTAINER_CACHEDIR: /home/runner/.cache/apptainer
         run: |
           nextflow run ${GITHUB_WORKSPACE} -profile test_PE_ST_H,apptainer --genome GRCh38_v41_chr19 --max_cpus 2 --max_memory '4.GB' --github_action
           sudo rm -rf /home/runner/work/ramdaq/ramdaq/results/pipeline_info

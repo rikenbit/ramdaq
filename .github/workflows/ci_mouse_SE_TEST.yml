@@ -30,27 +30,21 @@ jobs:
           sudo mv nextflow /usr/local/bin/
       - name: Pre-pull pipeline image as SIF
         run: |
-          mkdir -p $HOME/.cache/apptainer
-          apptainer pull --dir $HOME/.cache/apptainer \
+          mkdir -p $HOME/.cache/singularity
+          apptainer pull --dir $HOME/.cache/singularity \
             docker://myoshimura080822/ramdaq:v2.0
       #- name: Pull docker image
       #  run: |
       #    docker pull myoshimura080822/ramdaq:v2.0
       - name: Run pipeline with test_SE_UST_M
-        env:
-          NXF_APPTAINER_CACHEDIR: $HOME/.cache/apptainer
         run: |
           nextflow run ${GITHUB_WORKSPACE} -profile test_SE_UST_M,apptainer  --genome GRCm39_vM30_chr19 --max_cpus 2 --max_memory '4.GB' --github_action
           sudo rm -rf /home/runner/work/ramdaq/ramdaq/results/pipeline_info
       - name: Run pipeline with test_SE_UST_M_1
-        env:
-          NXF_APPTAINER_CACHEDIR: $HOME/.cache/apptainer
         run: |
           nextflow run ${GITHUB_WORKSPACE} -profile test_SE_UST_M_1,apptainer  --genome GRCm39_vM30_chr19 --max_cpus 2 --max_memory '4.GB' --github_action
           sudo rm -rf /home/runner/work/ramdaq/ramdaq/results/pipeline_info
       - name: Run pipeline with test_SE_ST_M
-        env:
-          NXF_APPTAINER_CACHEDIR: $HOME/.cache/apptainer
         run: |
           nextflow run ${GITHUB_WORKSPACE} -profile test_SE_ST_M,apptainer  --genome GRCm39_vM30_chr19 --max_cpus 2 --max_memory '4.GB' --github_action
           sudo rm -rf /home/runner/work/ramdaq/ramdaq/results/pipeline_info
