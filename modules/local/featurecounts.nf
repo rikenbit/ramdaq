@@ -1,9 +1,6 @@
 // Import generic module functions
 include { initOptions } from './functions'
 
-params.options = [:]
-options        = initOptions(params.options)
-
 process FEATURECOUNTS {
     label 'process_medium'
     tag "$name"
@@ -20,6 +17,7 @@ process FEATURECOUNTS {
     tuple val(name), file(bam), file(bai)
     file gtf
     file biotypes_header
+    val options
 
     output:
     path "*.featureCounts.txt", emit: counts_to_merge

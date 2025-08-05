@@ -1,9 +1,6 @@
 // Import generic module functions
 include { initOptions } from './functions'
 
-params.options = [:]
-options        = initOptions(params.options)
-
 process CALC_SAMPLE_CORRELATION {
 
     label 'process_low'
@@ -14,6 +11,7 @@ process CALC_SAMPLE_CORRELATION {
     val num_of_bams
     file(mdsplot_header)
     file(heatmap_header)
+    val options
     
     output:
     path "*.{txt,pdf,csv}", emit: sample_correlation

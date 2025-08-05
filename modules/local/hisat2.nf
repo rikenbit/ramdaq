@@ -1,9 +1,6 @@
 // Import generic module functions
 include { initOptions } from './functions'
 
-params.options = [:]
-options        = initOptions(params.options)
-
 process HISAT2  {
     tag "$name"
     containerOptions = '--no-mount tmp --writable-tmpfs'
@@ -17,6 +14,7 @@ process HISAT2  {
     tuple val(name), file(reads)
     path hs2_indices
     path tools_dir
+    val options
 
     output:
     tuple val(name), file("*.bam"), file("*.bai"), file("*.flagstat"), emit: hisat2_bam_all

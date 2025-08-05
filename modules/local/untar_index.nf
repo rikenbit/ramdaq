@@ -1,9 +1,6 @@
 // Import generic module functions
 include { initOptions } from './functions'
 
-params.options = [:]
-options        = initOptions(params.options)
-
 process UNTAR_INDEX {
 
     label 'process_low'
@@ -12,6 +9,7 @@ process UNTAR_INDEX {
     
     input:
     path gz
+    val options
     
     output:
     path "$untar/${options.suffix}", emit: index_files

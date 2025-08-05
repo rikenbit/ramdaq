@@ -1,9 +1,6 @@
 // Import generic module functions
 include { initOptions } from './functions'
 
-params.options = [:]
-options        = initOptions(params.options)
-
 process MERGE_FEATURECOUNTS {
 
     label 'process_low'
@@ -11,6 +8,7 @@ process MERGE_FEATURECOUNTS {
     
     input:
     file(input_files)
+    val options
     
     output:
     path "merged_featureCounts_${options.suffix}.txt", emit: merged_counts

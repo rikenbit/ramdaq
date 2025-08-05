@@ -1,9 +1,6 @@
 // Import generic module functions
 include { initOptions } from './functions'
 
-params.options = [:]
-options        = initOptions(params.options)
-
 process READCOVERAGE  {
     tag "$name"
     label 'process_low'
@@ -24,6 +21,7 @@ process READCOVERAGE  {
     input:
     tuple val(name), file(bam), file(bai)
     file bed
+    val options
 
     output:
     path "*.txt", emit: readcov_results

@@ -1,9 +1,6 @@
 // Import generic module functions
 include { initOptions } from './functions'
 
-params.options = [:]
-options        = initOptions(params.options)
-
 process ADJUST_BED_NONCODING {
 
     label 'process_low'
@@ -11,6 +8,7 @@ process ADJUST_BED_NONCODING {
     
     input:
     file(bed)
+    val options
     
     output:
     path "adjusted.bed", emit: bed_adjusted

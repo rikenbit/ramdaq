@@ -1,13 +1,10 @@
 // Import generic module functions
 include { initOptions } from './functions'
 
-params.options = [:]
-options        = initOptions(params.options)
-
 process MULTIQC {
 
     publishDir "${params.outdir}/${options.publish_dir}", mode: 'copy', overwrite: true
-    container "quay.io/biocontainers/multiqc:1.14--pyhdfd78af_0"
+    container "quay.io/biocontainers/multiqc:1.26--pyhdfd78af_0"
 
     input:
     path multiqc_config
@@ -47,6 +44,7 @@ process MULTIQC {
     path ('plots_nuclear_rna_exp/*')
     path ('software_versions/*')
     path workflow_summary
+    val options
     
     output:
     path "*.html", emit: multiqc_report

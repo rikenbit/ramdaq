@@ -1,9 +1,6 @@
 // Import generic module functions
 include { initOptions } from './functions'
 
-params.options = [:]
-options        = initOptions(params.options)
-
 process RSEQC  {
     tag "$name"
     label 'process_low'
@@ -21,6 +18,7 @@ process RSEQC  {
     input:
     tuple val(name), file(bam), file(bai)
     file bed
+    val options
 
     output:
     path "*.{txt,pdf,r,xls,log}", emit: rseqc_results

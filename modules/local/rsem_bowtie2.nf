@@ -1,9 +1,6 @@
 // Import generic module functions
 include { initOptions } from './functions'
 
-params.options = [:]
-options        = initOptions(params.options)
-
 process RSEM_BOWTIE2  {
     tag "$name"
     label 'process_high'
@@ -16,6 +13,7 @@ process RSEM_BOWTIE2  {
     input:
     tuple val(name), file(reads)
     path rsem_indices
+    val options
 
     output:
     path "*.isoforms.results", emit: rsem_isoforms_to_merge

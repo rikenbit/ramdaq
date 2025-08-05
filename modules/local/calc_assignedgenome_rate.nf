@@ -1,9 +1,6 @@
 // Import generic module functions
 include { initOptions } from './functions'
 
-params.options = [:]
-options        = initOptions(params.options)
-
 process CALC_ASSIGNEDGENOME_RATE {
 
     label 'process_low'
@@ -13,6 +10,7 @@ process CALC_ASSIGNEDGENOME_RATE {
     file(totalseq_merged)
     file(totalread_merged)
     file(assignedgenome_header)
+    val options
     
     output:
     path "*.{txt,pdf}", emit: assignedgenome_rate_results

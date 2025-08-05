@@ -1,9 +1,6 @@
 // Import generic module functions
 include { initOptions } from './functions'
 
-params.options = [:]
-options        = initOptions(params.options)
-
 process CALC_NUCLEAR_RNA_EXP {
 
     label 'process_low'
@@ -16,6 +13,7 @@ process CALC_NUCLEAR_RNA_EXP {
     file(raw_count)
     file(tpm_count)
     file(plot_header)
+    val options
     
     output:
     path '*_nuclearRNA_log.txt', optional:true, emit: nuclearrna_tpm_merged

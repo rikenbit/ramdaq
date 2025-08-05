@@ -485,68 +485,65 @@ Channel.from(summary.collect{ [it.key, it.value] })
 */
 
 include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions' 
-//addParams( options: modules['get_software_versions'] )
 
-include { UNTAR_INDEX as UNTAR_HISAT2_IDX } from '../modules/local/untar_index' addParams( options: modules['untar_index_hisat2'] )
-include { UNTAR_INDEX as UNTAR_HISAT2_RRNA_IDX } from '../modules/local/untar_index' addParams( options: modules['untar_index_hisat2'] )
-include { UNTAR_INDEX as UNTAR_RSEM_ALLGENE_IDX } from '../modules/local/untar_index' addParams( options: modules['untar_index_rsem'] )
+include { UNTAR_INDEX as UNTAR_HISAT2_IDX } from '../modules/local/untar_index' 
+include { UNTAR_INDEX as UNTAR_HISAT2_RRNA_IDX } from '../modules/local/untar_index' 
+include { UNTAR_INDEX as UNTAR_RSEM_ALLGENE_IDX } from '../modules/local/untar_index' 
 
-include { UNTAR_INDEX as UNTAR_HISAT2_SIRV_IDX } from '../modules/local/untar_index' addParams( options: modules['untar_index_hisat2'] )
-include { UNTAR_INDEX as UNTAR_RSEM_SIRV_IDX } from '../modules/local/untar_index' addParams( options: modules['untar_index_rsem'] )
+include { UNTAR_INDEX as UNTAR_HISAT2_SIRV_IDX } from '../modules/local/untar_index' 
+include { UNTAR_INDEX as UNTAR_RSEM_SIRV_IDX } from '../modules/local/untar_index' 
 
 include { FASTQC as FASTQC_RAW } from '../modules/local/fastqc' 
-//addParams( options: modules['fastqc'] )
-include { MERGE_SUMMARYFILE as MERGE_SUMMARYFILE_FASTQC_RAW } from '../modules/local/merge_summaryfile' addParams( options: modules['merge_summaryfile_fastqc_raw'] )
+include { MERGE_SUMMARYFILE as MERGE_SUMMARYFILE_FASTQC_RAW } from '../modules/local/merge_summaryfile' 
 
 include { FASTQC as FASTQC_TRIM } from '../modules/local/fastqc' 
-//addParams( options: modules['fastqc_trim'] )
-include { FASTQMCF } from '../modules/local/fastqmcf' addParams( options: modules['fastqmcf'] )
+include { FASTQMCF } from '../modules/local/fastqmcf' 
 
-include { HISAT2 as HISAT2_GENOME } from '../modules/local/hisat2' addParams( options: modules['hisat2_genome'] )
-include { HISAT2 as HISAT2_RRNA } from '../modules/local/hisat2' addParams( options: modules['hisat2_rrna'] )
-include { MERGE_SUMMARYFILE as MERGE_SUMMARYFILE_HISAT2 } from '../modules/local/merge_summaryfile' addParams( options: modules['merge_summaryfile_hisat2'] )
+include { HISAT2 as HISAT2_GENOME } from '../modules/local/hisat2' 
+include { HISAT2 as HISAT2_RRNA } from '../modules/local/hisat2' 
+include { MERGE_SUMMARYFILE as MERGE_SUMMARYFILE_HISAT2 } from '../modules/local/merge_summaryfile' 
 
-include { BAM2WIG as BAM2WIG_ALLGENES } from '../modules/local/bam2wig' addParams( options: modules['bam2wig'] )
-include { ADJUST_BED_NONCODING } from '../modules/local/adjust_bed_noncoding' addParams( options: modules['adjust_bed_noncoding'] )
-include { RSEQC } from '../modules/local/rseqc' addParams( options: modules['rseqc'] )
-include { MERGE_SUMMARYFILE as MERGE_SUMMARYFILE_READDIST } from '../modules/local/merge_summaryfile' addParams( options: modules['merge_summaryfile_readdist'] )
-include { READCOVERAGE } from '../modules/local/readcoverage' addParams( options: modules['readcoverage'] )
+include { BAM2WIG as BAM2WIG_ALLGENES } from '../modules/local/bam2wig' 
+include { ADJUST_BED_NONCODING } from '../modules/local/adjust_bed_noncoding' 
+include { RSEQC } from '../modules/local/rseqc' 
+include { MERGE_SUMMARYFILE as MERGE_SUMMARYFILE_READDIST } from '../modules/local/merge_summaryfile' 
+include { READCOVERAGE } from '../modules/local/readcoverage' 
 
-include { FEATURECOUNTS as FEATURECOUNTS_ALL_GTF } from '../modules/local/featurecounts' addParams( options: modules['featurecounts_all_gtf'] )
-include { FEATURECOUNTS as FEATURECOUNTS_MT_GTF } from '../modules/local/featurecounts' addParams( options: modules['featurecounts_mt_gtf'] )
-include { FEATURECOUNTS as FEATURECOUNTS_HISTONE_GTF } from '../modules/local/featurecounts' addParams( options: modules['featurecounts_histone_gtf'] )
-include { MERGE_FEATURECOUNTS as MERGE_FEATURECOUNTS_ALLGENE } from '../modules/local/merge_featurecounts' addParams( options: modules['merge_featurecounts_allgene'] )
-include { MERGE_FEATURECOUNTS as MERGE_FEATURECOUNTS_MT } from '../modules/local/merge_featurecounts' addParams( options: modules['merge_featurecounts_mt'] )
-include { MERGE_FEATURECOUNTS as MERGE_FEATURECOUNTS_HISTONE } from '../modules/local/merge_featurecounts' addParams( options: modules['merge_featurecounts_histone'] )
+include { FEATURECOUNTS as FEATURECOUNTS_ALL_GTF } from '../modules/local/featurecounts' 
+include { FEATURECOUNTS as FEATURECOUNTS_MT_GTF } from '../modules/local/featurecounts' 
+include { FEATURECOUNTS as FEATURECOUNTS_HISTONE_GTF } from '../modules/local/featurecounts' 
+include { MERGE_FEATURECOUNTS as MERGE_FEATURECOUNTS_ALLGENE } from '../modules/local/merge_featurecounts' 
+include { MERGE_FEATURECOUNTS as MERGE_FEATURECOUNTS_MT } from '../modules/local/merge_featurecounts' 
+include { MERGE_FEATURECOUNTS as MERGE_FEATURECOUNTS_HISTONE } from '../modules/local/merge_featurecounts' 
 
-include { RSEM_BOWTIE2 as RSEM_BOWTIE2_ALLGENES } from '../modules/local/rsem_bowtie2' addParams( options: modules['rsem_bowtie2_allgenes'] )
-include { MERGE_RSEM as MERGE_RSEM_GENES } from '../modules/local/merge_rsem' addParams( options: modules['merge_rsem_genes'] )
-include { MERGE_RSEM as MERGE_RSEM_ISOFORMS } from '../modules/local/merge_rsem' addParams( options: modules['merge_rsem_isoforms'] )
+include { RSEM_BOWTIE2 as RSEM_BOWTIE2_ALLGENES } from '../modules/local/rsem_bowtie2' 
+include { MERGE_RSEM as MERGE_RSEM_GENES } from '../modules/local/merge_rsem' 
+include { MERGE_RSEM as MERGE_RSEM_ISOFORMS } from '../modules/local/merge_rsem' 
 
-include { CALC_SAMPLE_CORRELATION } from '../modules/local/calc_sample_correlation' addParams( options: modules['calc_sample_correlation'] )
-include { CALC_ERCC_CORRELATION } from '../modules/local/calc_ercc_correlation' addParams( options: modules['calc_ercc_correlation'] )
-include { CALC_INITIALREADS_MAPRATE } from '../modules/local/calc_initialreads_maprate' addParams( options: modules['calc_initialreads_maprate'] )
-include { CALC_ASSIGNEDGENOME_RATE } from '../modules/local/calc_assignedgenome_rate' addParams( options: modules['calc_assignedgenome_rate'] )
-include { CALC_FEATURECOUNTS_MAPRATE as CALC_FEATURECOUNTS_MAPRATE_ALLGENE } from '../modules/local/calc_featurecounts_maprate' addParams( options: modules['calc_featurecounts_maprate_allgene'] )
-include { CALC_FEATURECOUNTS_MAPRATE as CALC_FEATURECOUNTS_MAPRATE_MT} from '../modules/local/calc_featurecounts_maprate' addParams( options: modules['calc_featurecounts_maprate_mt'] )
-include { CALC_FEATURECOUNTS_MAPRATE as CALC_FEATURECOUNTS_MAPRATE_HISTONE} from '../modules/local/calc_featurecounts_maprate' addParams( options: modules['calc_featurecounts_maprate_histone'] )
-include { CALC_DETECTEDGENES_DR as CALC_TPMCOUNTS_FEATURECOUNTS } from '../modules/local/calc_detectedgenes_dr' addParams( options: modules['calc_tpmcounts_featurecounts'] )
-include { CALC_DETECTEDGENES_DR as CALC_TPMCOUNTS_RSEM_GENE } from '../modules/local/calc_detectedgenes_dr' addParams( options: modules['calc_tpmcounts_rsem_gene'] )
-include { CALC_DETECTEDGENES_DR as CALC_TPMCOUNTS_RSEM_TS } from '../modules/local/calc_detectedgenes_dr' addParams( options: modules['calc_tpmcounts_rsem_ts'] )
+include { CALC_SAMPLE_CORRELATION } from '../modules/local/calc_sample_correlation' 
+include { CALC_ERCC_CORRELATION } from '../modules/local/calc_ercc_correlation' 
+include { CALC_INITIALREADS_MAPRATE } from '../modules/local/calc_initialreads_maprate' 
+include { CALC_ASSIGNEDGENOME_RATE } from '../modules/local/calc_assignedgenome_rate' 
+include { CALC_FEATURECOUNTS_MAPRATE as CALC_FEATURECOUNTS_MAPRATE_ALLGENE } from '../modules/local/calc_featurecounts_maprate' 
+include { CALC_FEATURECOUNTS_MAPRATE as CALC_FEATURECOUNTS_MAPRATE_MT} from '../modules/local/calc_featurecounts_maprate' 
+include { CALC_FEATURECOUNTS_MAPRATE as CALC_FEATURECOUNTS_MAPRATE_HISTONE} from '../modules/local/calc_featurecounts_maprate' 
+include { CALC_DETECTEDGENES_DR as CALC_TPMCOUNTS_FEATURECOUNTS } from '../modules/local/calc_detectedgenes_dr' 
+include { CALC_DETECTEDGENES_DR as CALC_TPMCOUNTS_RSEM_GENE } from '../modules/local/calc_detectedgenes_dr' 
+include { CALC_DETECTEDGENES_DR as CALC_TPMCOUNTS_RSEM_TS } from '../modules/local/calc_detectedgenes_dr' 
 
 // option: ERCC / SIRV quantification
-include { HISAT2 as HISAT2_SIRV } from '../modules/local/hisat2' addParams( options: modules['hisat2_sirv'] )
-include { READCOVERAGE_SIRV } from '../modules/local/readcoverage_sirv' addParams( options: modules['readcoverage_sirv'] )
-include { MERGE_READCOVERAGE_SIRV } from '../modules/local/merge_readcoverage_sirv' addParams( options: modules['merge_readcoverage_sirv'] )
-include { RSEM_BOWTIE2 as RSEM_BOWTIE2_SIRV } from '../modules/local/rsem_bowtie2' addParams( options: modules['rsem_bowtie2_sirv'] )
-include { MERGE_RSEM as MERGE_RSEM_ISOFORMS_SIRV } from '../modules/local/merge_rsem' addParams( options: modules['merge_rsem_isoforms_sirv'] )
-include { CALC_ENTROPY_SIRV } from '../modules/local/calc_entropy_sirv' addParams( options: modules['calc_entropy_sirv'] )
+include { HISAT2 as HISAT2_SIRV } from '../modules/local/hisat2' 
+include { READCOVERAGE_SIRV } from '../modules/local/readcoverage_sirv' 
+include { MERGE_READCOVERAGE_SIRV } from '../modules/local/merge_readcoverage_sirv' 
+include { RSEM_BOWTIE2 as RSEM_BOWTIE2_SIRV } from '../modules/local/rsem_bowtie2' 
+include { MERGE_RSEM as MERGE_RSEM_ISOFORMS_SIRV } from '../modules/local/merge_rsem' 
+include { CALC_ENTROPY_SIRV } from '../modules/local/calc_entropy_sirv' 
 
 // option: Nuclear RNA QC
-include { CALC_NUCLEAR_RNA_EXP } from '../modules/local/calc_nuclear_rna_exp' addParams( options: modules['calc_nuclear_rna_exp'] )
+include { CALC_NUCLEAR_RNA_EXP } from '../modules/local/calc_nuclear_rna_exp' 
 
 // MultiQC report
-include { MULTIQC } from '../modules/local/multiqc' addParams( options: modules['multiqc'] )
+include { MULTIQC } from '../modules/local/multiqc' 
 
 /*
 ========================================================================================
@@ -567,10 +564,12 @@ workflow RAMDAQ {
 
     if (!ch_hisat2_idx){
         //
-        // MODULE: untar index.tar.gz [hisat2 all genome]
+        // MODULE: untar index.tar.gz [hisat2 all genome] 
         //
+        options_ch  = Channel.value( params.modules.untar_index_hisat2 )
         UNTAR_HISAT2_IDX (
-            params.hisat2_idx
+            params.hisat2_idx,
+            options_ch
         )
         .index_files
         .set { ch_hisat2_idx }
@@ -579,18 +578,22 @@ workflow RAMDAQ {
         //
         // MODULE: untar index.tar.gz [hisat2 rrna genome]
         //
+        options_ch  = Channel.value( params.modules.untar_index_hisat2 )
         UNTAR_HISAT2_RRNA_IDX (
-            params.hisat2_rrna_idx
+            params.hisat2_rrna_idx,
+            options_ch
         )
         .index_files
         .set { ch_hisat2_rrna_idx }
     }
     if (!ch_rsem_allgene_idx){
         //
-        // MODULE: untar index.tar.gz [rsem all genes]
+        // MODULE: untar index.tar.gz [rsem all genes] 
         //
+        options_ch  = Channel.value( params.modules.untar_index_rsem )
         UNTAR_RSEM_ALLGENE_IDX (
-            params.rsem_allgene_idx
+            params.rsem_allgene_idx,
+            options_ch
         )
         .index_files
         .set { ch_rsem_allgene_idx }
@@ -600,8 +603,10 @@ workflow RAMDAQ {
         //
         // MODULE: untar index.tar.gz [hisat2 sirv genome]
         //
+        options_ch  = Channel.value( params.modules.untar_index_hisat2 )
         UNTAR_HISAT2_SIRV_IDX (
-            params.hisat2_sirv_idx
+            params.hisat2_sirv_idx,
+            options_ch
         )
         .index_files
         .set { ch_hisat2_sirv_idx }
@@ -611,8 +616,10 @@ workflow RAMDAQ {
         //
         // MODULE: untar index.tar.gz [rsem sirv genes]
         //
+        options_ch  = Channel.value( params.modules.untar_index_rsem )
         UNTAR_RSEM_SIRV_IDX (
-            params.rsem_sirv_idx
+            params.rsem_sirv_idx,
+            options_ch
         )
         .index_files
         .set { ch_rsem_sirv_idx }
@@ -632,8 +639,10 @@ workflow RAMDAQ {
     //
     // MODULE: Merge summaryfiles [FastQC(raw) seqcount]
     //
+    options_ch  = Channel.value( params.modules.merge_summaryfile_fastqc_raw )
     MERGE_SUMMARYFILE_FASTQC_RAW (
-        ch_fastqc_seqcount_raw.collect()
+        ch_fastqc_seqcount_raw.collect(),
+        options_ch
     )
     .merged_summary
     .set{
@@ -643,9 +652,11 @@ workflow RAMDAQ {
     //
     // MODULE: Adapter trimming
     //
+    options_ch  = Channel.value( params.modules.fastqmcf )
     FASTQMCF (
         ch_reads,
-        ch_adapter
+        ch_adapter,
+        options_ch
     )
     .trimmed_reads
     .set { ch_trimmed_reads }
@@ -664,10 +675,12 @@ workflow RAMDAQ {
     //
     // MODULE: Alignment with Hisat2 [all genes]
     //
+    options_ch  = Channel.value( params.modules.hisat2_genome )
     HISAT2_GENOME (
         ch_trimmed_reads,
         ch_hisat2_idx.collect(),
-        ch_tools_dir
+        ch_tools_dir,
+        options_ch
     )
     ch_hisat2_bam_all = HISAT2_GENOME.out.hisat2_bam_all
     ch_hisat2_bam_qc = HISAT2_GENOME.out.hisat2_bam_qc
@@ -721,8 +734,10 @@ workflow RAMDAQ {
     //
     // MODULE: Merge summaryfiles [Hisat2 totalseq]
     //
+    options_ch  = Channel.value( params.modules.merge_summaryfile_hisat2 )
     MERGE_SUMMARYFILE_HISAT2 (
-        ch_hisat2_summary.collect()
+        ch_hisat2_summary.collect(),
+        options_ch
     )
     .merged_summary
     .set{
@@ -732,10 +747,12 @@ workflow RAMDAQ {
     //
     // MODULE: Alignment with Hisat2 [rrna]
     //
+    options_ch  = Channel.value( params.modules.hisat2_rrna )
     HISAT2_RRNA (
         ch_trimmed_reads,
         ch_hisat2_rrna_idx.collect(),
-        ch_tools_dir
+        ch_tools_dir,
+        options_ch
     ).hisat2_summary
     .set { ch_hisat2_summary_rrna }
 
@@ -755,16 +772,20 @@ workflow RAMDAQ {
     //
     // MODULE: Bam to BigWig
     //
+    options_ch  = Channel.value( params.modules.bam2wig )
     BAM2WIG_ALLGENES (
         ch_hisat2_bam_bam2wig,
-        ch_chrsize
+        ch_chrsize,
+        options_ch
     )
 
     //
     // MODULE: Preparation of RseQC
     //
+    options_ch  = Channel.value( params.modules.adjust_bed_noncoding )
     ADJUST_BED_NONCODING (
-        ch_bed
+        ch_bed,
+        options_ch
     )
     .bed_adjusted
     .set { ch_bed_adjusted }
@@ -772,9 +793,11 @@ workflow RAMDAQ {
     //
     // MODULE: RseQC (Bam QC)
     //
+    options_ch  = Channel.value( params.modules.rseqc )
     RSEQC (
         ch_hisat2_bam_qc_filtered,
-        ch_bed_adjusted
+        ch_bed_adjusted,
+        options_ch
     )
     ch_readdist_totalread = RSEQC.out.readdist_totalread
     ch_rseqc_results = RSEQC.out.rseqc_results
@@ -782,8 +805,10 @@ workflow RAMDAQ {
     //
     // MODULE: Merge summaryfiles [ReadDist totalread]
     //
+    options_ch  = Channel.value( params.modules.merge_summaryfile_readdist )
     MERGE_SUMMARYFILE_READDIST (
-        ch_readdist_totalread.collect()
+        ch_readdist_totalread.collect(),
+        options_ch
     )
     .merged_summary
     .set{
@@ -793,9 +818,11 @@ workflow RAMDAQ {
     //
     // MODULE: readcoverage.jl
     //
+    options_ch  = Channel.value( params.modules.readcoverage )
     READCOVERAGE (
         ch_hisat2_bam_all_filtered,
-        ch_bed
+        ch_bed,
+        options_ch
     ).readcov_results
     ch_readcov_results = READCOVERAGE.out.readcov_results
 
@@ -823,10 +850,12 @@ workflow RAMDAQ {
     //
     // MODULE: featureCounts (All-genes GTF)
     //
+    options_ch  = Channel.value( params.modules.featurecounts_all_gtf )
     FEATURECOUNTS_ALL_GTF (
         ch_hisat2_bam_featurecount,
         ch_gtf,
-        ch_biotypes_header
+        ch_biotypes_header,
+        options_ch
     )
     ch_counts_to_merge_all = FEATURECOUNTS_ALL_GTF.out.counts_to_merge
     ch_counts_to_merge_all_list = ch_counts_to_merge_all.toList()
@@ -837,8 +866,10 @@ workflow RAMDAQ {
     //
     // MODULE: Merge featureCounts output (All-genes)
     //
+    options_ch  = Channel.value( params.modules.merge_featurecounts_allgene )
     MERGE_FEATURECOUNTS_ALLGENE (
-        ch_counts_to_merge_all.collect()
+        ch_counts_to_merge_all.collect(),
+        options_ch
     )
     ch_featurecounts_merged_allgene = MERGE_FEATURECOUNTS_ALLGENE.out.merged_counts
     ch_featurecounts_tpm_merged = MERGE_FEATURECOUNTS_ALLGENE.out.counts_tpm_merged
@@ -850,10 +881,12 @@ workflow RAMDAQ {
         //
         // MODULE: featureCounts (Mitocondria GTF)
         //
+        options_ch  = Channel.value( params.modules.featurecounts_mt_gtf )
         FEATURECOUNTS_MT_GTF (
             ch_hisat2_bam_featurecount,
             ch_mt_gtf,
-            ch_biotypes_header
+            ch_biotypes_header,
+            options_ch
         )
         ch_counts_to_merge_mt = FEATURECOUNTS_MT_GTF.out.counts_to_merge
         ch_counts_summary_mt = FEATURECOUNTS_MT_GTF.out.counts_summary
@@ -861,8 +894,10 @@ workflow RAMDAQ {
         //
         // MODULE: Merge featureCounts output (Mitocondria-genes)
         //
+        options_ch  = Channel.value( params.modules.merge_featurecounts_mt )
         MERGE_FEATURECOUNTS_MT (
-            ch_counts_to_merge_mt.collect()
+            ch_counts_to_merge_mt.collect(),
+            options_ch
         )
         .merged_counts
         .set{
@@ -875,10 +910,12 @@ workflow RAMDAQ {
         //
         // MODULE: featureCounts (Histone GTF)
         //
+        options_ch  = Channel.value( params.modules.featurecounts_histone_gtf )
         FEATURECOUNTS_HISTONE_GTF (
             ch_hisat2_bam_featurecount,
             ch_histone_gtf,
-            ch_biotypes_header
+            ch_biotypes_header,
+            options_ch
         )
         ch_counts_to_merge_histone = FEATURECOUNTS_HISTONE_GTF.out.counts_to_merge
         ch_counts_summary_histone = FEATURECOUNTS_HISTONE_GTF.out.counts_summary
@@ -886,8 +923,10 @@ workflow RAMDAQ {
         //
         // MODULE: Merge featureCounts output (Histone-genes)
         //
+        options_ch  = Channel.value( params.modules.merge_featurecounts_histone )
         MERGE_FEATURECOUNTS_HISTONE (
-            ch_counts_to_merge_histone.collect()
+            ch_counts_to_merge_histone.collect(),
+            options_ch
         )
         .merged_counts
         .set{
@@ -898,9 +937,11 @@ workflow RAMDAQ {
     //
     // MODULE: Quantification with RSEM [all genes]
     //
+    options_ch  = Channel.value( params.modules.rsem_bowtie2_allgenes )
     RSEM_BOWTIE2_ALLGENES (
         ch_trimmed_reads,
-        ch_rsem_allgene_idx.collect()
+        ch_rsem_allgene_idx.collect(),
+        options_ch
     )
     ch_rsem_isoforms_to_merge = RSEM_BOWTIE2_ALLGENES.out.rsem_isoforms_to_merge
     ch_rsem_genes_to_merge = RSEM_BOWTIE2_ALLGENES.out.rsem_genes_to_merge
@@ -909,8 +950,10 @@ workflow RAMDAQ {
     //
     // MODULE: Merge RSEM output (genes)
     //
+    options_ch  = Channel.value( params.modules.merge_rsem_genes )
     MERGE_RSEM_GENES (
-        ch_rsem_genes_to_merge.collect()
+        ch_rsem_genes_to_merge.collect(),
+        options_ch
     )
     .merged_counts
     .set{
@@ -920,8 +963,10 @@ workflow RAMDAQ {
     //
     // MODULE: Merge RSEM output (isoforms)
     //
+    options_ch  = Channel.value( params.modules.merge_rsem_isoforms )
     MERGE_RSEM_ISOFORMS (
-        ch_rsem_isoforms_to_merge.collect()
+        ch_rsem_isoforms_to_merge.collect(),
+        options_ch
     )
     .merged_counts
     .set{
@@ -946,11 +991,13 @@ workflow RAMDAQ {
         //
         // MODULE: Calc sample corr
         //
+        options_ch  = Channel.value( params.modules.calc_sample_correlation )
         CALC_SAMPLE_CORRELATION (
             ch_counts_to_plot_corr_trim.collect(),
             ch_num_of_bam.toList().size(),
             ch_mdsplot_header,
-            ch_heatmap_header
+            ch_heatmap_header,
+            options_ch
         ).sample_correlation
         .set { ch_sample_correlation }
     }
@@ -961,13 +1008,15 @@ workflow RAMDAQ {
         //
         // MODULE: Calc ERCC mol vs exp corr
         //
+        options_ch  = Channel.value( params.modules.calc_ercc_correlation )
         CALC_ERCC_CORRELATION (
             ch_spike_in_ercc,
             ch_ercc_tpm_merged_list.size(),
             ch_ercc_tpm_merged,
             ch_ercc_data,
             ch_ercc_corr_header,
-            ch_ercc_corr_header_gstat
+            ch_ercc_corr_header_gstat,
+            options_ch
         )
         ch_ercc_correlation_barplot = CALC_ERCC_CORRELATION.out.ercc_correlation_barplot
         ch_ercc_correlation_gstat = CALC_ERCC_CORRELATION.out.ercc_correlation_gstat
@@ -976,11 +1025,13 @@ workflow RAMDAQ {
     //
     // MODULE: Calc assignedgenome rate
     //
+    options_ch  = Channel.value( params.modules.calc_initialreads_maprate )
     CALC_INITIALREADS_MAPRATE (
         ch_fastqc_raw_merged_seqcount,
         ch_readdist_merged_totalread,
         ch_initialread_maprate_header,
-        ch_initialread_maprate_header_gstat
+        ch_initialread_maprate_header_gstat,
+        options_ch
     )
     ch_initialread_maprate_barplot = CALC_INITIALREADS_MAPRATE.out.initialread_maprate_barplot
     ch_initialread_maprate_gstat = CALC_INITIALREADS_MAPRATE.out.initialread_maprate_gstat
@@ -988,21 +1039,25 @@ workflow RAMDAQ {
     //
     // MODULE: Calc assignedgenome rate
     //
+    options_ch  = Channel.value( params.modules.calc_assignedgenome_rate )
     CALC_ASSIGNEDGENOME_RATE (
         ch_hisat2_merged_totalseq,
         ch_readdist_merged_totalread,
-        ch_assignedgenome_header
+        ch_assignedgenome_header,
+        options_ch
     )
     ch_assignedgenome_rate_barplot = CALC_ASSIGNEDGENOME_RATE.out.assignedgenome_rate_barplot
 
     //
     // MODULE: Calc featureCounts mapped rate (all genes)
     //
+    options_ch  = Channel.value( params.modules.calc_featurecounts_maprate_allgene )
     CALC_FEATURECOUNTS_MAPRATE_ALLGENE (
         ch_hisat2_merged_totalseq,
         ch_featurecounts_merged_allgene,
         ch_fcounts_allgene_header,
-        ch_fcounts_allgene_header_gstat
+        ch_fcounts_allgene_header_gstat,
+        options_ch
     )
     ch_fcounts_maprate_barplot_allgene = CALC_FEATURECOUNTS_MAPRATE_ALLGENE.out.fcounts_maprate_barplot
     ch_fcounts_maprate_gstat_allgene = CALC_FEATURECOUNTS_MAPRATE_ALLGENE.out.fcounts_maprate_gstat
@@ -1013,11 +1068,13 @@ workflow RAMDAQ {
         //
         // MODULE: Calc featureCounts mapped rate (mt genes)
         //
+        options_ch  = Channel.value( params.modules.calc_featurecounts_maprate_mt )
         CALC_FEATURECOUNTS_MAPRATE_MT (
             ch_hisat2_merged_totalseq,
             ch_featurecounts_merged_mt,
             ch_fcounts_mt_header,
-            ch_fcounts_mt_header_gstat
+            ch_fcounts_mt_header_gstat,
+            options_ch
         )
         ch_fcounts_maprate_barplot_mt = CALC_FEATURECOUNTS_MAPRATE_MT.out.fcounts_maprate_barplot
         ch_fcounts_maprate_gstat_mt = CALC_FEATURECOUNTS_MAPRATE_MT.out.fcounts_maprate_gstat
@@ -1029,11 +1086,13 @@ workflow RAMDAQ {
         //
         // MODULE: Calc featureCounts mapped rate (hisotne genes)
         //
+        options_ch  = Channel.value( params.modules.calc_featurecounts_maprate_histone )
         CALC_FEATURECOUNTS_MAPRATE_HISTONE (
             ch_hisat2_merged_totalseq,
             ch_featurecounts_merged_histone,
             ch_fcounts_histone_header,
-            ch_fcounts_histone_header_gstat
+            ch_fcounts_histone_header_gstat,
+            options_ch
         )
         ch_fcounts_maprate_barplot_histone = CALC_FEATURECOUNTS_MAPRATE_HISTONE.out.fcounts_maprate_barplot
         ch_fcounts_maprate_gstat_histone = CALC_FEATURECOUNTS_MAPRATE_HISTONE.out.fcounts_maprate_gstat
@@ -1042,13 +1101,15 @@ workflow RAMDAQ {
     //
     // MODULE: Calc detected genes and dimentional reduction from featureCounts TPM
     //
+    options_ch  = Channel.value( params.modules.calc_tpmcounts_featurecounts )
     CALC_TPMCOUNTS_FEATURECOUNTS (
         ch_featurecounts_tpm_merged,
         ch_num_of_detgene_header,
         ch_num_of_detgene_header_gstat,
         ch_pcaplot_header,
         ch_tsneplot_header,
-        ch_umapplot_header
+        ch_umapplot_header,
+        options_ch
     )
     ch_drplot = CALC_TPMCOUNTS_FEATURECOUNTS.out.drplot
     ch_detectedgene_barplot = CALC_TPMCOUNTS_FEATURECOUNTS.out.detectedgene_barplot
@@ -1057,13 +1118,15 @@ workflow RAMDAQ {
     //
     // MODULE: Calc detected genes from RSEM TPM
     //
+    options_ch  = Channel.value( params.modules.calc_tpmcounts_rsem_gene )
     CALC_TPMCOUNTS_RSEM_GENE (
         ch_rsem_merged_gene,
         ch_num_of_gene_rsem_header,
         ch_num_of_gene_rsem_header_gstat,
         [],
         [],
-        []
+        [],
+        options_ch
     )
     ch_detectedgene_barplot_rsem_gene = CALC_TPMCOUNTS_RSEM_GENE.out.detectedgene_barplot
     ch_detectedgene_gstat_rsem_gene = CALC_TPMCOUNTS_RSEM_GENE.out.detectedgene_gstat
@@ -1071,13 +1134,15 @@ workflow RAMDAQ {
     //
     // MODULE: Calc detected transcripts from RSEM TPM
     //
+    options_ch  = Channel.value( params.modules.calc_tpmcounts_rsem_ts )
     CALC_TPMCOUNTS_RSEM_TS (
         ch_rsem_merged_ts,
         ch_num_of_ts_rsem_header,
         ch_num_of_ts_rsem_header_gstat,
         [],
         [],
-        []
+        [],
+        options_ch
     )
     ch_detectedgene_barplot_rsem_ts = CALC_TPMCOUNTS_RSEM_TS.out.detectedgene_barplot
     ch_detectedgene_gstat_rsem_ts = CALC_TPMCOUNTS_RSEM_TS.out.detectedgene_gstat
@@ -1092,10 +1157,12 @@ workflow RAMDAQ {
         //
         // MODULE: Alignment with Hisat2 [sirv]
         //
+        options_ch  = Channel.value( params.modules.hisat2_sirv )
         HISAT2_SIRV (
             ch_trimmed_reads,
             ch_hisat2_sirv_idx.collect(),
-            ch_tools_dir
+            ch_tools_dir,
+            options_ch
         ).hisat2_bam_qc
         .set { ch_hisat2_bam_qc_sirv }
     
@@ -1113,32 +1180,40 @@ workflow RAMDAQ {
         //
         // MODULE: readcoverage.jl [sirv]
         //
+        options_ch  = Channel.value( params.modules.readcoverage_sirv )
         READCOVERAGE_SIRV (
-            ch_hisat2_bam_qc_sirv_filtered
+            ch_hisat2_bam_qc_sirv_filtered,
+            options_ch
         ).readcov_sirv_results
         .set { ch_readcov_sirv_results}
 
         //
         // MODULE: merge sirv readcoverage outputs
         //
+        options_ch  = Channel.value( params.modules.merge_readcoverage_sirv )
         MERGE_READCOVERAGE_SIRV (
-            ch_readcov_sirv_results.collect()
+            ch_readcov_sirv_results.collect(),
+            options_ch
         )
 
         //
         // MODULE: Quantification with RSEM [sirv]
         //
+        options_ch  = Channel.value( params.modules.rsem_bowtie2_sirv )
         RSEM_BOWTIE2_SIRV (
             ch_trimmed_reads,
-            ch_rsem_sirv_idx.collect()
+            ch_rsem_sirv_idx.collect(),
+            options_ch
         ).rsem_isoforms_to_merge
         .set { ch_rsem_isoforms_sirv_to_merge }
 
         //
         // MODULE: Merge RSEM output (sirv isoforms)
         //
+        options_ch  = Channel.value( params.modules.merge_rsem_isoforms_sirv )
         MERGE_RSEM_ISOFORMS_SIRV (
-            ch_rsem_isoforms_sirv_to_merge.collect()
+            ch_rsem_isoforms_sirv_to_merge.collect(),
+            options_ch
         )
         .merged_counts
         .set{
@@ -1148,10 +1223,12 @@ workflow RAMDAQ {
         //
         // MODULE: Merge RSEM output (sirv isoforms)
         //
+        options_ch  = Channel.value( params.modules.calc_entropy_sirv )
         CALC_ENTROPY_SIRV (
             ch_rsem_merged_ts_sirv.collect(),
             ch_entropy_of_sirv_header,
-            ch_entropy_of_sirv_header_gstat
+            ch_entropy_of_sirv_header_gstat,
+            options_ch
         )
         ch_entropy_sirv_barplot = CALC_ENTROPY_SIRV.out.entropy_barplot
         ch_entropy_sirv_gstat = CALC_ENTROPY_SIRV.out.entropy_gstat
@@ -1162,10 +1239,12 @@ workflow RAMDAQ {
     //
     ch_nuclear_rna_barplot  =  Channel.empty()
     if (params.nuclearRNA_qc) {
+        options_ch  = Channel.value( params.modules.calc_nuclear_rna_exp )
         CALC_NUCLEAR_RNA_EXP (
             ch_featurecounts_merged_allgene,
             ch_rsem_merged_gene,
-            ch_nuclear_rna_header
+            ch_nuclear_rna_header,
+            options_ch
         )
         ch_nuclear_rna_barplot = CALC_NUCLEAR_RNA_EXP.out.nuclear_rna_barplot
     }
@@ -1173,6 +1252,7 @@ workflow RAMDAQ {
     //=================================================
     // MODULE: MultiQC report
     //=================================================
+    options_ch  = Channel.value( params.modules.multiqc )
     MULTIQC (
         ch_multiqc_config,
         ch_multiqc_custom_config.collect().ifEmpty([]),
@@ -1210,7 +1290,8 @@ workflow RAMDAQ {
         ch_entropy_sirv_gstat.collect().ifEmpty([]),
         ch_nuclear_rna_barplot.collect().ifEmpty([]),
         ch_software_versions_yaml.collect(),
-        ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
+        ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml"),
+        options_ch
     ).multiqc_report
     .set { ch_multiqc_report }
 }

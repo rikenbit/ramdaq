@@ -1,9 +1,6 @@
 // Import generic module functions
 include { initOptions } from './functions'
 
-params.options = [:]
-options        = initOptions(params.options)
-
 process MERGE_RSEM {
 
     label 'process_low'
@@ -11,6 +8,7 @@ process MERGE_RSEM {
     
     input:
     file(input_files)
+    val options
     
     output:
     path "merged_*.txt", emit: merged_counts

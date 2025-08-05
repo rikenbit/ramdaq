@@ -1,9 +1,6 @@
 // Import generic module functions
 include { initOptions } from './functions'
 
-params.options = [:]
-options        = initOptions(params.options)
-
 process MERGE_READCOVERAGE_SIRV {
 
     label 'process_high'
@@ -11,6 +8,7 @@ process MERGE_READCOVERAGE_SIRV {
     
     input:
     file(input_files)
+    val options
     
     output:
     path "*.gz", emit: coverage_sirv_merged

@@ -1,9 +1,6 @@
 // Import generic module functions
 include { initOptions } from './functions'
 
-params.options = [:]
-options        = initOptions(params.options)
-
 process FASTQMCF  {
     label 'process_low'
     tag "$name"
@@ -13,6 +10,7 @@ process FASTQMCF  {
     input:
     tuple val(name), file(reads)
     file adapter
+    val options
 
     output:
     tuple val(name), file("*.fastq.gz"), emit: trimmed_reads

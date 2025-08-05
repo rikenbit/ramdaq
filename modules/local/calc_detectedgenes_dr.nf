@@ -1,9 +1,6 @@
 // Import generic module functions
 include { initOptions } from './functions'
 
-params.options = [:]
-options        = initOptions(params.options)
-
 process CALC_DETECTEDGENES_DR {
 
     label 'process_low'
@@ -16,6 +13,7 @@ process CALC_DETECTEDGENES_DR {
     file(pcaplot_header)
     file(tsneplot_header)
     file(umapplot_header)
+    val options
     
     output:
     path "*.{txt,pdf}", emit: detectedgene_dr_results

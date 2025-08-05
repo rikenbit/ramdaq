@@ -1,9 +1,6 @@
 // Import generic module functions
 include { initOptions } from './functions'
 
-params.options = [:]
-options        = initOptions(params.options)
-
 process CALC_INITIALREADS_MAPRATE {
 
     label 'process_low'
@@ -14,6 +11,7 @@ process CALC_INITIALREADS_MAPRATE {
     file(totalread_merged)
     file(initialread_maprate_header)
     file(initialread_maprate_header_gstat)
+    val options
     
     output:
     path "*.{txt,pdf}", emit: initialread_maprate_results

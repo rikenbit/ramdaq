@@ -1,9 +1,6 @@
 // Import generic module functions
 include { initOptions } from './functions'
 
-//params.options = [:]
-//options        = initOptions(params.options)
-
 process FASTQC {
     label 'process_low'
     tag "$name"

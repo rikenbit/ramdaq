@@ -1,9 +1,6 @@
 // Import generic module functions
 include { initOptions } from './functions'
 
-params.options = [:]
-options        = initOptions(params.options)
-
 process CALC_ENTROPY_SIRV {
 
     label 'process_low'
@@ -13,6 +10,7 @@ process CALC_ENTROPY_SIRV {
     file(tpm_count)
     file(entropy_header)
     file(entropy_header_gstat)
+    val options
     
     output:
     path "*.{txt,pdf}", emit: entropy_results

@@ -1,9 +1,6 @@
 // Import generic module functions
 include { initOptions } from './functions'
 
-params.options = [:]
-options        = initOptions(params.options)
-
 process CALC_ERCC_CORRELATION {
 
     label 'process_low'
@@ -19,6 +16,7 @@ process CALC_ERCC_CORRELATION {
     file(ercc_data)
     file(ercc_header)
     file(ercc_header_gstat)
+    val options
     
     output:
     path "*.{txt,pdf}", emit: ercc_correlation_results
