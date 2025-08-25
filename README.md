@@ -49,21 +49,33 @@ nextflow run rikenbit/ramdaq -profile test,docker
 ```bash
 nextflow run rikenbit/ramdaq -profile test,singularity
 ```
+iv. Download references (dl_references)
 
-iv. Start running your own analysis!
+**Before running ramdaq, you must download the reference files using the command below.** 
+
+Use the --annot_ver option to specify the human/mouse annotation version to download. ramdaq will create a species subdirectory (human/ or mouse/) under the directory you specify and place the required annotation assets there.  
+
+```bash
+nextflow run rikenbit/ramdaq \
+  --dl_references \
+  -profile <docker/singularity> \
+  --annot_ver <ANNOT_VER> \
+  --outdir ramdaq_dl_references \
+  --reportdir pipeline_info_$(date +%Y%m%d_%H%M)
+```
+
+See ['Using provided reference genome and annotations'](docs/local_annotation.md) for detail.
+
+v. Start running your own analysis!
 
 <!-- TODO: Update the default command above used to run the pipeline -->
 
-iv-i. You can run ramdaq without donwloading reference annotation data.
-
 ```bash
-nextflow run rikenbit/ramdaq -profile <docker/singularity> --reads '*_R{1,2}.fastq.gz' --genome GRCh38_v37
-```
-
-iv-i. You can also run ramdaq by specifying local paths to reference annotation (See ['Using provided reference genome and annotations'](docs/local_annotation.md)).
-
-```bash
-nextflow run rikenbit/ramdaq -profile <docker/singularity> --reads '*_R{1,2}.fastq.gz' --genome GRCh38_v37 --local_annot_dir <The directory path where the reference genome and annotations are placed>
+nextflow run rikenbit/ramdaq \
+  -profile <docker/singularity> \
+  --reads '*_R{1,2}.fastq.gz' \
+  --genome GRCh38_v37 \
+  --local_annot_dir ramdaq_dl_references/<human/mouse>
 ```
 
 See [usage docs](docs/usage.md) for all of the available options when running the pipeline.
