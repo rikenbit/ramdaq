@@ -2,7 +2,6 @@
 include { initOptions } from './functions'
 
 process BAM2WIG  {
-    label 'process_medium'
     tag "$name"
 
     publishDir "${params.outdir}/${options.publish_dir}", mode: 'copy', overwrite: true

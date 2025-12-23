@@ -3,7 +3,7 @@ include { initOptions } from './functions'
 
 process RSEM_BOWTIE2  {
     tag "$name"
-    label 'process_high'
+    label 'process_medium'
     
     publishDir "${params.outdir}/${options.publish_dir}", mode: 'copy', overwrite: true,
         saveAs: { filename ->
