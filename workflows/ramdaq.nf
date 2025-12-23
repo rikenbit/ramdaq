@@ -1,3 +1,8 @@
+// Show help message
+if (params.help) {
+    helpMessage()
+    exit 0
+}
 
 // Has the run name been specified by the user?
 //  this has the bonus effect of catching both -name and --name
@@ -8,12 +13,6 @@ if (!(workflow.runName ==~ /[a-z]+_[a-z]+/)) {
 
 // Don't overwrite global params.modules, create a copy instead and use that within the main script.
 def modules = params.modules.clone()
-
-// Show help message
-if (params.help) {
-    helpMessage()
-    exit 0
-}
 
 /*
 ========================================================================================
