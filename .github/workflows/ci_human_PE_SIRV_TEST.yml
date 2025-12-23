@@ -33,7 +33,7 @@ jobs:
           mkdir -p $HOME/.cache/singularity
           apptainer pull --dir $HOME/.cache/singularity \
             docker://myoshimura080822/ramdaq:v2.0
-      #- name: Pull docker image
+      # - name: Pull docker image
       #  run: |
       #    docker pull myoshimura080822/ramdaq:v2.0
       - name: Run pipeline with test_PE_UST_H_SIRV
