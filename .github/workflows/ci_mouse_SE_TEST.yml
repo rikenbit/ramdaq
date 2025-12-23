@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         # Nextflow versions: check pipeline minimum and current latest
-        nxf_ver: 24.10.4
+        nxf_ver: [24.10.4]
     steps:
       - uses: actions/checkout@v2
       - name: Crean env
