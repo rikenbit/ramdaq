@@ -49,9 +49,10 @@ nextflow run rikenbit/ramdaq -profile test,docker
 ```bash
 nextflow run rikenbit/ramdaq -profile test,singularity
 ```
+
 iv. Download references (dl_references)
 
-**Before running ramdaq, you must download the reference files using the command below.** 
+**Before running ramdaq, you must download the reference files using the command below.**
 
 Use the --annot_ver option to specify the human/mouse annotation version to download. ramdaq will create a species subdirectory (human/ or mouse/) under the directory you specify and place the required annotation assets there.  
 

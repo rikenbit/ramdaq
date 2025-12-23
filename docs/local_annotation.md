@@ -10,6 +10,7 @@ nextflow run rikenbit/ramdaq \
   --outdir ramdaq_dl_references \
   --reportdir pipeline_info_$(date +%Y%m%d_%H%M)
 ```
+
 The parameters are:
 
 - `--dl_references`: Enables the one-time download of reference assets (genomes, indexes, annotations). Use this before running analyses so later runs can reuse the downloaded assets.
@@ -18,7 +19,7 @@ The parameters are:
   - Approximate free disk space required per annotation version:
     - Mouse (GRCm39_vM37): ~7.0 GB
     - Human (GRCh38_v48): ~9.5 GB
-    
+
 ```bash
   --annot_ver [str] Name of human or mouse reference to download : GRCm39_vM37, GRCm39_vM35, GRCm39_vM33, GRCm39_vM32, GRCm39_vM30_chr19, GRCm39_vM30, GRCm39_vM29, GRCm39_vM28, GRCm39_vM27, GRCm39_vM26, GRCm38_vM25, NCBIM37_vM1, GRCh38_v48, GRCh38_v46, GRCh38_v44, GRCh38_v43, GRCh38_v41_chr19, GRCh38_v41, GRCh38_v40, GRCh38_v39, GRCh38_v38, GRCh38_v37, GRCh38_v35, GRCh37_v19
 ```
@@ -27,7 +28,6 @@ The parameters are:
 - `--reportdir` : Directory for pipeline reports (timeline/report/trace/dag). Use a unique name to avoid collisions when downloading multiple versions (e.g., pipeline_info_$(date +%Y%m%d_%H%M)). If a same-named report directory already exists, Nextflow may refuse to run to prevent overwriting.
 
 If a download is interrupted, rerun with `-resume` to continue from where it left off.
-
 
 ## Run pipeline (mouse)
 
