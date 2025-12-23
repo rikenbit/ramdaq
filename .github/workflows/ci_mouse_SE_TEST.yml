@@ -6,13 +6,13 @@ on: [push, pull_request]
 jobs:
   test:
     env:
-      NXF_VER: ${{ matrix.nxf_ver }}
+      NXF_VER: ${{ matrix.nxf_ver }} 
       NXF_ANSI_LOG: false
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         # Nextflow versions: check pipeline minimum and current latest
-        nxf_ver: ['']
+        nxf_ver: 24.10.4
     steps:
       - uses: actions/checkout@v2
       - name: Crean env
@@ -38,15 +38,15 @@ jobs:
       #    docker pull myoshimura080822/ramdaq:v2.0
       - name: Run pipeline with test_SE_UST_M
         run: |
-          nextflow run ${GITHUB_WORKSPACE} -profile test_SE_UST_M,apptainer  --genome GRCm39_vM30_chr19 --max_cpus 2 --max_memory '4.GB' --github_action
+          nextflow run ${GITHUB_WORKSPACE} -profile test_SE_UST_M,apptainer,github_action  --genome GRCm39_vM30_chr19 --max_cpus 2 --max_memory '4.GB' --github_action
           sudo rm -rf /home/runner/work/ramdaq/ramdaq/results/pipeline_info
       - name: Run pipeline with test_SE_UST_M_1
         run: |
-          nextflow run ${GITHUB_WORKSPACE} -profile test_SE_UST_M_1,apptainer  --genome GRCm39_vM30_chr19 --max_cpus 2 --max_memory '4.GB' --github_action
+          nextflow run ${GITHUB_WORKSPACE} -profile test_SE_UST_M_1,apptainer,github_action  --genome GRCm39_vM30_chr19 --max_cpus 2 --max_memory '4.GB' --github_action
           sudo rm -rf /home/runner/work/ramdaq/ramdaq/results/pipeline_info
       - name: Run pipeline with test_SE_ST_M
         run: |
-          nextflow run ${GITHUB_WORKSPACE} -profile test_SE_ST_M,apptainer  --genome GRCm39_vM30_chr19 --max_cpus 2 --max_memory '4.GB' --github_action
+          nextflow run ${GITHUB_WORKSPACE} -profile test_SE_ST_M,apptainer,github_action  --genome GRCm39_vM30_chr19 --max_cpus 2 --max_memory '4.GB' --github_action
           sudo rm -rf /home/runner/work/ramdaq/ramdaq/results/pipeline_info
       - name: Deploy to ramdaq-mouse-se-ust.surge.sh
         uses: dswistowski/surge-sh-action@v1
