@@ -5,6 +5,12 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## v1.9.3 (`-r 1.9.3`) [2026-03-17]
+
+### `v1.9.3 Fixed`
+
+- Fixed Zenodo URLs in `conf/remote_annotation.config` (`zenodo.org/record/` → `zenodo.org/records/`)
+
 ## v1.9.2 (`-r 1.9.2`) [2022-02-17]
 
 ### `v1.9.2 Added`
