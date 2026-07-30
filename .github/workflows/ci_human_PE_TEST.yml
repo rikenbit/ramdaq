@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # Nextflow versions: check pipeline minimum and current latest
-        nxf_ver: ['']
+        # Match the Nextflow version used in the shared environment.
+        nxf_ver: ['24.10.5']
     steps:
       - uses: actions/checkout@v6
       - name: Crean env
