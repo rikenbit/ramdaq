@@ -6,7 +6,6 @@ options        = initOptions(params.options)
 
 process HISAT2  {
     tag "$name"
-    containerOptions = '--no-mount tmp --writable-tmpfs'
     
     publishDir "${params.outdir}/${options.publish_dir}", mode: 'copy', overwrite: true,
         saveAs: { filename ->

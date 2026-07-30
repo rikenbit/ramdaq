@@ -14,7 +14,7 @@ jobs:
         # Nextflow versions: check pipeline minimum and current latest
         nxf_ver: ['']
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
       - name: Crean env
         run: |
           sudo rm -rf /usr/share/dotnet
@@ -36,19 +36,22 @@ jobs:
         run: |
           nextflow run ${GITHUB_WORKSPACE} -profile test_PE_ST_H,docker --genome GRCh38_v41_chr19 --entire_max_cpus 2 --entire_max_memory '4.GB'
           sudo rm -rf /home/runner/work/ramdaq/ramdaq/results/pipeline_info
+      - name: Set up Node.js for Surge deployment
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev')
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Install Surge CLI
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev')
+        run: npm install --global surge@0.34.0
       - name: Deploy to ramdaq-human-pe-ust.surge.sh
         if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev')
-        uses: dswistowski/surge-sh-action@v1
-        with:
-          domain: 'ramdaq-human-pe-ust.surge.sh'
-          project: './results_PE_UST_H/MultiQC'
-          login: ${{ secrets.SURGE_LOGIN }}
-          token: ${{ secrets.SURGE_TOKEN }}
+        env:
+          SURGE_TOKEN: ${{ secrets.SURGE_TOKEN }}
+        run: surge --project './results_PE_UST_H/MultiQC' --domain 'ramdaq-human-pe-ust.surge.sh'
       - name: Deploy to ramdaq-human-pe-st.surge.sh
         if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev')
-        uses: dswistowski/surge-sh-action@v1
-        with:
-          domain: 'ramdaq-human-pe-st.surge.sh'
-          project: './results_PE_ST_H/MultiQC'
-          login: ${{ secrets.SURGE_LOGIN }}
-          token: ${{ secrets.SURGE_TOKEN }}
+        env:
+          SURGE_TOKEN: ${{ secrets.SURGE_TOKEN }}
+        run: surge --project './results_PE_ST_H/MultiQC' --domain 'ramdaq-human-pe-st.surge.sh'
