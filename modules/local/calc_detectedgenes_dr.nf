@@ -6,7 +6,7 @@ options        = initOptions(params.options)
 
 process CALC_DETECTEDGENES_DR {
 
-    label 'process_medium'
+    label 'process_low'
     publishDir "${params.outdir}/${options.publish_dir}", mode: 'copy', overwrite: true
     
     input:

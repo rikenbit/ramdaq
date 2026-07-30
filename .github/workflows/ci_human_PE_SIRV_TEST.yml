@@ -37,6 +37,7 @@ jobs:
           nextflow run ${GITHUB_WORKSPACE} -profile test_PE_ST_H_SIRV,docker --genome GRCh38_v41_chr19 --entire_max_cpus 2 --entire_max_memory '4.GB'
           sudo rm -rf /home/runner/work/ramdaq/ramdaq/results/pipeline_info
       - name: Deploy to ramdaq-human-pe-ust-sirv.surge.sh
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev')
         uses: dswistowski/surge-sh-action@v1
         with:
           domain: 'ramdaq-human-pe-ust-sirv.surge.sh'
@@ -44,6 +45,7 @@ jobs:
           login: ${{ secrets.SURGE_LOGIN }}
           token: ${{ secrets.SURGE_TOKEN }}
       - name: Deploy to ramdaq-human-pe-st-sirv.surge.sh
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev')
         uses: dswistowski/surge-sh-action@v1
         with:
           domain: 'ramdaq-human-pe-st-sirv.surge.sh'

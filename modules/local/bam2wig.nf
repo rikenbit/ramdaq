@@ -5,7 +5,7 @@ params.options = [:]
 options        = initOptions(params.options)
 
 process BAM2WIG  {
-    label 'process_medium'
+    //label 'process_low'
     tag "$name"
 
     publishDir "${params.outdir}/${options.publish_dir}", mode: 'copy', overwrite: true
@@ -16,10 +16,10 @@ process BAM2WIG  {
 
     output:
     file "*.bw"
-    file "*.wig"
 
     script:
     """
-    bam2wig.py -i ${bam} -s $chrsize -u -o ${bam.baseName}
+    bam2wig.py -i ${bam} -s $chrsize --wigsum 100000000 -u -o ${bam.baseName}
+    rm ${bam.baseName}.wig
     """
 }

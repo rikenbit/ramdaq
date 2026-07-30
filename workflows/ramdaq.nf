@@ -59,21 +59,24 @@ if (params.adapter) { ch_adapter = file(params.adapter, checkIfExists: true) } e
 //Create a channel for input read files
 if (params.readPaths) {
     if (params.single_end) {
-        ch_reads = Channel
+        ch_reads_pre = Channel
             .from(params.readPaths)
             .map { row -> [ row[0], [ file(row[1][0], checkIfExists: true) ] ] }
             .ifEmpty { exit 1, "params.readPaths was empty - no input files supplied" }
     } else {
-        ch_reads = Channel
+        ch_reads_pre = Channel
             .from(params.readPaths)
             .map { row -> [ row[0], [ file(row[1][0], checkIfExists: true), file(row[1][1], checkIfExists: true) ] ] }
             .ifEmpty { exit 1, "params.readPaths was empty - no input files supplied" }
     }
 } else {
-    ch_reads = Channel
+    ch_reads_pre = Channel
         .fromFilePairs(params.reads, size: params.single_end ? 1 : 2)
         .ifEmpty { exit 1, "Cannot find any reads matching: ${params.reads}\nNB: Path needs to be enclosed in quotes!\nIf this is single-end data, please specify --single_end on the command line." }
 }
+
+//trim Undetermined fastq
+ch_reads = ch_reads_pre.filter { it -> !it.toString().contains('Undetermined') }
 
 if (params.hisat2_idx) {
     if (params.hisat2_idx.endsWith('.tar.gz')) {

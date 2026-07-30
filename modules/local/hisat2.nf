@@ -6,7 +6,7 @@ options        = initOptions(params.options)
 
 process HISAT2  {
     tag "$name"
-    label 'process_high'
+    containerOptions = '--no-mount tmp --writable-tmpfs'
     
     publishDir "${params.outdir}/${options.publish_dir}", mode: 'copy', overwrite: true,
         saveAs: { filename ->
@@ -39,7 +39,7 @@ process HISAT2  {
     if (params.single_end) {
         if (params.stranded && params.stranded != 'unstranded' && options.suffix != '.rrna') {
             """
-            hisat2 $softclipping $threads_num -x $index_base -U $reads $strandness $options.args --summary-file ${prefix}.summary.txt \\
+            hisat2 $softclipping -x $index_base -U $reads $strandness $options.args --summary-file ${prefix}.summary.txt \\
             | samtools view -bS - | samtools sort - -o ${prefix}.bam
             samtools index ${prefix}.bam
             samtools flagstat ${prefix}.bam > ${prefix}.bam.flagstat
@@ -54,7 +54,7 @@ process HISAT2  {
             """
         } else {
             """
-            hisat2 $softclipping $threads_num -x $index_base -U $reads $strandness $options.args --summary-file ${prefix}.summary.txt \\
+            hisat2 $softclipping -x $index_base -U $reads $strandness $options.args --summary-file ${prefix}.summary.txt \\
             | samtools view -bS - | samtools sort - -o ${prefix}.bam
             samtools index ${prefix}.bam
             samtools flagstat ${prefix}.bam > ${prefix}.bam.flagstat
@@ -64,7 +64,7 @@ process HISAT2  {
     } else {
         if (params.stranded && params.stranded != 'unstranded' && options.suffix != '.rrna') {
             """
-            hisat2 $softclipping $threads_num -x $index_base -1 ${reads[0]} -2 ${reads[1]} $strandness $options.args --summary-file ${prefix}.summary.txt \\
+            hisat2 $softclipping -x $index_base -1 ${reads[0]} -2 ${reads[1]} $strandness $options.args --summary-file ${prefix}.summary.txt \\
             | samtools view -bS - | samtools sort - -o ${prefix}.bam
             samtools index ${prefix}.bam
             samtools flagstat ${prefix}.bam > ${prefix}.bam.flagstat
@@ -87,7 +87,7 @@ process HISAT2  {
             """
         } else if (params.stranded == 'unstranded' && options.suffix != '.rrna'){
             """
-            hisat2 $softclipping $threads_num -x $index_base -1 ${reads[0]} -2 ${reads[1]} $options.args --summary-file ${prefix}.summary.txt \\
+            hisat2 $softclipping -x $index_base -1 ${reads[0]} -2 ${reads[1]} $options.args --summary-file ${prefix}.summary.txt \\
             | samtools view -bS - | samtools sort - -o ${prefix}.bam
             samtools index ${prefix}.bam
             samtools flagstat ${prefix}.bam > ${prefix}.bam.flagstat
@@ -102,7 +102,7 @@ process HISAT2  {
             """
         } else {
             """
-            hisat2 $softclipping $threads_num -x $index_base -1 ${reads[0]} -2 ${reads[1]} $strandness $options.args --summary-file ${prefix}.summary.txt \\
+            hisat2 $softclipping -x $index_base -1 ${reads[0]} -2 ${reads[1]} $strandness $options.args --summary-file ${prefix}.summary.txt \\
             | samtools view -bS - | samtools sort - -o ${prefix}.bam
             samtools index ${prefix}.bam
             samtools flagstat ${prefix}.bam > ${prefix}.bam.flagstat

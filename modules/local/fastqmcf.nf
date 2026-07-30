@@ -5,6 +5,7 @@ params.options = [:]
 options        = initOptions(params.options)
 
 process FASTQMCF  {
+    label 'process_low'
     tag "$name"
 
     publishDir "${params.outdir}/${options.publish_dir}", mode: 'copy', overwrite: true

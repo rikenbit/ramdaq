@@ -5,6 +5,22 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## ramdaq-1.9.2-custom-20250805 (`-r ramdaq-1.9.2-custom-20250805`) [Unreleased]
+
+This manuscript and shared-laboratory customization is derived from `ramdaq v1.9.2`. It is not an official ramdaq release and is outside the official support scope.
+
+### `ramdaq-1.9.2-custom-20250805 Added`
+
+- Added local annotation configurations for GENCODE human releases v44 and v46.
+- Added an Apptainer execution profile.
+
+### `ramdaq-1.9.2-custom-20250805 Changed`
+
+- Tuned process resources, concurrency, and tool thread settings for the shared laboratory computing environment.
+- Excluded `Undetermined` FASTQ files from workflow input.
+- Changed BigWig generation to omit intermediate WIG output and use summarized coverage.
+- Limited CI Surge deployment to pushes to the `master` and `dev` branches.
+
 ## v1.9.2 (`-r 1.9.2`) [2022-02-17]
 
 ### `v1.9.2 Added`

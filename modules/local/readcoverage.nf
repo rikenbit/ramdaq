@@ -6,7 +6,7 @@ options        = initOptions(params.options)
 
 process READCOVERAGE  {
     tag "$name"
-    label 'process_high'
+    label 'process_low'
     container "yuifu/readcoverage.jl:0.1.2-workaround"
 
     publishDir "${params.outdir}/${options.publish_dir}", mode: 'copy', overwrite: true,

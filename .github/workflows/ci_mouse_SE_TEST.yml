@@ -41,6 +41,7 @@ jobs:
           nextflow run ${GITHUB_WORKSPACE} -profile test_SE_ST_M,docker  --genome GRCm39_vM30_chr19 --entire_max_cpus 2 --entire_max_memory '4.GB'
           sudo rm -rf /home/runner/work/ramdaq/ramdaq/results/pipeline_info
       - name: Deploy to ramdaq-mouse-se-ust.surge.sh
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev')
         uses: dswistowski/surge-sh-action@v1
         with:
           domain: 'ramdaq-mouse-se-ust.surge.sh'
@@ -48,6 +49,7 @@ jobs:
           login: ${{ secrets.SURGE_LOGIN }}
           token: ${{ secrets.SURGE_TOKEN }}
       - name: Deploy to ramdaq-mouse-se-ust_1.surge.sh
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev')
         uses: dswistowski/surge-sh-action@v1
         with:
           domain: 'ramdaq-mouse-se-ust_1.surge.sh'
@@ -55,6 +57,7 @@ jobs:
           login: ${{ secrets.SURGE_LOGIN }}
           token: ${{ secrets.SURGE_TOKEN }}
       - name: Deploy to ramdaq-mouse-se-st.surge.sh
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev')
         uses: dswistowski/surge-sh-action@v1
         with:
           domain: 'ramdaq-mouse-se-st.surge.sh'

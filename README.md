@@ -1,5 +1,7 @@
 # ![ramdaq](docs/images/ramdaq_logo_vectorized.svg)
 
+> **Research custom version — not officially supported.**  This is a derivative of `ramdaq v1.9.2`, customized for manuscript work and a shared laboratory computing environment.  It is not an official ramdaq release and is outside the official support scope.
+
 **This pipeline analyses data from full-length single-cell RNA sequencing (scRNA-seq) methods.**
 
 [![GitHub Actions CI Status](https://github.com/rikenbit/ramdaq/workflows/CI/badge.svg)](https://github.com/rikenbit/ramdaq/actions)

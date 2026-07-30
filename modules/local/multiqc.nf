@@ -6,7 +6,6 @@ options        = initOptions(params.options)
 
 process MULTIQC {
 
-    label 'process_medium'
     publishDir "${params.outdir}/${options.publish_dir}", mode: 'copy', overwrite: true
     container "quay.io/biocontainers/multiqc:1.13--pyhdfd78af_0"
 
